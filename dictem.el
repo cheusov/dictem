@@ -1,23 +1,25 @@
-(defvar edict-server "localhost")
+(defvar edict-server "dict.org")
 (defvar edict-port "2628")
 (defvar edict-client-prog "dict")
 
 (defvar edict-strategy-list
   '(
+    ("."         nil)
     ("exact"     nil)
     ("prefix"    nil)
     ("substring" nil)
     ("suffix"  nil)
     ("re"      nil)
-    ("word"    nil)
+;    ("word"    nil)
     ("lev"     nil)
     ("soundex" nil)
     ("regexp"  nil)
+    )
   )
-)
 
 (defvar edict-database-list
   '(
+    ( "*"   nil )
     ( "gaz" nil )
     ( "hi127" nil )
     ( "church" nil )
@@ -63,8 +65,8 @@
     ( "elements" nil )
     ( "easton" nil )
     ( "hitchcock" nil )
+    )
   )
-)
 
 (defun list2alist (list)
   (if
@@ -157,19 +159,21 @@ and sets edict-database-list variable"
 to enter a search strategy"
   (interactive)
 
-  (edict-select
-   "strategy"
-   edict-strategy-list
-   (if
-       default-strat
-       default-strat
-     (if edict-strategy-history
-	 (car edict-strategy-history)
-       "exact"
-       )
-     )
-   'edict-strategy-history
-   )
+  (setq edict-last-strategy
+	(edict-select
+	 "strategy"
+	 edict-strategy-list
+	 (if
+	     default-strat
+	     default-strat
+	   (if edict-strategy-history
+	       (car edict-strategy-history)
+	     "exact"
+	     )
+	   )
+	 'edict-strategy-history
+	 )
+	)
   )
 
 (defun edict-select-database (&optional default-db)
@@ -177,19 +181,21 @@ to enter a search strategy"
 to enter a database to be searched in"
   (interactive)
 
-  (edict-select
-   "db"
-   edict-database-list
-   (if
-       default-db
-       default-db
-     (if edict-database-history
-	 (car edict-database-history)
-       "*"
-       )
-     )
-   'edict-database-history
-   )
+  (setq edict-last-database
+	(edict-select
+	 "db"
+	 edict-database-list
+	 (if
+	     default-db
+	     default-db
+	   (if edict-database-history
+	       (car edict-database-history)
+	     "*"
+	     )
+	   )
+	 'edict-database-history
+	 )
+	)
   )
 
 (defun edict-read-query (&optional default-query)
@@ -204,6 +210,148 @@ to enter a query be searched"
    default-query
    t)
   )
+
+(defun edict-replace-spaces (str)
+  (while (string-match "  +" str)
+    (setq str (replace-match " " t t str)))
+  (if (string-match "^ +" str)
+      (setq str (replace-match "" t t str)))
+  (if (string-match " +$" str)
+      (setq str (replace-match "" t t str)))
+  str
+  )
+
+;(edict-replace-spaces " qwe   ertrwww   ")
+
+(defface edict-word-entry-face
+  '((((type x))
+     (:italic t))
+    (((type tty) (class color))
+     (:foreground "green"))
+    (t
+     (:inverse t)))
+  "The face that is used for displaying the initial word entry line."
+  :group 'edict)
+
+(defface edict-reference-face
+  '((((type x)
+      (class color)
+      (background dark))
+     (:foreground "yellow"))
+    (((type tty)
+      (class color)
+      (background dark))
+     (:foreground "cyan"))
+    (((class color)
+      (background light))
+     (:foreground "blue"))
+    (t
+     (:underline t)))
+  
+  "The face that is used for displaying a reference word."
+  :group 'edict)
+
+(defun edict-define-on-click (event)
+  "Is called upon clicking the link."
+  (interactive "@e")
+
+  (mouse-set-point event)
+  (let* (
+	 (properties (text-properties-at (point)))
+	 (word (plist-get properties 'link-data)))
+    (if word
+	(edict-search edict-last-database nil word 'edict-define-base)
+      )
+    )
+  )
+
+(defun edict-define-with-db-on-click (event)
+  "Is called upon clicking the link."
+  (interactive "@e")
+
+  (mouse-set-point event)
+  (let* (
+	 (properties (text-properties-at (point)))
+	 (word (plist-get properties 'link-data)))
+    (if word
+	(edict-search (edict-select-database) nil word 'edict-define-base)
+      )
+    )
+  )
+
+(defun link-create-link (start end face function &optional data help)
+  "Create a link in the current buffer starting from `start' going to `end'.
+The `face' is used for displaying, the `data' are stored together with the
+link.  Upon clicking the `function' is called with `data' as argument."
+  (let ((properties `(face ,face
+	              mouse-face highlight
+		      link t
+		      link-data ,data)
+;		      help-echo ,help
+;		      link-function ,function)
+		    )
+	)
+    (remove-text-properties start end properties)
+    (add-text-properties start end properties)))
+
+(defun edict-new-search (word &optional all)
+  (interactive)
+  (edict-search
+   edict-last-database
+   "exact"
+   word
+   'edict-define-base)
+  )
+;(edict-new-search "apple")
+
+(defun edict-colorit ()
+  (interactive)
+  (let ((regexp "\\({\\)\\([^}]*\\)\\(}\\)"))
+    (beginning-of-buffer)
+    (while (< (point) (point-max))
+      (if (search-forward-regexp regexp nil t)
+	  (progn
+	    (let* (
+		  (match-length (- (match-end 2) (match-beginning 2)))
+		  (match-string (match-string 2))
+		  (match-start (match-beginning 1))
+		  (match-finish (+ (match-beginning 1) match-length))
+		  )
+	      (replace-match "\\2")
+	      (put-text-property
+	       match-start
+	       match-finish
+	       'face
+	       'edict-word-entry-face)
+	      (link-create-link
+	       match-start
+	       match-finish
+	       'edict-reference-face
+	       'edict-new-search
+	       (edict-replace-spaces
+		(buffer-substring-no-properties match-start match-finish))
+	       )
+	      )
+	    )
+	(goto-char (point-max))
+	)
+      )
+    )
+  (beginning-of-buffer)
+  )
+
+;	      (replace-match "\\2")
+	      ;; Compensate for the replacement
+;	      (let* ((brace-match-length (- (match-end 1)
+;					    (match-beginning 1)))
+;		     (match-start (- (match-beginning 2)
+;				     brace-match-length))
+;		     (match-end (- (match-end 2)
+;				   brace-match-length)))
+;		(dictionary-mark-reference match-start match-end
+;					   'dictionary-new-search
+;					   word dictionary)))
+;	  (goto-char (point-max)))))))
 
 (defcustom edict-mode-hook
   nil
@@ -275,67 +423,85 @@ the protocol defined in RFC 2229.
   nil
   "Keymap for edict mode")
 
-(unless edict-mode-map
-  (setq edict-mode-map (make-sparse-keymap))
-  (suppress-keymap edict-mode-map)
+;(unless edict-mode-map
+(setq edict-mode-map (make-sparse-keymap))
+(suppress-keymap edict-mode-map)
 
-  (define-key edict-mode-map "q"
-    'edict-close)
+(define-key edict-mode-map "q"
+  'edict-close)
 
-  (define-key edict-mode-map "h"
-    'edict-help)
+(define-key edict-mode-map "h"
+  'edict-help)
 
-  ; SEARCH = MATCH + DEFINE
-  (define-key edict-mode-map "s"
-    '(lambda ()
-       (interactive)
-       (edict-search
-	(edict-select-database)
-	(edict-select-strategy)
-	(edict-read-query)
-	'edict-search-base
-	)
-       )
-    )
+(define-key edict-mode-map [mouse-3]
+  'edict-define-on-click)
 
-  ; MATCH
-  (define-key edict-mode-map "m"
-    '(lambda ()
-       (interactive)
-       (edict-search
-	(edict-select-database)
-	(edict-select-strategy)
-	(edict-read-query)
-	'edict-match-base
-	)
-       )
-    )
+(define-key edict-mode-map [C-down-mouse-3]
+  'edict-define-with-db-on-click)
 
-  ; DEFINE
-  (define-key edict-mode-map "d"
-    '(lambda ()
-       (interactive)
-       (edict-search
-	(edict-select-database)
-	nil
-	(edict-read-query)
-	'edict-define-base
-	)
-       )
-    )
+; SEARCH = MATCH + DEFINE
+(define-key edict-mode-map "s"
+  '(lambda ()
+     (interactive)
+     (edict-search
+      (edict-select-database)
+      (edict-select-strategy)
+      (edict-read-query)
+      'edict-search-base
+      )
+     )
+  )
+
+; MATCH
+(define-key edict-mode-map "m"
+  '(lambda ()
+     (interactive)
+     (edict-search
+      (edict-select-database)
+      (edict-select-strategy)
+      (edict-read-query)
+      'edict-match-base
+      )
+     )
+  )
+
+; DEFINE
+(define-key edict-mode-map "d"
+  '(lambda ()
+     (interactive)
+     (edict-search
+      (edict-select-database)
+      nil
+      (edict-read-query)
+      'edict-define-base
+      )
+     )
+  )
+
+; DEFINE for the selected region
+(define-key edict-mode-map " "
+  '(lambda ()
+     (interactive)
+     (edict-search
+      edict-last-database
+      nil
+      (thing-at-point 'word)
+      'edict-define-base
+      )
+     )
+  )
 
   ; DEFINE for the selected region
-  (define-key edict-mode-map " "
-    '(lambda ()
-       (interactive)
-       (edict-search
-	(edict-last-database)
-	nil
-	(thing-at-point 'word)
-	'edict-define-base
-	)
-       )
-    )
+(define-key edict-mode-map [C-SPC]
+  '(lambda ()
+     (interactive)
+     (edict-search
+      (edict-select-database edict-last-database)
+      nil
+      (thing-at-point 'word)
+      'edict-define-base
+      )
+     )
   )
 
 ;  (link-initialize-keymap edict-mode-map)
@@ -381,7 +547,8 @@ the protocol defined in RFC 2229.
    "-h" edict-server "-p" edict-port
    query
    )
-)
+  (edict-colorit)
+  )
 
 (defun edict-define-base (database query strategy)
   "Edict search: DEFINE"
@@ -393,7 +560,9 @@ the protocol defined in RFC 2229.
    "-h" edict-server "-p" edict-port
    query
    )
-)
+  (edict-colorit)
+  )
+;(edict-new-search "apple")
 
 (defun edict-match-base (database query strategy)
   "Edict search: MATCH"
@@ -405,7 +574,8 @@ the protocol defined in RFC 2229.
    "-h" edict-server "-p" edict-port "-m"
    query
    )
-)
+  (edict-colorit)
+  )
 
 ; search type may be "", 'edict-define or 'edict-match
 (defun edict-search (database strategy query search-fun)
@@ -428,20 +598,12 @@ the protocol defined in RFC 2229.
     )
   )
 
-(defun edict-last-database ()
-  "Returns last requested database name or nil"
-  (interactive)
-  (if
-      edict-database-history
-      (car edict-database-history)
-    nil)
-)
+(defvar edict-last-database
+  "Last requested database name"
+  "*"
+  )
 
-(defun edict-last-strategy ()
-  "Returns last requested strategy name or nil"
-  (interactive)
-  (if
-      edict-strategy-history
-      (car edict-strategy-history)
-    nil)
-)
+(defvar edict-last-strategy
+  "Last requested strategy name"
+  "."
+  )
