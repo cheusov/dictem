@@ -18,10 +18,10 @@
   :group 'dictem
   :type 'string)
 
-(defcustom dictem-port "2628"
+(defcustom dictem-port 2628
   "The port of the DICT server"
   :group 'dictem
-  :type 'string)
+  :type 'number)
 
 (defcustom dictem-client-prog "dict"
   "The command line DICT client.

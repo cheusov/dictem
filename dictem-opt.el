@@ -140,7 +140,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	  (link-create-link
 	   beg-dbname end-dbname
 	   'dictem-reference-dbname-face
-	   'dictem-dbinfo-base
+	   'dictem-show-info-base
 	   (list (cons 'dbname dictem-current-dbname))))
 	))))
 
@@ -187,7 +187,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		 (buffer-substring-no-properties beg (- end 1))))
 	  (link-create-link
 	   beg (- end 1)
-	   'dictem-reference-dbname-face 'dictem-dbinfo-base
+	   'dictem-reference-dbname-face 'dictem-show-info-base
 	   (list (cons 'dbname last-database))))
 	 ((match-beginning 1)
 	  (link-create-link

@@ -25,6 +25,12 @@ and sets dictem-database-alist variable."
   (interactive)
   (setq dictem-database-alist (dictem-get-databases server port)))
 
+(defun dictem-initialize ()
+  "Initialize dictem"
+  (dictem-initialize-databases-alist)
+  (dictem-initialize-strategies-alist)
+  )
+
 ;;; Functions related to Minibuffer ;;;;
 
 (defun dictem-select-strategy (&optional default-strat)
@@ -42,24 +48,26 @@ to enter a search strategy."
        dictem-default-strategy))
    'dictem-strategy-history))
 
-(defun dictem-select-database (&optional default-db)
+(defun dictem-select-database (spec-dbs user-dbs &optional default-db)
   "Switches to minibuffer and ask user
 to enter a database name."
   (interactive)
-  (dictem-select
-   "db"
-   (dictem-prepand-special-dbs
-    (if dictem-use-user-databases-only
-	dictem-user-databases-alist
-      (append
-       dictem-user-databases-alist
-       (dictem-remove-value-from-alist dictem-database-alist))))
-   (if default-db
-       default-db
-     (if dictem-database-history
-	 (car dictem-database-history)
-       "*"))
-   'dictem-database-history))
+  (let* ((dbs (dictem-remove-value-from-alist dictem-database-alist))
+	 (dbs2 (if user-dbs
+		   (if dictem-use-user-databases-only
+		       dictem-user-databases-alist
+		     (append dictem-user-databases-alist dbs)
+		     )
+		 dbs)))
+    (dictem-select
+     "db"
+     (if spec-dbs (dictem-prepand-special-dbs dbs2) dbs2)
+     (if default-db
+	 default-db
+       (if dictem-database-history
+	   (car dictem-database-history)
+	 "*"))
+     'dictem-database-history)))
 
 (defun dictem-read-query (&optional default-query)
   "Switches to minibuffer and ask user to enter a query."
@@ -89,7 +97,7 @@ to enter a database name."
   :type 'hook
   :options '(dictem-postprocess-match))
 
-(defcustom dictem-postprocess-dbinfo-hook
+(defcustom dictem-postprocess-show-info-hook
   nil
   "Hook run in dictem mode buffers containing SHOW INFO result."
   :group 'dictem
@@ -137,6 +145,35 @@ to enter a database name."
    (if (null define_or_match) (concat ":" (if strategy strategy ".")))
    ))
 
+(defun dictem-showdb-base (a b c)
+  "Show a list of databases"
+  (interactive)
+
+  (let* ((beg (point))
+	 (exit_status
+	  (call-process
+	   dictem-client-prog nil (current-buffer) nil
+	   "-P" "-" "-D"
+	   "-h" (dictem-get-server) "-p" (dictem-get-port)
+	   "--client" (dictem-client-text)
+	   )))
+
+    (cond ((= 0 exit_status)
+;	     (save-excursion
+;	       (narrow-to-region beg (point))
+;	       (run-hooks 'dictem-postprocess-definition-hook)
+;	       (widen))
+	   nil)
+	  (t
+	   (if (/= beg (point))
+	       (setq dictem-error-messages
+		     (append
+		      (list (dictem-url (dictem-get-server)
+					(dictem-get-port) query t database)
+			    (buffer-substring-no-properties beg (point)))
+		      dictem-error-messages)))
+	   (kill-region beg (point))))))
+
 (defun dictem-search-base (databases query strategy)
   "dictem search: MATCH + DEFINE"
   (interactive)
@@ -148,7 +185,7 @@ to enter a database name."
 	    (call-process
 	     dictem-client-prog nil (current-buffer) nil
 	     "-P" "-" "-d" database "-s" strategy
-	     "-h" dictem-server "-p" dictem-port
+	     "-h" (dictem-get-server) "-p" (dictem-get-port)
 	     "--client" (dictem-client-text)
 	     query)))
 
@@ -171,8 +208,8 @@ to enter a database name."
 	     (if (/= beg (point))
 		 (setq dictem-error-messages
 		       (append
-			(list (dictem-url dictem-server
-					  dictem-port query t database)
+			(list (dictem-url (dictem-get-server)
+					  (dictem-get-port) query t database)
 			      (buffer-substring-no-properties beg (point)))
 			dictem-error-messages)))
 	     (kill-region beg (point))))
@@ -192,7 +229,7 @@ to enter a database name."
 	    (call-process
 	     dictem-client-prog nil (current-buffer) nil
 	     "-P" "-" "-d" database
-	     "-h" dictem-server "-p" dictem-port
+	     "-h" (dictem-get-server) "-p" (dictem-get-port)
 	     "--client" (dictem-client-text)
 	     query)))
 
@@ -212,8 +249,8 @@ to enter a database name."
 	     (if (/= beg (point))
 		 (setq dictem-error-messages
 		       (append
-			(list (dictem-url dictem-server
-					  dictem-port query t database)
+			(list (dictem-url (dictem-get-server)
+					  (dictem-get-port) query t database)
 			      (buffer-substring-no-properties beg (point)))
 			dictem-error-messages)))
 	     (kill-region beg (point))))
@@ -233,7 +270,7 @@ to enter a database name."
 	    (call-process
 	     dictem-client-prog nil (current-buffer) nil
 	     "-P" "-" "-d" database "-s" strategy
-	     "-h" dictem-server "-p" dictem-port "-m"
+	     "-h" (dictem-get-server) "-p" (dictem-get-port) "-m"
 	     "--client" (dictem-client-text)
 	     query)))
       (cond ((= 0 exit_status)
@@ -247,8 +284,8 @@ to enter a database name."
 	     (if (/= beg (point))
 		 (setq dictem-error-messages
 		       (append
-			(list (dictem-url dictem-server
-					  dictem-port query t database)
+			(list (dictem-url (dictem-get-server)
+					  (dictem-get-port) query t database)
 			      (buffer-substring-no-properties beg (point)))
 			dictem-error-messages)))
 	     (kill-region beg (point))))
@@ -257,24 +294,24 @@ to enter a database name."
 
   (dictem-call-dict-internal 'run-dict-match databases)))
 
-(defun dictem-dbinfo-base (databases b c)
+(defun dictem-show-info-base (databases b c)
   "dictem: SHOW INFO command"
   (interactive)
 
   (let ((ex_status -1))
-  (defun run-dict-dbinfo (database)
+  (defun run-dict-show-info (database)
     (let* ((beg (point))
 	   (exit_status
 	    (call-process
 	     dictem-client-prog nil (current-buffer) nil
 	     "-P" "-" "-i" database
-	     "-h" dictem-server "-p" dictem-port
+	     "-h" (dictem-get-server) "-p" (dictem-get-port)
 	     "--client" (dictem-client-text)
 	     )))
       (cond ((= 0 exit_status)
 	     (save-excursion
 	       (narrow-to-region beg (point))
-	       (run-hooks 'dictem-postprocess-dbinfo-hook)
+	       (run-hooks 'dictem-postprocess-show-info-hook)
 	       (widen)))
 	    (t
 	     (if (= -1 ex_status)
@@ -282,15 +319,15 @@ to enter a database name."
 	     (if (/= beg (point))
 		 (setq dictem-error-messages
 		       (append
-			(list (dictem-url dictem-server
-					  dictem-port query t database)
+			(list (dictem-url (dictem-get-server)
+					  (dictem-get-port) query t database)
 			      (buffer-substring-no-properties beg (point)))
 			dictem-error-messages)))
 	     (kill-region beg (point))))
       (setq dictem-last-database database)
       ex_status))
 
-  (dictem-call-dict-internal 'run-dict-dbinfo databases)))
+  (dictem-call-dict-internal 'run-dict-show-info databases)))
 
 (defun dictem-showserver-base (a b c)
   "dictem: SHOW SERVER command"
@@ -301,7 +338,7 @@ to enter a database name."
 	  (call-process
 	   dictem-client-prog nil (current-buffer) nil
 	   "-P" "-" "-I"
-	   "-h" dictem-server "-p" dictem-port
+	   "-h" (dictem-get-server) "-p" (dictem-get-port)
 	   "--client" (dictem-client-text)
 	   )))
     (cond ((= 0 exit_status)
@@ -381,6 +418,7 @@ to enter a database name."
 	    (coding-system-for-read coding-system)
 	    (coding-system-for-write coding-system))
 	(dictem)
+;	(set-buffer-file-coding-system coding-system)
 	(make-local-variable 'dictem-last-strategy)
 	(make-local-variable 'dictem-last-database)
 	(make-local-variable 'case-replace)
@@ -512,7 +550,7 @@ The default key bindings:
 (define-key dictem-mode-map "i" 'dictem-run-showserver)
 
 ; SHOW INFO
-(define-key dictem-mode-map "r" 'dictem-run-dbinfo)
+(define-key dictem-mode-map "r" 'dictem-run-show-info)
 
 ; Move point to the next DEFINITION
 (define-key dictem-mode-map "n" 'dictem-next-section)
@@ -587,7 +625,7 @@ shows matches in it."
   (interactive)
   (let
       ((query  (dictem-read-query (thing-at-point 'word)))
-       (dbname (dictem-select-database dictem-last-database))
+       (dbname (dictem-select-database t t dictem-last-database))
        (strat  (dictem-select-strategy)))
     (dictem-run
      'dictem-match-base
@@ -602,7 +640,7 @@ shows definitions in it."
   (interactive)
   (let
       ((query  (dictem-read-query (thing-at-point 'word)))
-       (dbname (dictem-select-database dictem-last-database)))
+       (dbname (dictem-select-database t t dictem-last-database)))
     (dictem-run
      'dictem-define-base
      dbname
@@ -616,7 +654,7 @@ shows definitions in it."
   (interactive)
   (let
       ((query  (dictem-read-query (thing-at-point 'word)))
-       (dbname (dictem-select-database dictem-last-database))
+       (dbname (dictem-select-database t t dictem-last-database))
        (strat  (dictem-select-strategy)))
     (dictem-run
      'dictem-search-base
@@ -624,14 +662,14 @@ shows definitions in it."
      query
      strat)))
 
-(defun dictem-run-dbinfo ()
+(defun dictem-run-show-info ()
   "Asks a user about database name
 creates new *dictem* buffer and
 shows information about it."
   (interactive)
   (dictem-run
-   'dictem-dbinfo-base
-   (dictem-select-database dictem-last-database)))
+   'dictem-show-info-base
+   (dictem-select-database nil nil dictem-last-database)))
 
 (defun dictem-run-showserver ()
   "Creates new *dictem* buffer and
@@ -639,6 +677,13 @@ show information about DICT server in it."
   (interactive)
   (dictem-run
    'dictem-showserver-base))
+
+(defun dictem-run-show-databases ()
+  "Creates new *dictem* buffer and
+show information about databases provided by DICT."
+  (interactive)
+  (dictem-run
+   'dictem-showdb-base))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -657,7 +702,8 @@ show information about DICT server in it."
    ["Search"           dictem-run-search t]
    "--"
    ["Information about server"   dictem-run-showserver t]
-   ["Information about database" dictem-run-dbinfo t]
+   ["Information about database" dictem-run-show-info t]
+   ["A list of available databases" dictem-run-show-databases t]
    "--"
    ["Bury Dictem Buffer" dictem-quit t]
    ["Kill Dictem Buffer" dictem-kill t]

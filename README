@@ -82,30 +82,41 @@ The easiest configuration of dictem may look like this
 
 ; Code necessary to obtain database and strategy list
 ; from DICT server
-(dictem-initialize-strategies-alist)
-(dictem-initialize-databases-alist)
+(dictem-initialize)
 
-; Creating hot keys for accessing DICT server
+; Assigning hot keys for accessing DICT server
 
 ; SEARCH = MATCH + DEFINE
+; Ask for word, database and search strategy
+; and show definitions found
 (global-set-key "\C-cs" 'dictem-run-search)
 
 ; MATCH
+; Ask for word, database and search strategy
+; and show matches found
 (global-set-key "\C-cm" 'dictem-run-match)
 
 ; DEFINE
+; Ask for word and database name
+; and show definitions found
 (global-set-key "\C-cd" 'dictem-run-define)
 
 ; SHOW SERVER
-(global-set-key "\C-c\C-r" 'dictem-run-showserver)
+; Show information about DICT server
+(global-set-key "\C-c\M-r" 'dictem-run-show-server)
 
 ; SHOW INFO
-(global-set-key "\C-c\C-n" 'dictem-run-dbinfo)
+; Show information about the database
+(global-set-key "\C-c\M-i" 'dictem-run-show-info)
+
+; SHOW DB
+; Show a list of databases provided by DICT server
+(global-set-key "\C-c\M-b" 'dictem-run-show-databases)
 
 -------
 
 There are a few functions that can make dictem look
-a bit nicer and be more functional. All of them should
+a bit nicer and be more functional. They should
 be added to special hooks like the following.
 
 ; For creating hyperlinks on database names
@@ -126,7 +137,7 @@ be added to special hooks like the following.
 
 ; For creating hyperlinks in dictem buffer
 ; that contains information about a database.
-(add-hook 'dictem-postprocess-dbinfo-hook
+(add-hook 'dictem-postprocess-show-info-hook
 	  'dictem-postprocess-definition-hyperlinks)
 
 -------

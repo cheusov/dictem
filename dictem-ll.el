@@ -72,4 +72,19 @@
 	(case-fold-search nil))
     (replace-match NEWTEXT FIXEDCASE LITERAL STRING SUBEXP)))
 
+(defun dictem-get-port ()
+  (cond
+   ((stringp dictem-port) dictem-port)
+   ((numberp dictem-port) (number-to-string dictem-port))
+   (t (error "The value of dictem-port variable should be \
+either a string or a number"))
+   ))
+
+(defun dictem-get-server ()
+  (cond
+   ((stringp dictem-server) dictem-server)
+   (t (error "The value of dictem-server variable should be \
+either a string or a number"))
+   ))
+
 (provide 'dictem-ll)
