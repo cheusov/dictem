@@ -281,7 +281,23 @@ to enter a database name."
       )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun dictem-next-section ()
+  "Move point to the next definition"
+  (interactive)
+  (forward-char)
+  (if (search-forward-regexp "^From " nil t)
+      (beginning-of-line)
+    (goto-char (point-max))))
 
+(defun dictem-previous-section ()
+  "Move point to the previous definition"
+  (interactive)
+  (backward-char)
+  (if (search-backward-regexp "^From " nil t)
+      (beginning-of-line)
+    (goto-char (point-min))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun dictem-help ()
   "Display a dictem help"
   (interactive)
@@ -375,22 +391,10 @@ The default key bindings:
 (define-key dictem-mode-map "r" 'dictem-run-dbinfo)
 
 ; Move point to the next DEFINITION
-(define-key dictem-mode-map "n"
-  '(lambda ()
-     (interactive)
-     (forward-char)
-     (if (search-forward-regexp "^From " nil t)
-	 (beginning-of-line)
-       (backward-char))))
+(define-key dictem-mode-map "n" 'dictem-next-section)
 
 ; Move point to the previous DEFINITION
-(define-key dictem-mode-map "p"
-  '(lambda ()
-     (interactive)
-     (backward-char)
-     (if (search-backward-regexp "^From " nil t)
-	 (beginning-of-line)
-       (forward-char))))
+(define-key dictem-mode-map "p" 'dictem-previous-section)
 
 ; DEFINE for the selected region
 (define-key dictem-mode-map " "
@@ -424,12 +428,12 @@ The default key bindings:
     (dictem)))
 
 (defun dictem-quit ()
-  "Bury the buffer containing the manpage."
+  "Bury the current dictem buffer."
   (interactive)
   (quit-window))
 
 (defun dictem-close ()
-  "Close the current dictem buffer"
+  "Close the current dictem buffer."
   (interactive)
 
   (if (eq major-mode 'dictem-mode)
@@ -494,5 +498,26 @@ show information about DICT server in it."
   (interactive)
   (dictem-run
    'dictem-showserver-base))
+
+(easy-menu-define
+ dictem-menu
+ dictem-mode-map
+ "DictEm Menu"
+ `("DictEm"
+   ["DictEm..." dictem-help t]
+   "--"
+   ["Next Section"     dictem-next-section t]
+   ["Previous Section" dictem-previous-section t]
+   "--"
+   ["Match"            dictem-run-match t]
+   ["Definition"       dictem-run-define t]
+   ["Search"           dictem-run-search t]
+   "--"
+   ["Information about server"   dictem-run-showserver t]
+   ["Information about database" dictem-run-dbinfo t]
+   "--"
+   ["Bury Dictem Buffer" dictem-quit t]
+   ["Kill Dictem Buffer" dictem-close t]
+   ))
 
 (provide 'dictem)
