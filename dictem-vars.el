@@ -135,4 +135,8 @@ will be used by dictem-select-database"
 currently processed
 by functions run from dictem-postprocess-each-definition-hook.")
 
+(defvar dictem-error-messages
+  nil
+"A list of error messages collected by dictem-run")
+
 (provide 'dictem-vars)

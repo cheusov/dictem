@@ -128,6 +128,15 @@ to enter a database name."
     (if (= exit-status -1) 0 exit-status)
     ))
 
+(defun dictem-url (host port database define_or_match query &optional strategy)
+  "Returns dict:// URL"
+  (concat
+   "dict://" host ":"
+   (if port port "2628")
+   "/" (if define_or_match "d" "m") ":" query ":" database
+   (if (null define_or_match) (concat ":" (if strategy strategy ".")))
+   ))
+
 (defun dictem-search-base (databases query strategy)
   "dictem search: MATCH + DEFINE"
   (interactive)
@@ -159,6 +168,13 @@ to enter a database name."
 	    (t
 	     (if (= -1 ex_status)
 		 (setq ex_status exit_status))
+	     (if (/= beg (point))
+		 (setq dictem-error-messages
+		       (append
+			(list (dictem-url dictem-server
+					  dictem-port query t database)
+			      (buffer-substring-no-properties beg (point)))
+			dictem-error-messages)))
 	     (kill-region beg (point))))
       (setq dictem-last-database database)
       ex_status))
@@ -193,6 +209,13 @@ to enter a database name."
 	    (t
 	     (if (= -1 ex_status)
 		 (setq ex_status exit_status))
+	     (if (/= beg (point))
+		 (setq dictem-error-messages
+		       (append
+			(list (dictem-url dictem-server
+					  dictem-port query t database)
+			      (buffer-substring-no-properties beg (point)))
+			dictem-error-messages)))
 	     (kill-region beg (point))))
       (setq dictem-last-database database)
       ex_status))
@@ -221,6 +244,13 @@ to enter a database name."
 	    (t
 	     (if (= -1 ex_status)
 		 (setq ex_status exit_status))
+	     (if (/= beg (point))
+		 (setq dictem-error-messages
+		       (append
+			(list (dictem-url dictem-server
+					  dictem-port query t database)
+			      (buffer-substring-no-properties beg (point)))
+			dictem-error-messages)))
 	     (kill-region beg (point))))
       (setq dictem-last-database database)
       ex_status))
@@ -249,6 +279,13 @@ to enter a database name."
 	    (t
 	     (if (= -1 ex_status)
 		 (setq ex_status exit_status))
+	     (if (/= beg (point))
+		 (setq dictem-error-messages
+		       (append
+			(list (dictem-url dictem-server
+					  dictem-port query t database)
+			      (buffer-substring-no-properties beg (point)))
+			dictem-error-messages)))
 	     (kill-region beg (point))))
       (setq dictem-last-database database)
       ex_status))
@@ -298,6 +335,23 @@ to enter a database name."
    (t                  (concat "Ooops!" (number-to-string exit_status)))
    ))
 
+(defun dictem-generate-full-error-message (exit_status)
+  (defun internal (err-msgs exit_status)
+    (if err-msgs
+	(concat (car err-msgs) "\n"
+		(cadr err-msgs)
+		"\n"
+		(internal
+		 (cddr err-msgs)
+		 nil)
+		)
+      (if exit_status
+	  (dictem-error-message exit_status)
+	nil)))
+
+  (concat "Error messages:\n\n"
+	  (internal dictem-error-messages exit_status)))
+
 (defun dictem-run (search-fun &optional database query strategy)
   "Creates new *dictem* buffer and run search-fun"
   (interactive)
@@ -335,9 +389,10 @@ to enter a database name."
 	(setq dictem-last-database database)
 	(setq case-replace nil)
 	(setq case-fold-search nil)
+	(setq dictem-error-messages nil)
 	(run-functions search-fun database query strategy)
 	(if (and (not (equal ex_status 0)) (= (point-min) (point-max)))
-	    (insert (dictem-error-message ex_status)))
+	    (insert (dictem-generate-full-error-message ex_status)))
 	(beginning-of-buffer)
 	(setq buffer-read-only t)
 	ex_status
