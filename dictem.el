@@ -97,32 +97,32 @@ Instead, existing buffer will be erased and used to show results.
 ;;;;;            Faces             ;;;;;
 
 (defface dictem-reference-definition-face
-  '((((background light)) (:foreground "BlueSky4"))
-    (((background dark))  (:foreground "SkyBlue1")))
+  '((((background light)) (:foreground "blue"))
+    (((background dark))  (:foreground "cyan")))
 
   "The face that is used for displaying a reference to
 a phrase in a DEFINE search."
   :group 'dictem-faces)
 
 (defface dictem-reference-m1-face
-  '((((background light)) (:foreground "DarkSlateGray"))
-    (((background dark))  (:foreground "SkyBlue1")))
+  '((((background light)) (:foreground "darkgreen"))
+    (((background dark))  (:foreground "lightblue")))
 
   "The face that is used for displaying a reference to
 a phrase in a MATCH search."
   :group 'dictem-faces)
 
 (defface dictem-reference-m2-face
-  '((((background light)) (:foreground "BlueSky4"))
-    (((background dark))  (:bold true :foreground "LightBlue")))
+  '((((background light)) (:foreground "blue"))
+    (((background dark))  (:bold true :foreground "gray")))
 
   "The face that is used for displaying a reference to
 a single word in a MATCH search."
   :group 'dictem-faces)
 
 (defface dictem-reference-dbname-face
-  '((((background light)) (:foreground "Black"))
-    (((background dark))  (:bold t :foreground "White")))
+  '((((background light)) (:foreground "black"))
+    (((background dark))  (:bold t :foreground "white")))
 
   "The face that is used for displaying a reference to database"
   :group 'dictem-faces)
