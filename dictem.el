@@ -152,7 +152,7 @@ and sets edict-database-list variable"
   (kill-buffer "*dict-temp*")
   )
 
-(defun edict-select-strategy ()
+(defun edict-select-strategy (&optional default-strat)
   "Switches to minibuffer and ask user
 to enter a search strategy"
   (interactive)
@@ -160,15 +160,19 @@ to enter a search strategy"
   (edict-select
    "strategy"
    edict-strategy-list
-   (if edict-strategy-history
-       (car edict-strategy-history)
-     "exact"
+   (if
+       default-strat
+       default-strat
+     (if edict-strategy-history
+	 (car edict-strategy-history)
+       "exact"
+       )
      )
    'edict-strategy-history
    )
   )
 
-(defun edict-select-database ()
+(defun edict-select-database (&optional default-db)
   "Switches to minibuffer and ask user
 to enter a database to be searched in"
   (interactive)
@@ -176,21 +180,30 @@ to enter a database to be searched in"
   (edict-select
    "db"
    edict-database-list
-   (if edict-database-history
-       (car edict-database-history)
-     "*"
+   (if
+       default-db
+       default-db
+     (if edict-database-history
+	 (car edict-database-history)
+       "*"
+       )
      )
    'edict-database-history
    )
   )
 
-(defun edict-read-query ()
+(defun edict-read-query (&optional default-query)
   "Switches to minibuffer and ask user
 to enter a query be searched"
   (interactive)
 
-  (read-string "query: " nil 'edict-query-history "" t)
-)
+  (read-string
+   (concat "query:(" default-query ") ")
+   nil
+   'edict-query-history
+   default-query
+   t)
+  )
 
 (defcustom edict-mode-hook
   nil
