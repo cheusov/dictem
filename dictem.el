@@ -115,72 +115,107 @@ to enter a database name."
   (interactive)
 
   (defun run-dict-search (database)
-    (call-process
-     dictem-client-prog nil (current-buffer) nil
-     "-P" "-" "-d" database "-s" strategy
-     "-h" dictem-server "-p" dictem-port
-     query))
+    (let* ((beg (point))
+	   (exit_status
+	    (call-process
+	     dictem-client-prog nil (current-buffer) nil
+	     "-P" "-" "-d" database "-s" strategy
+	     "-h" dictem-server "-p" dictem-port
+	     query)))
 
-  (let ((exit_status (dictem-call-dict-internal 'run-dict-search databases)))
-    (cond ((= 0 exit_status)
-	   (let ((dictem-current-dbname databases))
-	     (run-hooks 'dictem-postprocess-define-hook)))
-	  ((= 21 exit_status)
-	   (forward-line-nomark)
-	   (run-hooks 'dictem-postprocess-match-hook))
-	  )))
+      (cond ((= 0 exit_status)
+	     (save-excursion
+	       (narrow-to-region beg (point))
+	       (goto-char beg)
+	       (run-hooks 'dictem-postprocess-define-hook)
+	       (widen)))
+	    ((= 21 exit_status)
+	     (save-excursion
+	       (narrow-to-region beg (point))
+	       (goto-char beg)
+	       (forward-line-nomark)
+	       (run-hooks 'dictem-postprocess-match-hook)
+	       (widen))))
+      (setq dictem-last-database database)
+      exit_status))
+
+  (dictem-call-dict-internal 'run-dict-search databases))
 
 (defun dictem-define-base (databases query strategy)
   "dictem search: DEFINE"
   (interactive)
 
   (defun run-dict-define (database)
-    (call-process
-     dictem-client-prog nil (current-buffer) nil
-     "-P" "-" "-d" database
-     "-h" dictem-server "-p" dictem-port
-     query))
+    (let* ((beg (point))
+	   (exit_status
+	    (call-process
+	     dictem-client-prog nil (current-buffer) nil
+	     "-P" "-" "-d" database
+	     "-h" dictem-server "-p" dictem-port
+	     query)))
 
-  (let ((exit_status (dictem-call-dict-internal 'run-dict-define databases)))
-    (cond ((= 0 exit_status)
-	   (let ((dictem-current-dbname databases))
-	     (run-hooks 'dictem-postprocess-define-hook)))
-	  ((= 21 exit_status)
-	   (run-hooks 'dictem-postprocess-match-hook))
-	  )))
+      (cond ((= 0 exit_status)
+	     (save-excursion
+	       (narrow-to-region beg (point))
+	       (goto-char beg)
+	       (run-hooks 'dictem-postprocess-define-hook)
+	       (widen)))
+	    ((= 21 exit_status)
+	     (save-excursion
+	       (narrow-to-region beg (point))
+	       (goto-char beg)
+	       (run-hooks 'dictem-postprocess-match-hook)
+	       (widen))))
+      (setq dictem-last-database database)
+      exit_status))
+
+  (dictem-call-dict-internal 'run-dict-define databases))
 
 (defun dictem-match-base (databases query strategy)
   "dictem search: MATCH"
   (interactive)
 
   (defun run-dict-match (database)
-    (call-process
-     dictem-client-prog nil (current-buffer) nil
-     "-P" "-" "-d" database "-s" strategy
-     "-h" dictem-server "-p" dictem-port "-m"
-     query))
+    (let* ((beg (point))
+	   (exit_status
+	    (call-process
+	     dictem-client-prog nil (current-buffer) nil
+	     "-P" "-" "-d" database "-s" strategy
+	     "-h" dictem-server "-p" dictem-port "-m"
+	     query)))
+      (cond ((= 0 exit_status)
+	     (save-excursion
+	       (narrow-to-region beg (point))
+	       (goto-char beg)
+	       (run-hooks 'dictem-postprocess-match-hook)
+	       (widen)))
+	    )
+      (setq dictem-last-database database)
+      exit_status))
 
-  (let ((exit_status (dictem-call-dict-internal 'run-dict-match databases)))
-    (cond ((= 0 exit_status)
-	   (run-hooks 'dictem-postprocess-match-hook))
-	  )))
+  (dictem-call-dict-internal 'run-dict-match databases))
 
 (defun dictem-dbinfo-base (databases b c)
   "dictem: SHOW INFO command"
   (interactive)
 
   (defun run-dict-dbinfo (database)
-    (call-process
-     dictem-client-prog nil (current-buffer) nil
-     "-P" "-" "-i" database
-     "-h" dictem-server "-p" dictem-port
-     ))
+    (let* ((beg (point))
+	   (exit_status
+	    (call-process
+	     dictem-client-prog nil (current-buffer) nil
+	     "-P" "-" "-i" database
+	     "-h" dictem-server "-p" dictem-port)))
+      (cond ((= 0 exit_status)
+	     (save-excursion
+	       (narrow-to-region beg (point))
+	       (goto-char beg)
+	       (run-hooks 'dictem-postprocess-dbinfo-hook)
+	       (widen))))
+      (setq dictem-last-database database)
+      exit_status))
 
-  (let ((exit_status (dictem-call-dict-internal 'run-dict-dbinfo databases)))
-    (cond ((= 0 exit_status)
-	   (let ((dictem-current-dbname databases))
-	     (run-hooks 'dictem-postprocess-dbinfo-hook))
-	   ))))
+  (dictem-call-dict-internal 'run-dict-dbinfo databases))
 
 (defun dictem-showserver-base (a b c)
   "dictem: SHOW SERVER command"
@@ -261,6 +296,8 @@ The default key bindings:
             and show matches
   r         show information about DICT server
   i         ask for a database and show information about it
+  n         move point to the next definition
+  p         move point to the previous definition
   mouse-2   visit a link (DEFINE using all dictionaries)
   C-mouse-2 visit a link (DEFINE using asked dictionaries)
 
@@ -401,7 +438,7 @@ shows matches in it."
   (interactive)
   (dictem-run
    'dictem-match-base
-   (dictem-select-database)
+   (dictem-select-database dictem-last-database)
    (dictem-read-query (thing-at-point 'word))
    (dictem-select-strategy)))
 
@@ -412,7 +449,7 @@ shows definitions in it."
   (interactive)
   (dictem-run
    'dictem-define-base
-   (dictem-select-database)
+   (dictem-select-database dictem-last-database)
    (dictem-read-query (thing-at-point 'word))
    nil))
 
@@ -423,7 +460,7 @@ shows definitions in it."
   (interactive)
   (dictem-run
    'dictem-search-base
-   (dictem-select-database)
+   (dictem-select-database dictem-last-database)
    (dictem-read-query (thing-at-point 'word))
    (dictem-select-strategy)))
 
@@ -434,7 +471,7 @@ shows information about it."
   (interactive)
   (dictem-run
    'dictem-dbinfo-base
-   (dictem-select-database)))
+   (dictem-select-database dictem-last-database)))
 
 (defun dictem-run-showserver ()
   "Creates new *dictem* buffer and
