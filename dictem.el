@@ -586,10 +586,8 @@ to enter a database name."
   (interactive)
   (read-string
    (concat "query (" default-query "): ")
-   nil
-   'dictem-query-history
-   default-query
-   t))
+   nil 'dictem-query-history default-query t))
+
 
 ;;;;;;;;    Search Functions     ;;;;;;;
 
@@ -1199,72 +1197,56 @@ The default key bindings:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;     Top-level Functions     ;;;;;;
 
-(defun dictem-run-match ()
+(defun dictem-run-match (query database strat)
   "Asks a user about database name, search strategy and query,
 creates new *dictem* buffer and
 shows matches in it."
-  (interactive)
-  (let
-      ((query  (dictem-read-query (thing-at-point 'word)))
-       (dbname (dictem-select-database t t dictem-last-database))
-       (strat  (dictem-select-strategy)))
-    (dictem-run
-     'dictem-base-match
-     dbname
-     query
-     strat)))
+  (interactive
+   (list 
+    (dictem-read-query (thing-at-point 'word))
+    (dictem-select-database t t dictem-last-database)
+    (dictem-select-strategy)))
+  (dictem-run 'dictem-base-match database query strat))
 
-(defun dictem-run-define ()
+(defun dictem-run-define (query database)
   "Asks a user about database name and query,
 creates new *dictem* buffer and
 shows definitions in it."
-  (interactive)
-  (let
-      ((query  (dictem-read-query (thing-at-point 'word)))
-       (dbname (dictem-select-database t t dictem-last-database)))
-    (dictem-run
-     'dictem-base-define
-     dbname
-     query
-     nil)))
+  (interactive
+   (list
+    (dictem-read-query (thing-at-point 'word))
+    (dictem-select-database t t dictem-last-database)))
+  (dictem-run 'dictem-base-define database query nil))
 
-(defun dictem-run-search ()
+(defun dictem-run-search (query database strat)
   "Asks a user about database name, search strategy and query,
 creates new *dictem* buffer and
 shows definitions in it."
-  (interactive)
-  (let
-      ((query  (dictem-read-query (thing-at-point 'word)))
-       (dbname (dictem-select-database t t dictem-last-database))
-       (strat  (dictem-select-strategy)))
-    (dictem-run
-     'dictem-base-search
-     dbname
-     query
-     strat)))
+  (interactive
+   (list
+    (dictem-read-query (thing-at-point 'word))
+    (dictem-select-database t t dictem-last-database)
+    (dictem-select-strategy)))
+  (dictem-run 'dictem-base-search database query strat))
 
-(defun dictem-run-show-info ()
+(defun dictem-run-show-info (database)
   "Asks a user about database name
 creates new *dictem* buffer and
 shows information about it."
-  (interactive)
-  (dictem-run
-   'dictem-base-show-info
-   (dictem-select-database nil nil dictem-last-database)))
+  (interactive (list (dictem-select-database nil nil dictem-last-database)))
+  (dictem-run 'dictem-base-show-info database))
 
 (defun dictem-run-show-server ()
   "Creates new *dictem* buffer and
 shows information about DICT server in it."
   (interactive)
-  (dictem-run
-   'dictem-base-show-server))
+  (dictem-run 'dictem-base-show-server))
 
 (defun dictem-run-show-databases ()
   "Creates new *dictem* buffer and
 shows information about databases provided by DICT."
   (interactive)
-  (dictem-run
-   'dictem-base-show-databases))
+  (dictem-run 'dictem-base-show-databases))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
