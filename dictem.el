@@ -223,17 +223,26 @@ to enter a query be searched"
 
 ;(edict-replace-spaces " qwe   ertrwww   ")
 
-(defface edict-word-entry-face
-  '((((type x))
-     (:italic t))
-    (((type tty) (class color))
+(defface edict-reference-d-face
+  '((((type x)
+      (class color)
+      (background dark))
      (:foreground "green"))
+    (((type tty)
+      (class color)
+      (background dark))
+     (:foreground "cyan"))
+    (((class color)
+      (background light))
+     (:foreground "blue"))
     (t
-     (:inverse t)))
-  "The face that is used for displaying the initial word entry line."
+     (:underline t)))
+  
+  "The face that is used for displaying a reference to
+a phrase in a DEFINE search."
   :group 'edict)
 
-(defface edict-reference-face
+(defface edict-reference-m1-face
   '((((type x)
       (class color)
       (background dark))
@@ -248,7 +257,15 @@ to enter a query be searched"
     (t
      (:underline t)))
   
-  "The face that is used for displaying a reference word."
+  "The face that is used for displaying a reference to
+a phrase in a MATCH search."
+  :group 'edict)
+
+(defface edict-reference-m2-face
+  nil
+
+  "The face that is used for displaying a reference to
+a single word in a MATCH search."
   :group 'edict)
 
 (defun edict-define-on-click (event)
@@ -304,7 +321,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
   )
 ;(edict-new-search "apple")
 
-(defun edict-colorit ()
+(defun edict-colorit-define ()
   (interactive)
   (let ((regexp "\\({\\)\\([^}]*\\)\\(}\\)"))
     (beginning-of-buffer)
@@ -318,15 +335,10 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		  (match-finish (+ (match-beginning 1) match-length))
 		  )
 	      (replace-match "\\2")
-	      (put-text-property
-	       match-start
-	       match-finish
-	       'face
-	       'edict-word-entry-face)
 	      (link-create-link
 	       match-start
 	       match-finish
-	       'edict-reference-face
+	       'edict-reference-d-face
 	       'edict-new-search
 	       (edict-replace-spaces
 		(buffer-substring-no-properties match-start match-finish))
@@ -340,18 +352,50 @@ link.  Upon clicking the `function' is called with `data' as argument."
   (beginning-of-buffer)
   )
 
-;	      (replace-match "\\2")
-	      ;; Compensate for the replacement
-;	      (let* ((brace-match-length (- (match-end 1)
-;					    (match-beginning 1)))
-;		     (match-start (- (match-beginning 2)
-;				     brace-match-length))
-;		     (match-end (- (match-end 2)
-;				   brace-match-length)))
-;		(dictionary-mark-reference match-start match-end
-;					   'dictionary-new-search
-;					   word dictionary)))
-;	  (goto-char (point-max)))))))
+(defun edict-colorit-match ()
+  (interactive)
+  (let ((regexp1 "\"[^\"\n]*\"") (regexp2 "[^ \n][^ \n]*"))
+    (beginning-of-buffer)
+    (while (< (point) (point-max))
+      (if (search-forward-regexp regexp1 nil t)
+	  (link-create-link
+	   (match-beginning 0)
+	   (match-end 0)
+	   'edict-reference-m1-face
+	   'edict-new-search
+	   (edict-replace-spaces
+	    (buffer-substring-no-properties
+	     (+ (match-beginning 0) 1)
+	     (- (match-end 0) 1)))
+	   )
+	(goto-char (point-max))
+	)
+      )
+    (beginning-of-buffer)
+    (while (< (point) (point-max))
+      (if (search-forward-regexp regexp2 nil t)
+	  (unless
+	      (or
+	       (equal 0 (match-beginning 0))
+	       (get-text-property (match-beginning 0) 'link-data)
+	       )
+	    (link-create-link
+	     (match-beginning 0)
+	     (match-end 0)
+	     'edict-reference-m2-face
+	     'edict-new-search
+	     (edict-replace-spaces
+	      (buffer-substring-no-properties
+	       (match-beginning 0)
+	       (match-end 0)))
+	     )
+	    )
+	(goto-char (point-max))
+	)
+      )
+    )
+  (beginning-of-buffer)
+  )
 
 (defcustom edict-mode-hook
   nil
@@ -547,7 +591,7 @@ the protocol defined in RFC 2229.
    "-h" edict-server "-p" edict-port
    query
    )
-  (edict-colorit)
+  (edict-colorit-define)
   )
 
 (defun edict-define-base (database query strategy)
@@ -560,7 +604,7 @@ the protocol defined in RFC 2229.
    "-h" edict-server "-p" edict-port
    query
    )
-  (edict-colorit)
+  (edict-colorit-define)
   )
 ;(edict-new-search "apple")
 
@@ -574,7 +618,7 @@ the protocol defined in RFC 2229.
    "-h" edict-server "-p" edict-port "-m"
    query
    )
-  (edict-colorit)
+  (edict-colorit-match)
   )
 
 ; search type may be "", 'edict-define or 'edict-match
