@@ -1,29 +1,29 @@
-(defgroup edict nil
+(defgroup dictem nil
   "Client for accessing the DICT server."
   :group 'help
   :group 'hypermedia
   )
 
-(defcustom edict-server "dict.org"
+(defcustom dictem-server "dict.org"
   "The DICT server"
-  :group 'edict
+  :group 'dictem
   :type 'string
   )
 
-(defcustom edict-port "2628"
+(defcustom dictem-port "2628"
   "The port of the DICT server"
-  :group 'edict
+  :group 'dictem
   :type 'string
   )
 
-(defcustom edict-client-prog "dict"
+(defcustom dictem-client-prog "dict"
   "The command line DICT client.
-edict accesses DICT server through this executable."
-  :group 'edict
+dictem accesses DICT server through this executable."
+  :group 'dictem
   :type 'string
   )
 
-(defvar edict-strategy-list
+(defvar dictem-strategy-list
   '(
     ("."         nil)
 ;    ("word"    nil)
@@ -38,7 +38,7 @@ edict accesses DICT server through this executable."
     )
   )
 
-(defvar edict-database-list
+(defvar dictem-database-list
   '(
     ( "*"   nil )
     ( "elements" nil )
@@ -55,34 +55,34 @@ edict accesses DICT server through this executable."
     )
   )
 
-(defcustom edict-default-strategy "."
+(defcustom dictem-default-strategy "."
   "The default search strategy."
-  :group 'edict
+  :group 'dictem
   :group 'string
   )
 
-(defcustom edict-default-database "*"
+(defcustom dictem-default-database "*"
   "The default database name."
-  :group 'edict
+  :group 'dictem
   :group 'string
   )
 
-(defvar edict-strategy-history nil)
-(defvar edict-database-history nil)
-(defvar edict-query-history nil)
-(defvar edict-last-database
+(defvar dictem-strategy-history nil)
+(defvar dictem-database-history nil)
+(defvar dictem-query-history nil)
+(defvar dictem-last-database
   "Last used database name"
   "*"
   )
 
-(defvar edict-last-strategy
+(defvar dictem-last-strategy
   "Last used strategy name"
   "."
   )
 
-(defvar edict-mode-map
+(defvar dictem-mode-map
   nil
-  "Keymap for edict mode")
+  "Keymap for dictem mode")
 
 (defun list2alist (list)
   (if
@@ -95,7 +95,7 @@ edict accesses DICT server through this executable."
     )
   )
 
-(defun edict-select (prompt alist default history)
+(defun dictem-select (prompt alist default history)
   (let
       ((completion-ignore-case t))
     (completing-read
@@ -132,13 +132,13 @@ edict accesses DICT server through this executable."
     )
   )
 
-(defun edict-set-strategies ()
+(defun dictem-set-strategies ()
   "Obtain strategy list from a DICT server
-and sets edict-strategy-list variable."
+and sets dictem-strategy-list variable."
   (interactive)
   (if
-      (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-S" "-h" edict-server "-p" edict-port))
-      (setq edict-strategy-list
+      (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-S" "-h" dictem-server "-p" dictem-port))
+      (setq dictem-strategy-list
 	    (cons
 	     (list "." nil)
 	     (nreverse (list2alist (get-first-tokens-from-temp-buffer) ) )
@@ -148,13 +148,13 @@ and sets edict-strategy-list variable."
   (kill-buffer "*dict-temp*")
   )
 
-(defun edict-set-databases ()
+(defun dictem-set-databases ()
   "Obtain database list from a DICT server
-and sets edict-database-list variable."
+and sets dictem-database-list variable."
   (interactive)
   (if
-      (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-D" "-h" edict-server "-p" edict-port))
-      (setq edict-database-list
+      (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-D" "-h" dictem-server "-p" dictem-port))
+      (setq dictem-database-list
 	    (cons
 	     (list "*" nil)
 	     (nreverse (list2alist (get-first-tokens-from-temp-buffer)))
@@ -164,56 +164,56 @@ and sets edict-database-list variable."
   (kill-buffer "*dict-temp*")
   )
 
-(defun edict-help ()
-  "Display a edict help"
+(defun dictem-help ()
+  "Display a dictem help"
   (interactive)
-  (describe-function 'edict-mode))
+  (describe-function 'dictem-mode))
 
-(defun edict-select-strategy (&optional default-strat)
+(defun dictem-select-strategy (&optional default-strat)
   "Switches to minibuffer and ask user
 to enter a search strategy."
   (interactive)
 
-  (setq edict-last-strategy
-	(edict-select
+  (setq dictem-last-strategy
+	(dictem-select
 	 "strategy"
-	 edict-strategy-list
+	 dictem-strategy-list
 	 (if
 	     default-strat
 	     default-strat
-	   (if edict-strategy-history
-	       (car edict-strategy-history)
+	   (if dictem-strategy-history
+	       (car dictem-strategy-history)
 	     "exact"
 	     )
 	   )
-	 'edict-strategy-history
+	 'dictem-strategy-history
 	 )
 	)
   )
 
-(defun edict-select-database (&optional default-db)
+(defun dictem-select-database (&optional default-db)
   "Switches to minibuffer and ask user
 to enter a database name."
   (interactive)
 
-  (setq edict-last-database
-	(edict-select
+  (setq dictem-last-database
+	(dictem-select
 	 "db"
-	 edict-database-list
+	 dictem-database-list
 	 (if
 	     default-db
 	     default-db
-	   (if edict-database-history
-	       (car edict-database-history)
+	   (if dictem-database-history
+	       (car dictem-database-history)
 	     "*"
 	     )
 	   )
-	 'edict-database-history
+	 'dictem-database-history
 	 )
 	)
   )
 
-(defun edict-read-query (&optional default-query)
+(defun dictem-read-query (&optional default-query)
   "Switches to minibuffer and ask user
 to enter a query."
   (interactive)
@@ -221,12 +221,12 @@ to enter a query."
   (read-string
    (concat "query:(" default-query ") ")
    nil
-   'edict-query-history
+   'dictem-query-history
    default-query
    t)
   )
 
-(defun edict-replace-spaces (str)
+(defun dictem-replace-spaces (str)
   (while (string-match "  +" str)
     (setq str (replace-match " " t t str)))
   (if (string-match "^ +" str)
@@ -236,9 +236,9 @@ to enter a query."
   str
   )
 
-;(edict-replace-spaces " qwe   ertrwww   ")
+;(dictem-replace-spaces " qwe   ertrwww   ")
 
-(defface edict-reference-define-face
+(defface dictem-reference-define-face
   '((((type x)
       (class color)
       (background dark))
@@ -255,9 +255,9 @@ to enter a query."
 
   "The face that is used for displaying a reference to
 a phrase in a DEFINE search."
-  :group 'edict)
+  :group 'dictem)
 
-(defface edict-reference-m1-face
+(defface dictem-reference-m1-face
   '((((type x)
       (class color)
       (background dark))
@@ -274,16 +274,16 @@ a phrase in a DEFINE search."
 
   "The face that is used for displaying a reference to
 a phrase in a MATCH search."
-  :group 'edict)
+  :group 'dictem)
 
-(defface edict-reference-m2-face
+(defface dictem-reference-m2-face
   nil
 
   "The face that is used for displaying a reference to
 a single word in a MATCH search."
-  :group 'edict)
+  :group 'dictem)
 
-(defun edict-define-on-click (event)
+(defun dictem-define-on-click (event)
   "Is called upon clicking the link."
   (interactive "@e")
 
@@ -292,12 +292,12 @@ a single word in a MATCH search."
 	 (properties (text-properties-at (point)))
 	 (word (plist-get properties 'link-data)))
     (if word
-	(edict-search edict-last-database nil word 'edict-define-base)
+	(dictem-search dictem-last-database nil word 'dictem-define-base)
       )
     )
   )
 
-(defun edict-define-with-db-on-click (event)
+(defun dictem-define-with-db-on-click (event)
   "Is called upon clicking the link."
   (interactive "@e")
 
@@ -306,7 +306,7 @@ a single word in a MATCH search."
 	 (properties (text-properties-at (point)))
 	 (word (plist-get properties 'link-data)))
     (if word
-	(edict-search (edict-select-database) nil word 'edict-define-base)
+	(dictem-search (dictem-select-database) nil word 'dictem-define-base)
       )
     )
   )
@@ -326,16 +326,16 @@ link.  Upon clicking the `function' is called with `data' as argument."
     (remove-text-properties start end properties)
     (add-text-properties start end properties)))
 
-(defun edict-new-search (word &optional all)
+(defun dictem-new-search (word &optional all)
 ;  (interactive)
-  (edict-search
-   edict-last-database
+  (dictem-search
+   dictem-last-database
    "exact"
    word
-   'edict-define-base)
+   'dictem-define-base)
   )
 
-(defun edict-colorit-define ()
+(defun dictem-colorit-define ()
 ;  (interactive)
   (let ((regexp "\\({\\)\\([^}]*\\)\\(}\\)"))
     (beginning-of-buffer)
@@ -352,9 +352,9 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	      (link-create-link
 	       match-start
 	       match-finish
-	       'edict-reference-define-face
-	       'edict-new-search
-	       (edict-replace-spaces
+	       'dictem-reference-define-face
+	       'dictem-new-search
+	       (dictem-replace-spaces
 		(buffer-substring-no-properties match-start match-finish))
 	       )
 	      )
@@ -366,7 +366,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
   (beginning-of-buffer)
   )
 
-(defun edict-colorit-match ()
+(defun dictem-colorit-match ()
   (interactive)
   (let ((regexp1 "\"[^\"\n]*\"") (regexp2 "[^ \n][^ \n]*"))
     (beginning-of-buffer)
@@ -375,9 +375,9 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	  (link-create-link
 	   (match-beginning 0)
 	   (match-end 0)
-	   'edict-reference-m1-face
-	   'edict-new-search
-	   (edict-replace-spaces
+	   'dictem-reference-m1-face
+	   'dictem-new-search
+	   (dictem-replace-spaces
 	    (buffer-substring-no-properties
 	     (+ (match-beginning 0) 1)
 	     (- (match-end 0) 1)))
@@ -396,9 +396,9 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	    (link-create-link
 	     (match-beginning 0)
 	     (match-end 0)
-	     'edict-reference-m2-face
-	     'edict-new-search
-	     (edict-replace-spaces
+	     'dictem-reference-m2-face
+	     'dictem-new-search
+	     (dictem-replace-spaces
 	      (buffer-substring-no-properties
 	       (match-beginning 0)
 	       (match-end 0)))
@@ -411,17 +411,17 @@ link.  Upon clicking the `function' is called with `data' as argument."
   (beginning-of-buffer)
   )
 
-(defcustom edict-mode-hook
+(defcustom dictem-mode-hook
   nil
-  "Hook run in edict mode buffers.")
+  "Hook run in dictem mode buffers.")
 
-(defun edict-mode ()
+(defun dictem-mode ()
   "This is a mode for dict client implementing
 the protocol defined in RFC 2229.
 
 The default key bindings:
 
-  q         close the edict buffer
+  q         close the dictem buffer
   h         display the help information
 
   s         make a new SEARCH, i.e. ask for a database, strategy and query
@@ -441,146 +441,146 @@ The default key bindings:
 
   (kill-all-local-variables)
   (buffer-disable-undo)
-  (use-local-map edict-mode-map)
-  (setq major-mode 'edict-mode)
-  (setq mode-name "EDict")
+  (use-local-map dictem-mode-map)
+  (setq major-mode 'dictem-mode)
+  (setq mode-name "dictem")
 
 ;  (toggle-read-only t)
 
-  (add-hook 'kill-buffer-hook 'edict-close t t)
-  (run-hooks 'edict-mode-hook)
+  (add-hook 'kill-buffer-hook 'dictem-close t t)
+  (run-hooks 'dictem-mode-hook)
   )
 
-(defvar edict-window-configuration
+(defvar dictem-window-configuration
   nil
   "The window configuration to be restored upon closing the buffer")
 
-(defvar edict-selected-window
+(defvar dictem-selected-window
   nil
   "The currently selected window")
 
-(defun edict ()
-  "Create a new edict buffer and install edict-mode"
+(defun dictem ()
+  "Create a new dictem buffer and install dictem-mode"
   (interactive)
 
   (let (
-	(buffer (generate-new-buffer "*Edict buffer*"))
+	(buffer (generate-new-buffer "*dictem buffer*"))
 	(window-configuration (current-window-configuration))
 	(selected-window (frame-selected-window))
 	)
     (switch-to-buffer-other-window buffer)
-    (edict-mode)
+    (dictem-mode)
 
-    (make-local-variable 'edict-window-configuration)
-    (make-local-variable 'edict-selected-window)
-    (setq edict-window-configuration window-configuration)
-    (setq edict-selected-window selected-window)
+    (make-local-variable 'dictem-window-configuration)
+    (make-local-variable 'dictem-selected-window)
+    (setq dictem-window-configuration window-configuration)
+    (setq dictem-selected-window selected-window)
     )
   )
 
-;(unless edict-mode-map
-(setq edict-mode-map (make-sparse-keymap))
-(suppress-keymap edict-mode-map)
+;(unless dictem-mode-map
+(setq dictem-mode-map (make-sparse-keymap))
+(suppress-keymap dictem-mode-map)
 
-(define-key edict-mode-map "q"
-  'edict-close)
+(define-key dictem-mode-map "q"
+  'dictem-close)
 
-(define-key edict-mode-map "h"
-  'edict-help)
+(define-key dictem-mode-map "h"
+  'dictem-help)
 
-(define-key edict-mode-map [mouse-2]
-  'edict-define-on-click)
+(define-key dictem-mode-map [mouse-2]
+  'dictem-define-on-click)
 
-(define-key edict-mode-map [C-down-mouse-2]
-  'edict-define-with-db-on-click)
+(define-key dictem-mode-map [C-down-mouse-2]
+  'dictem-define-with-db-on-click)
 
 ; SEARCH = MATCH + DEFINE
-(define-key edict-mode-map "s"
+(define-key dictem-mode-map "s"
   '(lambda ()
      (interactive)
-     (edict-search
-      (edict-select-database)
-      (edict-select-strategy)
-      (edict-read-query)
-      'edict-search-base
+     (dictem-search
+      (dictem-select-database)
+      (dictem-select-strategy)
+      (dictem-read-query)
+      'dictem-search-base
       )
      )
   )
 
 ; MATCH
-(define-key edict-mode-map "m"
+(define-key dictem-mode-map "m"
   '(lambda ()
      (interactive)
-     (edict-search
-      (edict-select-database)
-      (edict-select-strategy)
-      (edict-read-query)
-      'edict-match-base
+     (dictem-search
+      (dictem-select-database)
+      (dictem-select-strategy)
+      (dictem-read-query)
+      'dictem-match-base
       )
      )
   )
 
 ; DEFINE
-(define-key edict-mode-map "d"
+(define-key dictem-mode-map "d"
   '(lambda ()
      (interactive)
-     (edict-search
-      (edict-select-database)
+     (dictem-search
+      (dictem-select-database)
       nil
-      (edict-read-query)
-      'edict-define-base
+      (dictem-read-query)
+      'dictem-define-base
       )
      )
   )
 
 ; DEFINE for the selected region
-(define-key edict-mode-map " "
+(define-key dictem-mode-map " "
   '(lambda ()
      (interactive)
-     (edict-search
+     (dictem-search
       "*"
       nil
       (thing-at-point 'word)
-      'edict-define-base
+      'dictem-define-base
       )
      )
   )
 
 ; DEFINE for the selected region
-(define-key edict-mode-map [C-SPC]
+(define-key dictem-mode-map [C-SPC]
   '(lambda ()
      (interactive)
-     (edict-search
-      (edict-select-database edict-last-database)
+     (dictem-search
+      (dictem-select-database dictem-last-database)
       nil
       (thing-at-point 'word)
-      'edict-define-base
+      'dictem-define-base
       )
      )
   )
 
-;  (link-initialize-keymap edict-mode-map)
+;  (link-initialize-keymap dictem-mode-map)
 
-(defun edict-mode-p ()
-  "Return non-nil if current buffer has edict-mode"
-  (eq major-mode 'edict-mode))
+(defun dictem-mode-p ()
+  "Return non-nil if current buffer has dictem-mode"
+  (eq major-mode 'dictem-mode))
 
-(defun edict-ensure-buffer ()
-  "If current buffer is not a edict buffer, create a new one."
-  (unless (edict-mode-p)
-    (edict)
+(defun dictem-ensure-buffer ()
+  "If current buffer is not a dictem buffer, create a new one."
+  (unless (dictem-mode-p)
+    (dictem)
     )
   )
 
-(defun edict-close ()
-  "Close the current edict buffer"
+(defun dictem-close ()
+  "Close the current dictem buffer"
   (interactive)
 
-  (if (eq major-mode 'edict-mode)
+  (if (eq major-mode 'dictem-mode)
       (progn
 	(setq major-mode nil)
-	(let ((configuration edict-window-configuration)
-	      (selected-window edict-selected-window))
+	(let ((configuration dictem-window-configuration)
+	      (selected-window dictem-selected-window))
 	  (kill-buffer (current-buffer))
 	  (if (window-live-p selected-window)
 	      (progn
@@ -591,48 +591,48 @@ The default key bindings:
     )
   )
 
-(defun edict-search-base (database query strategy)
-  "Edict search: MATCH + DEFINE"
+(defun dictem-search-base (database query strategy)
+  "dictem search: MATCH + DEFINE"
   (interactive)
 
   (call-process
-   edict-client-prog nil (current-buffer) nil
+   dictem-client-prog nil (current-buffer) nil
    "-P" "-" "-d" database "-s" strategy
-   "-h" edict-server "-p" edict-port
+   "-h" dictem-server "-p" dictem-port
    query
    )
-  (edict-colorit-define)
+  (dictem-colorit-define)
   )
 
-(defun edict-define-base (database query strategy)
-  "Edict search: DEFINE"
+(defun dictem-define-base (database query strategy)
+  "dictem search: DEFINE"
   (interactive)
 
   (call-process
-   edict-client-prog nil (current-buffer) nil
+   dictem-client-prog nil (current-buffer) nil
    "-P" "-" "-d" database
-   "-h" edict-server "-p" edict-port
+   "-h" dictem-server "-p" dictem-port
    query
    )
-  (edict-colorit-define)
+  (dictem-colorit-define)
   )
 
-(defun edict-match-base (database query strategy)
-  "Edict search: MATCH"
+(defun dictem-match-base (database query strategy)
+  "dictem search: MATCH"
   (interactive)
 
   (call-process
-   edict-client-prog nil (current-buffer) nil
+   dictem-client-prog nil (current-buffer) nil
    "-P" "-" "-d" database "-s" strategy
-   "-h" edict-server "-p" edict-port "-m"
+   "-h" dictem-server "-p" dictem-port "-m"
    query
    )
-  (edict-colorit-match)
+  (dictem-colorit-match)
   )
 
-; search type may be "", 'edict-define or 'edict-match
-(defun edict-search (database strategy query search-fun)
-  "Creates new *Edict* buffer and run search-fun"
+; search type may be "", 'dictem-define or 'dictem-match
+(defun dictem-search (database strategy query search-fun)
+  "Creates new *dictem* buffer and run search-fun"
   (interactive)
 
   (let ((coding-system nil))
@@ -644,7 +644,7 @@ The default key bindings:
 	  (coding-system-for-read coding-system)
 	  (coding-system-for-write coding-system)
 	  )
-      (edict)
+      (dictem)
       (funcall search-fun database query strategy)
       (beginning-of-buffer)
       )

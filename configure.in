@@ -1,4 +1,4 @@
-dnl Process this file with autoconf to produce a configure script for edict.
+dnl Process this file with autoconf to produce a configure script for dictem.
 dnl
 dnl Created: Mon Oct 20 17:16:37 2003 by Aleksey Cheusov <vle@gmx.net>
 dnl Copyright 2003 Aleksey Cheusov <vle@gmx.net>
@@ -17,26 +17,26 @@ dnl You should have received a copy of the GNU General Public License along
 dnl with this program; if not, write to the Free Software Foundation, Inc.,
 dnl 675 Mass Ave, Cambridge, MA 02139, USA.
 dnl
-dnl $Id: configure.in,v 1.1 2003-10-22 03:24:13 cheusov Exp $
+dnl $Id: configure.in,v 1.2 2004-01-07 16:00:06 cheusov Exp $
 dnl
 
 define(VER, "0.0.1")
 
-AC_INIT(edict, VER, [vle@gmx.net])
-AM_INIT_AUTOMAKE(edict, VER)
+AC_INIT(dictem, VER, [vle@gmx.net])
+AM_INIT_AUTOMAKE(dictem, VER)
 AM_SANITY_CHECK
 AC_PREREQ(2.53)
-AC_REVISION($Revision: 1.1 $)
+AC_REVISION($Revision: 1.2 $)
 
-#AC_CONFIG_SRCDIR([edict.el])
+#AC_CONFIG_SRCDIR([dictem.el])
 
-echo Configuring for edict
+echo Configuring for dictem
 echo .
 
 AM_PATH_LISPDIR
 
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([edict], [chmod +x edict])
+AC_CONFIG_FILES([dictem], [chmod +x dictem])
 
 AC_OUTPUT
 
