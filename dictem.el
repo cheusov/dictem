@@ -250,6 +250,17 @@ by functions run from dictem-postprocess-each-definition-hook.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;        Functions         ;;;;;;
 
+(defmacro save-dictem (&rest funs)
+  `(let ((dictem-port                    "2628")
+	 (dictem-server                  nil)
+	 (dictem-database-alist          nil)
+	 (dictem-strategy-alist          nil)
+	 (dictem-use-user-databases-only nil)
+	 (dictem-user-databases-alist    nil)
+	 )
+     (progn ,@funs)
+     ))
+
 (defun dictem-client-text ()
   "Returns a portion of text sent to the server for identifying a client"
   (concat "dictem " dictem-version ", DICT client for emacs"))
@@ -347,7 +358,7 @@ by functions run from dictem-postprocess-each-definition-hook.")
 	  "-d" (if database database "*")
 	  "-s" (if strategy strategy dictem-default-strategy)
 	  "-h" (if server server dictem-server)
-	  "-p" (if port port dictem-port)
+	  "-p" (dictem-get-port port)
 	  "--client" (dictem-client-text)
 	  query)))
     (cond
@@ -378,7 +389,7 @@ and returns alist containing strategies and their descriptions"
 	  dictem-temp-buffer-name nil
 	  "-P" "-" "-S"
 	  "-h" (if server server dictem-server)
-	  "-p" (if port port dictem-port)
+	  "-p" (dictem-get-port port)
 	  "--client" (dictem-client-text))
 	 ))
     (cond
@@ -415,7 +426,7 @@ and returns alist containing database names and descriptions"
 	  dictem-temp-buffer-name nil
 	  "-P" "-" "-D"
 	  "-h" (if server server dictem-server)
-	  "-p" (if port port dictem-port)
+	  "-p" (dictem-get-port port)
 	  "--client" (dictem-client-text))
 	 ))
     (cond
@@ -512,13 +523,14 @@ and returns alist containing database names and descriptions"
 	(case-fold-search nil))
     (replace-match NEWTEXT FIXEDCASE LITERAL STRING SUBEXP)))
 
-(defun dictem-get-port ()
-  (cond
-   ((stringp dictem-port) dictem-port)
-   ((numberp dictem-port) (number-to-string dictem-port))
-   (t (error "The value of dictem-port variable should be \
+(defun dictem-get-port (&optional port)
+  (let ((p (if port port dictem-port)))
+    (cond
+     ((stringp p) p)
+     ((numberp p) (number-to-string p))
+     (t (error "The value of dictem-port variable should be \
 either a string or a number"))
-   ))
+     )))
 
 (defun dictem-get-server ()
   (cond
@@ -536,19 +548,24 @@ either a string or a number"))
   "Obtain strategy ALIST from a DICT server
 and sets dictem-strategy-alist variable."
   (interactive)
-  (setq dictem-strategy-alist (dictem-get-strategies server port)))
+  (setq dictem-strategy-alist (dictem-get-strategies
+			       server
+			       (dictem-get-port port))))
 
 (defun dictem-initialize-databases-alist (&optional server port)
   "Obtain database ALIST from a DICT server
 and sets dictem-database-alist variable."
   (interactive)
-  (setq dictem-database-alist (dictem-get-databases server port)))
+  (setq dictem-database-alist (dictem-get-databases
+			       server
+			       (dictem-get-port port))))
 
 (defun dictem-initialize ()
   "Initialize dictem"
-  (dictem-initialize-databases-alist)
-  (dictem-initialize-strategies-alist)
-  )
+  (let ((dbs (dictem-initialize-databases-alist)))
+    (if (dictem-error-p dbs)
+	dbs
+      (dictem-initialize-strategies-alist))))
 
 ;;; Functions related to Minibuffer ;;;;
 
@@ -556,6 +573,8 @@ and sets dictem-database-alist variable."
   "Switches to minibuffer and ask the user
 to enter a search strategy."
   (interactive)
+  (if (dictem-error-p dictem-strategy-alist)
+      (error "A list of strategies was not initialized properly"))
   (dictem-select
    "strategy"
    (dictem-prepand-special-strats
@@ -571,6 +590,8 @@ to enter a search strategy."
   "Switches to minibuffer and ask user
 to enter a database name."
   (interactive)
+  (if (dictem-error-p dictem-database-alist)
+      (error "A list of databases was not initialized properly"))
   (let* ((dbs (dictem-remove-value-from-alist dictem-database-alist))
 	 (dbs2 (if user-dbs
 		   (if dictem-use-user-databases-only
@@ -659,7 +680,7 @@ to enter a database name."
   "Returns dict:// URL"
   (concat
    "dict://" host ":"
-   (if port port "2628")
+   (if port (dictem-get-port) "2628")
    "/" (if define_or_match "d" "m") ":" query ":" database
    (if (null define_or_match) (concat ":" (if strategy strategy ".")))
    ))
@@ -934,13 +955,29 @@ to enter a database name."
 	  (setq coding-system 'utf-8))
       (let ((selected-window (frame-selected-window))
 	    (coding-system-for-read coding-system)
-	    (coding-system-for-write coding-system))
+	    (coding-system-for-write coding-system)
+	    (server dictem-server)
+	    (port   dictem-port)
+	    (dbs    dictem-database-alist)
+	    (strats dictem-strategy-alist)
+	    (user-dbs  dictem-user-databases-alist)
+	    (user-only dictem-use-user-databases-only)
+	    )
 	(dictem)
 ;	(set-buffer-file-coding-system coding-system)
 	(make-local-variable 'dictem-last-strategy)
 	(make-local-variable 'dictem-last-database)
 	(make-local-variable 'case-replace)
 	(make-local-variable 'case-fold-search)
+
+	; the following seven lines are to inherit values local to buffer
+	(set (make-local-variable 'dictem-server) server)
+	(set (make-local-variable 'dictem-port)   port)
+	(set (make-local-variable 'dictem-database-alist) dbs)
+	(set (make-local-variable 'dictem-strategy-alist) strats)
+	(set (make-local-variable 'dictem-user-databases-alist) user-dbs)
+	(set (make-local-variable 'dictem-use-user-databases-only) user-only)
+
 	(setq dictem-last-strategy strategy)
 	(setq dictem-last-database database)
 	(setq case-replace nil)
@@ -1060,10 +1097,10 @@ The default key bindings:
 (define-key dictem-mode-map "d" 'dictem-run-define)
 
 ; SHOW SERVER
-(define-key dictem-mode-map "i" 'dictem-run-show-server)
+(define-key dictem-mode-map "r" 'dictem-run-show-server)
 
 ; SHOW INFO
-(define-key dictem-mode-map "r" 'dictem-run-show-info)
+(define-key dictem-mode-map "i" 'dictem-run-show-info)
 
 ; Move point to the next DEFINITION
 (define-key dictem-mode-map "n" 'dictem-next-section)
@@ -1174,7 +1211,7 @@ show information about DICT server in it."
 show information about databases provided by DICT."
   (interactive)
   (dictem-run
-   'dictem-base-show-info))
+   'dictem-base-show-databases))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -177,25 +177,25 @@ You'll be asked for host and port.
  "\C-c\M-d"
  '(lambda ()
     (interactive)
-    (let* ((server-orig dictem-server)
-	   (port-orig   dictem-port)
-	   (dictem-server (read-string "server> "
-				       dictem-server nil "dict.org" nil))
-	   (dictem-port (read-string "port> "
-				     dictem-port nil "2628" nil)))
-      (dictem-run-define))))
+    (save-dictem
+     (let* ((dictem-server (read-string "server> "
+					dictem-server nil "dict.org" nil))
+	    (dictem-port (read-string "port> "
+				      dictem-port nil "2628" nil)))
+       (dictem-initialize)
+       (dictem-run-define)))))
 
 (global-set-key
  "\C-c\M-m"
  '(lambda ()
     (interactive)
-    (let* ((server-orig dictem-server)
-	   (port-orig   dictem-port)
-	   (dictem-server (read-string "server> "
-				       dictem-server nil "dict.org" nil))
-	   (dictem-port (read-string "port> "
-				     dictem-port nil "2628" nil)))
-      (dictem-run-match))))
+    (save-dictem
+     (let* ((dictem-server (read-string "server> "
+					dictem-server nil "dict.org" nil))
+	    (dictem-port (read-string "port> "
+				      dictem-port nil "2628" nil)))
+       (dictem-initialize)
+       (dictem-run-match)))))
 
 -------
 
@@ -246,7 +246,7 @@ It is easy to postprocess them.
 ; may create their own search scenaria. Look at this code.
 
 (dictem-run
-  'dictem-search-base
+  'dictem-base-search
   "gcide"
   "apple"
   "lev")
