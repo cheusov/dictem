@@ -1,9 +1,49 @@
-DictEm is a DICT client for GNU Emacs.
+DictEm is a dict client for GNU Emacs.
+
+It uses a console dict client (http://sf.net/projects/dict) and
+implements all functions of the client part of DICT protocol
+(RFC-2229, www.dict.org), i.e looking up words and definitions,
+obtaining information about available strategies, provided databases,
+information about DICT server etc.
+
+Unlike dictionary.el
+(http://www.myrkr.in-berlin.de/dictionary/index.html) DictEm widely
+uses autocompletion that is used for selecting dictionary and search
+strategy.  Moreover, DictEm provides several hooks which may be used
+for buffer postprocessing. For example, inbuilt hyperlinking and
+highlighting mechanism are based on this possiblity.  Another example
+is that information obtained from DICT server that is in HTML, ROFF or
+INFO format can be easily viewed by Emacs+DictEm if the user supplies
+appropriate conversion functions.  Of course DictEm can be differently
+configured for different Emacs modes (major, minor or buffer
+oriented), that allows modularized access to all data serviced by DICT
+servers. This makes it ideal tool for translating articles between a
+series of foreign languages, browsing manuals and other tasks
+depending on Emacs mode user currently works with.
+
+Additionally DictEm supports accessing so called virtual dictionaries (a set
+of dictionaries provided by DICT server that user prefers to treat as
+a single one).
+
+Yet another feature DictEm provides is a set of useful functions with
+a help of which user can extend DictEm functionality such as to define
+new search strategies or even provide new functionality such as to use
+another sources of data other than DICT servers.
+
+See below for a set of example configuration and extensions.
+
+Also DictEm uses customization mechanism provided by Emacs that helps
+Emacs users to easily configure DictEm.
 
 COPYING
 ============
 
 See the file COPYING
+
+DOWNLOAD
+========
+
+Latest sources can be downloaded from http://freshmeat.net/projects/dictem
 
 INSTALLATION
 ============
