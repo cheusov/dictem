@@ -211,6 +211,14 @@ and use only those specified in dictem-user-databases-alist variable.
 
 -------
 
+Of course, you can assign you can
+assign your own key bendings in dictem buffer
+
+(define-key dictem-mode-map [tab] 'dictem-next-link)
+(define-key dictem-mode-map [(backtab)] 'dictem-previous-link)
+
+-------
+
 You are not limited to the default DICT server only.
 The following code will allow you to access any server you want.
 You'll be asked for host and port.
