@@ -89,97 +89,38 @@ will be used by dictem-select-database"
 ;;;;;            Faces             ;;;;;
 
 (defface dictem-reference-definition-face
-  '((((type x)
-      (class color)
-      (background dark))
-     (:foreground "cyan"))
-    (((type tty)
-      (class color)
-      (background dark))
-     (:foreground "cyan"))
-    (((class color)
-      (background light))
-     (:foreground "blue"))
-    (t
-     (:underline t)))
+  '((((background light)) (:foreground "BlueSky4"))
+    (((background dark))  (:foreground "SkyBlue1")))
 
   "The face that is used for displaying a reference to
 a phrase in a DEFINE search."
   :group 'dictem-faces)
 
 (defface dictem-reference-m1-face
-  '((((type x)
-      (class color)
-      (background dark))
-     (:foreground "cyan"))
-    (((type tty)
-      (class color)
-      (background dark))
-     (:foreground "cyan"))
-    (((class color)
-      (background light))
-     (:foreground "blue"))
-    (t
-     (:underline t)))
+  '((((background light)) (:foreground "DarkSlateGray"))
+    (((background dark))  (:foreground "SkyBlue1")))
 
   "The face that is used for displaying a reference to
 a phrase in a MATCH search."
   :group 'dictem-faces)
 
 (defface dictem-reference-m2-face
-  '((((type x)
-      (class color)
-      (background dark))
-     (:foreground "green"))
-    (((type tty)
-      (class color)
-      (background dark))
-     (:foreground "cyan"))
-    (((class color)
-      (background light))
-     (:foreground "blue"))
-    (t
-     (:underline t)))
+  '((((background light)) (:foreground "BlueSky4"))
+    (((background dark))  (:bold true :foreground "LightBlue")))
 
   "The face that is used for displaying a reference to
 a single word in a MATCH search."
   :group 'dictem-faces)
 
 (defface dictem-reference-dbname-face
-  '((((type x)
-      (class color)
-      (background dark))
-     (:foreground "white"))
-    (((type tty)
-      (class color)
-      (background dark))
-     (:foreground "white"))
-    (((class color)
-      (background light))
-     (:foreground "white"))
-    (t
-     (:underline t)))
+  '((((background light)) (:foreground "Black"))
+    (((background dark))  (:bold t :foreground "White")))
 
   "The face that is used for displaying a reference to database"
   :group 'dictem-faces)
 
 (defface dictem-database-description-face
-  '((((type x)
-      (class color)
-      (background dark))
-;     (:underline t)
-     (:foreground "dark green")
-     (:weight bold)
-     )
-    (((type tty)
-      (class color)
-      (background dark))
-     (:foreground "white"))
-    (((class color)
-      (background light))
-     (:foreground "white"))
-    (t
-     (:underline t)))
+  '((t (:bold t)))
 
   "The face that is used for displaying a database description"
   :group 'dictem-faces)
