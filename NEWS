@@ -1,3 +1,35 @@
+Version 0.0.3, Tue, 14 Dec 2004 20:43:34 +0200
+
+  DictEm has been ported to XEmacs
+
+  Virtual dictionaries can access databases from different DICT servers
+
+    (setq dictem-user-databases-alist
+      '(("_translate" . ("dict://mova.org/mueller7"
+                         "dict://dict.org:2628/web1913"))
+        ("_ru-ru" . ("beslov" "dict://mova.org:2628/religion"))
+        ))
+
+    See README file for more information.
+
+  The following commands can be run non-interactively.
+     `dictem-run-show-info', `dictem-run-search' and
+     `dictem-run-define' 
+
+  `dictem-next-link' and `dictem-previous-link' skip hyperlinks on
+    database names.
+
+  Renamed: `dictem-url'       to `dictem-make-url'
+           `link-create-link' to `dictem-create-link'
+
+  DictEm's prompt looks like this: `<string> [<default>]:'
+
+  New default faces
+
+  Lots of README updates.
+
+  A few fixes
+
 Version 0.0.2, Tue, 30 Nov 2004 16:40:00 +0200
 
   added: new function `dictem-kill-all-buffers' killing all dictem buffers.
