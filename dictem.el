@@ -446,11 +446,12 @@ The default key bindings:
   i         ask for a database and show information about it
   n         move point to the next definition
   p         move point to the previous definition
+  SPC       scroll dictem buffer up
+  DEL       scroll dictem buffer down
   mouse-2   visit a link (DEFINE using all dictionaries)
   C-mouse-2 visit a link (DEFINE using asked dictionaries)
-
-  SPC       search the marked region (DEFINE) in all dictionaries
 "
+;  SPC       search the marked region (DEFINE) in all dictionaries
 
   (interactive)
 
@@ -519,25 +520,31 @@ The default key bindings:
 ; Move point to the previous DEFINITION
 (define-key dictem-mode-map "p" 'dictem-previous-section)
 
-; DEFINE for the selected region
-(define-key dictem-mode-map " "
-  '(lambda ()
-    (interactive)
-    (dictem-run
-     'dictem-define-base
-     "*"
-     (thing-at-point 'word)
-     nil)))
+; Scroll up dictem buffer
+(define-key dictem-mode-map " " 'scroll-up)
+
+; Scroll down dictem buffer
+(define-key dictem-mode-map "\177" 'scroll-down)
 
 ; DEFINE for the selected region
-(define-key dictem-mode-map [C-SPC]
-  '(lambda ()
-    (interactive)
-    (dictem-run
-     'dictem-define-base
-     (dictem-select-database dictem-last-database)
-     (thing-at-point 'word)
-     nil)))
+;(define-key dictem-mode-map " "
+;  '(lambda ()
+;    (interactive)
+;    (dictem-run
+;     'dictem-define-base
+;     "*"
+;     (thing-at-point 'word)
+;     nil)))
+
+; DEFINE for the selected region
+;(define-key dictem-mode-map [C-SPC]
+;  '(lambda ()
+;    (interactive)
+;    (dictem-run
+;     'dictem-define-base
+;     (dictem-select-database dictem-last-database)
+;     (thing-at-point 'word)
+;     nil)))
 
 ;  (link-initialize-keymap dictem-mode-map)
 
@@ -578,33 +585,44 @@ The default key bindings:
 creates new *dictem* buffer and
 shows matches in it."
   (interactive)
-  (dictem-run
-   'dictem-match-base
-   (dictem-select-database dictem-last-database)
-   (dictem-read-query (thing-at-point 'word))
-   (dictem-select-strategy)))
+  (let
+      ((query  (dictem-read-query (thing-at-point 'word)))
+       (dbname (dictem-select-database dictem-last-database))
+       (strat  (dictem-select-strategy)))
+    (dictem-run
+     'dictem-match-base
+     dbname
+     query
+     strat)))
 
 (defun dictem-run-define ()
   "Asks a user about database name and query,
 creates new *dictem* buffer and
 shows definitions in it."
   (interactive)
-  (dictem-run
-   'dictem-define-base
-   (dictem-select-database dictem-last-database)
-   (dictem-read-query (thing-at-point 'word))
-   nil))
+  (let
+      ((query  (dictem-read-query (thing-at-point 'word)))
+       (dbname (dictem-select-database dictem-last-database)))
+    (dictem-run
+     'dictem-define-base
+     dbname
+     query
+     nil)))
 
 (defun dictem-run-search ()
   "Asks a user about database name, search strategy and query,
 creates new *dictem* buffer and
 shows definitions in it."
   (interactive)
-  (dictem-run
-   'dictem-search-base
-   (dictem-select-database dictem-last-database)
-   (dictem-read-query (thing-at-point 'word))
-   (dictem-select-strategy)))
+  (let
+      ((query  (dictem-read-query (thing-at-point 'word)))
+       (dbname (dictem-select-database dictem-last-database))
+       (strat  (dictem-select-strategy)))
+    (dictem-run
+     'dictem-search-base
+     dbname
+     query
+     strat)))
 
 (defun dictem-run-dbinfo ()
   "Asks a user about database name

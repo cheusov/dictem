@@ -110,7 +110,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	       'link t
 	       'link-data data
 	       'link-function function)
-	  ))
+	 ))
     (remove-text-properties start end properties)
     (add-text-properties start end properties)))
 
