@@ -1,15 +1,18 @@
 DictEm is a DICT client for GNU Emacs.
 
+COPYING
+============
+
 INSTALLATION
 ============
 
-* Uncompress dictem tarball like this
+* In order to uncompress dictem tarball run the following.
 
   tar xfv dictem-x.y.z.tar.gz
 
-  If you read this file, you probably already did this.
+  If you read this file, you probably have already done this.
 
-* Change your current directory to dictem's one
+* Change your current directory to dictem.
 
   cd dictem-x.y.z
 
@@ -34,14 +37,14 @@ INSTALLATION
 
   make install
 
-  to install dictem to your system.
-  Be sure, you have necessary permissions to install dictem to
+  for installing dictem into the system.
+  Make sure that you have necessary permissions to install dictem to
   system directories.
 
-* Be sure that DICT client named dict available
-  at http://sf.net/projects/dict
-  is available on your system.
-  DictEm uses it for accessing DICT server.
+* Make sure that DICT client named dict
+  (available at http://sf.net/projects/dict)
+  is installed on your system.
+  Console dict client is used by DictEm for accessing the DICT server.
   dict-1.9.14 or later is recomended.
 
 REPORTING BUGS
@@ -62,7 +65,7 @@ Customization group
 -------------------
 
 Take note, that DictEm defines customization group "dictem".
-So, it may easier for you to customize DictEm by running
+So, it may be easier for you to customize DictEm by running
 M-x customize-group <RET> dictem <RET>
 
 Manual Configuration
@@ -82,7 +85,7 @@ The easiest configuration of dictem may look like this
 (dictem-initialize-strategies-alist)
 (dictem-initialize-databases-alist)
 
-; Creating a hot keys for accessing DICT server
+; Creating hot keys for accessing DICT server
 
 ; SEARCH = MATCH + DEFINE
 (global-set-key "\C-cs" 'dictem-run-search)
@@ -101,29 +104,34 @@ The easiest configuration of dictem may look like this
 
 -------
 
-There are a few function that can make dictem
-a bit nicer and more functional. All they should
-be added to the special hooks like this.
-
-; For creating hyperlinks in dictem buffer
-; containing an information about database.
-; Click on them with mouse-2
-(add-hook 'dictem-postprocess-dbinfo-hook
-	  'dictem-postprocess-definition-hyperlinks)
+There are a few functions that can make dictem look
+a bit nicer and be more functional. All of them should
+be added to special hooks like the following.
 
 ; For creating hyperlinks on database names
 ; and found matches.
+; Click on them with mouse-2
 (add-hook 'dictem-postprocess-match-hook
 	  'dictem-postprocess-match)
 
-; For highlighting the separator between definitions found.
+; For highlighting the separator between the definitions found.
 ; This also creates hyperlink on database names.
 (add-hook 'dictem-postprocess-definition-hook 
 	  'dictem-postprocess-definition-separator)
 
+; For creating hyperlinks in dictem buffer
+; that contains definitions.
+(add-hook 'dictem-postprocess-definition-hook 
+	  'dictem-postprocess-definition-hyperlinks)
+
+; For creating hyperlinks in dictem buffer
+; that contains information about a database.
+(add-hook 'dictem-postprocess-dbinfo-hook
+	  'dictem-postprocess-definition-hyperlinks)
+
 -------
 
-If you want to combine some databases to you own "virtual" dictionary,
+If you want to combine some databases in you own "virtual" dictionary,
 create them like this
 
 (setq dictem-user-databases-alist
@@ -133,16 +141,47 @@ create them like this
      ("_unidoc" . ("susv3" "man" "info" "howto" "rfc"))
      ))
 
-As a result four new special databases will appear when
+As a result four new special database collections will be created
+and new names will appear when
 dictem-run function will ask you about database name.
 
 -------
 
-If your DICT server supports too many databases most of which
-are not interesting for you, you can disable them
+If your DICT server provides too many databases most of which
+are of no interest for you, you can disable them
 and use only those specified in dictem-user-databases-alist variable. 
 
 (setq dictem-use-user-databases-only t)
+
+-------
+
+You are not limited to the default DICT server only.
+The following code will allow you to access any server you want.
+You'll be asked for host and port.
+
+(global-set-key
+ "\C-c\M-d"
+ '(lambda ()
+    (interactive)
+    (let* ((server-orig dictem-server)
+	   (port-orig   dictem-port)
+	   (dictem-server (read-string "server> "
+				       dictem-server nil "dict.org" nil))
+	   (dictem-port (read-string "port> "
+				     dictem-port nil "2628" nil)))
+      (dictem-run-define))))
+
+(global-set-key
+ "\C-c\M-m"
+ '(lambda ()
+    (interactive)
+    (let* ((server-orig dictem-server)
+	   (port-orig   dictem-port)
+	   (dictem-server (read-string "server> "
+				       dictem-server nil "dict.org" nil))
+	   (dictem-port (read-string "port> "
+				     dictem-port nil "2628" nil)))
+      (dictem-run-match))))
 
 -------
 
@@ -151,9 +190,10 @@ for example, HTML, MIME, DICF or ROFF formats.
 It is easy to postprocess them.
 
 ; All functions from dictem-postprocess-each-definition-hook
-; will be run for each definition which in turn will be narrowed
-; Current database name is kept in dictem-current-dbname variable
-; For this to wark run the following.
+; will be run for each definition which in turn will be narrowed.
+; Current database name is kept in dictem-current-dbname variable.
+; The following code demonstrates how to highlight SUSV3 and ROFF
+; definitions.
 (add-hook 'dictem-postprocess-definition-hook
 	  'dictem-postprocess-each-definition)
 
@@ -188,7 +228,7 @@ It is easy to postprocess them.
 
 -------
 
-; By using function dictem-run more advanced ELISP programmers
+; By using dictem-run function more advanced ELISP programmers
 ; may create their own search scenaria. Look at this code.
 
 (dictem-run
@@ -205,13 +245,20 @@ It is easy to postprocess them.
       nil ))
   nil nil)
 
-(let ((_query (dictem-read-query (thing-at-point 'word))))
+(let ((query (dictem-read-query (thing-at-point 'word))))
   (dictem-run
    `((lambda (a b c)
        (dictem-match-base
 	'("gcide" "wn")
-	_query "exact"))
+	,query "exact"))
      (lambda (a b c)
        (dictem-search-base
 	'("mueller7" "korolew_en-ru")
-	_query "word")))))
+	,query "word")))))
+
+-------
+
+If you have read to this point and all the examples above seem easy
+for you, you are probably a LISP Guru.
+So, I have nothing more to tell you ;-)
+Feel free to inspect the code, and I hope you found DictEm useful.
