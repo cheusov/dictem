@@ -76,6 +76,27 @@ a single word in a MATCH search."
   "The face that is used for displaying a reference to database"
   :group 'dictem-faces)
 
+(defface dictem-database-description-face
+  '((((type x)
+      (class color)
+      (background dark))
+;     (:underline t)
+     (:foreground "dark green")
+     (:weight bold)
+     )
+    (((type tty)
+      (class color)
+      (background dark))
+     (:foreground "white"))
+    (((class color)
+      (background light))
+     (:foreground "white"))
+    (t
+     (:underline t)))
+
+  "The face that is used for displaying a database description"
+  :group 'dictem-faces)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;      Low Level Functions     ;;;;;
 
@@ -96,20 +117,26 @@ link.  Upon clicking the `function' is called with `data' as argument."
 ;;;;;;;   Coloring Functions     ;;;;;;;
 
 (defun dictem-postprocess-definition-separator ()
-  (interactive)
   (save-excursion
-    (let ((regexp "^\\(From\\) [^\n]+\\[\\([^\n]+\\)\\]"))
+    (beginning-of-buffer)
+    (let ((regexp "^\\(From\\)\\( [^\n]+\\)\\(\\[[^\n]+\\]\\)"))
 
       (while (search-forward-regexp regexp nil t)
 	(let ((beg (match-beginning 1))
 	      (end (match-end 1))
-	      (beg-dbname (match-beginning 2))
-	      (end-dbname (match-end 2))
+	      (beg-dbdescr (match-beginning 2))
+	      (end-dbdescr (match-end 2))
+	      (beg-dbname (match-beginning 3))
+	      (end-dbname (match-end 3))
 	      )
-	  (put-text-property beg end 'face 'dictem-reference-dbname-face)
+	  (put-text-property beg end
+			     'face 'dictem-database-description-face)
+	  (put-text-property beg-dbdescr end-dbdescr
+			     'face 'dictem-database-description-face)
 	  (setq dictem-current-dbname
 		(dictem-replace-spaces
-		 (buffer-substring-no-properties beg-dbname end-dbname)))
+		 (buffer-substring-no-properties
+		  (+ beg-dbname 1) (- end-dbname 1))))
 	  (link-create-link
 	   beg-dbname end-dbname
 	   'dictem-reference-dbname-face
@@ -118,8 +145,8 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	))))
 
 (defun dictem-postprocess-definition-hyperlinks ()
-  (interactive)
   (save-excursion
+    (beginning-of-buffer)
     (let ((regexp "[{]\\([^{}\n]+\\)[}]\\|^From [^\n]+\\[\\([^\n]+\\)\\]"))
 
       (while (search-forward-regexp regexp nil t)
@@ -144,10 +171,11 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	  )))))
 
 (defun dictem-postprocess-match ()
-  (interactive)
+  (goto-char (point-min))
   (let ((last-database dictem-last-database)
 	(regexp "\\(\"[^\"\n]+\"\\)\\|\\([^ \"\n]+\\)"))
 
+;    (forward-line-nomark)
     (while (search-forward-regexp regexp nil t)
       (let* ((beg (match-beginning 0))
 	     (end (match-end 0))
@@ -230,6 +258,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	     dictem-postprocess-definition-hyperlinks))
 
 (defun dictem-postprocess-each-definition ()
+  (goto-char (point-min))
   (let ((regexp-from-dbname "^From [^\n]+\\[\\([^\n]+\\)\\]")
 	(beg nil)
 	(end (make-marker))
@@ -248,7 +277,6 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 	    (save-excursion
 	      (narrow-to-region beg (marker-position end))
-	      (goto-char beg)
 	      (run-hooks 'dictem-postprocess-each-definition-hook)
 	      (widen))
 
@@ -259,7 +287,6 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	    )
 	  (save-excursion
 	    (narrow-to-region beg (point-max))
-	    (goto-char beg)
 	    (run-hooks 'dictem-postprocess-each-definition-hook)
 	    (widen))
 	  ))))

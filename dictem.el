@@ -132,6 +132,7 @@ to enter a database name."
   "dictem search: MATCH + DEFINE"
   (interactive)
 
+  (let ((ex_status -1))
   (defun run-dict-search (database)
     (let* ((beg (point))
 	   (exit_status
@@ -143,27 +144,32 @@ to enter a database name."
 	     query)))
 
       (cond ((= 0 exit_status)
+	     (setq ex_status 0)
 	     (save-excursion
 	       (narrow-to-region beg (point))
-	       (goto-char beg)
 	       (run-hooks 'dictem-postprocess-definition-hook)
 	       (widen)))
 	    ((= 21 exit_status)
+	     (if (= -1 ex_status)
+		 (setq ex_status exit_status))
 	     (save-excursion
 	       (narrow-to-region beg (point))
-	       (goto-char beg)
-	       (forward-line-nomark)
 	       (run-hooks 'dictem-postprocess-match-hook)
-	       (widen))))
+	       (widen)))
+	    (t
+	     (if (= -1 ex_status)
+		 (setq ex_status exit_status))
+	     (kill-region beg (point))))
       (setq dictem-last-database database)
-      exit_status))
+      ex_status))
 
-  (dictem-call-dict-internal 'run-dict-search databases))
+  (dictem-call-dict-internal 'run-dict-search databases)))
 
 (defun dictem-define-base (databases query strategy)
   "dictem search: DEFINE"
   (interactive)
 
+  (let ((ex_status -1))
   (defun run-dict-define (database)
     (let* ((beg (point))
 	   (exit_status
@@ -177,24 +183,27 @@ to enter a database name."
       (cond ((= 0 exit_status)
 	     (save-excursion
 	       (narrow-to-region beg (point))
-	       (goto-char beg)
 	       (run-hooks 'dictem-postprocess-definition-hook)
 	       (widen)))
 	    ((= 21 exit_status)
 	     (save-excursion
 	       (narrow-to-region beg (point))
-	       (goto-char beg)
 	       (run-hooks 'dictem-postprocess-match-hook)
-	       (widen))))
+	       (widen)))
+	    (t
+	     (if (= -1 ex_status)
+		 (setq ex_status exit_status))
+	     (kill-region beg (point))))
       (setq dictem-last-database database)
-      exit_status))
+      ex_status))
 
-  (dictem-call-dict-internal 'run-dict-define databases))
+  (dictem-call-dict-internal 'run-dict-define databases)))
 
 (defun dictem-match-base (databases query strategy)
   "dictem search: MATCH"
   (interactive)
 
+  (let ((ex_status -1))
   (defun run-dict-match (database)
     (let* ((beg (point))
 	   (exit_status
@@ -207,19 +216,22 @@ to enter a database name."
       (cond ((= 0 exit_status)
 	     (save-excursion
 	       (narrow-to-region beg (point))
-	       (goto-char beg)
 	       (run-hooks 'dictem-postprocess-match-hook)
 	       (widen)))
-	    )
+	    (t
+	     (if (= -1 ex_status)
+		 (setq ex_status exit_status))
+	     (kill-region beg (point))))
       (setq dictem-last-database database)
-      exit_status))
+      ex_status))
 
-  (dictem-call-dict-internal 'run-dict-match databases))
+  (dictem-call-dict-internal 'run-dict-match databases)))
 
 (defun dictem-dbinfo-base (databases b c)
   "dictem: SHOW INFO command"
   (interactive)
 
+  (let ((ex_status -1))
   (defun run-dict-dbinfo (database)
     (let* ((beg (point))
 	   (exit_status
@@ -232,13 +244,16 @@ to enter a database name."
       (cond ((= 0 exit_status)
 	     (save-excursion
 	       (narrow-to-region beg (point))
-	       (goto-char beg)
 	       (run-hooks 'dictem-postprocess-dbinfo-hook)
-	       (widen))))
+	       (widen)))
+	    (t
+	     (if (= -1 ex_status)
+		 (setq ex_status exit_status))
+	     (kill-region beg (point))))
       (setq dictem-last-database database)
-      exit_status))
+      ex_status))
 
-  (dictem-call-dict-internal 'run-dict-dbinfo databases))
+  (dictem-call-dict-internal 'run-dict-dbinfo databases)))
 
 (defun dictem-showserver-base (a b c)
   "dictem: SHOW SERVER command"
@@ -255,51 +270,78 @@ to enter a database name."
     (cond ((= 0 exit_status)
 	   (save-excursion
 	     (narrow-to-region beg (point))
-	     (goto-char beg)
 	     (run-hooks 'dictem-postprocess-showserver-hook)
 	     (widen))))
     (setq dictem-last-database database)
     exit_status))
 
+(defun dictem-error-message (exit_status)
+  (cond
+   ((= exit_status 0) "All is fine")
+   ((= exit_status 20) "No matches found")
+   ((= exit_status 21) "Approximate matches found")
+   ((= exit_status 22) "No databases available")
+   ((= exit_status 23) "No strategies available")
+
+   ((= exit_status 30) "Unexpected response code from server")
+   ((= exit_status 31) "Server is temporarily unavailable")
+   ((= exit_status 32) "Server is shutting down")
+   ((= exit_status 33) "Syntax error, command not recognized")
+   ((= exit_status 34) "Syntax error, illegal parameters")
+   ((= exit_status 35) "Command not implemented")
+   ((= exit_status 36) "Command parameter not implemented")
+   ((= exit_status 37) "Access denied")
+   ((= exit_status 38) "Authentication failed")
+   ((= exit_status 39) "Invalid database name")
+   ((= exit_status 40) "Invalid strategy name")
+   ((= exit_status 41) "Connection to server failed")
+   (t                  (concat "Ooops!" (number-to-string exit_status)))
+   ))
+
 (defun dictem-run (search-fun &optional database query strategy)
   "Creates new *dictem* buffer and run search-fun"
   (interactive)
 
-  (defun run-functions (fun database query strategy)
-    (cond
-     ((functionp fun)
-      (funcall fun database query strategy))
-     ((and (consp fun) (functionp (car fun)))
-      (funcall (car fun) database query strategy)
-      (run-functions (cdr fun) database query strategy))
-     ((null fun)
-      t)
-     (t
-      (error "wrong argument type"))
-     ))
+  (let ((ex_status -1))
 
-  (let ((coding-system nil))
-    (if (and (functionp 'coding-system-list)
-	     (member 'utf-8 (coding-system-list)))
- 	(setq coding-system 'utf-8))
-    (let (
-	  (selected-window (frame-selected-window))
-	  (coding-system-for-read coding-system)
-	  (coding-system-for-write coding-system)
-	  )
-      (dictem)
-      (make-local-variable 'dictem-last-strategy)
-      (make-local-variable 'dictem-last-database)
-      (make-local-variable 'case-replace)
-      (make-local-variable 'case-fold-search)
-      (setq dictem-last-strategy strategy)
-      (setq dictem-last-database database)
-      (setq case-replace nil)
-      (setq case-fold-search nil)
-      (run-functions search-fun database query strategy)
-      (beginning-of-buffer)
-      (setq buffer-read-only t)
-      )))
+    (defun run-functions (funs database query strategy)
+      (cond
+       ((functionp funs)
+	(let ((ex_st (funcall funs database query strategy)))
+	  (if (/= ex_status 0)
+	      (setq ex_status ex_st))))
+       ((and (consp funs) (functionp (car funs)))
+	(run-functions (car funs) database query strategy)
+	(run-functions (cdr funs) database query strategy))
+       ((null funs)
+	nil)
+       (t (error "wrong argument type"))
+       )
+      ex_status)
+
+    (let ((coding-system nil))
+      (if (and (functionp 'coding-system-list)
+	       (member 'utf-8 (coding-system-list)))
+	  (setq coding-system 'utf-8))
+      (let ((selected-window (frame-selected-window))
+	    (coding-system-for-read coding-system)
+	    (coding-system-for-write coding-system))
+	(dictem)
+	(make-local-variable 'dictem-last-strategy)
+	(make-local-variable 'dictem-last-database)
+	(make-local-variable 'case-replace)
+	(make-local-variable 'case-fold-search)
+	(setq dictem-last-strategy strategy)
+	(setq dictem-last-database database)
+	(setq case-replace nil)
+	(setq case-fold-search nil)
+	(run-functions search-fun database query strategy)
+	(if (and (not (equal ex_status 0)) (= (point-min) (point-max)))
+	    (insert (dictem-error-message ex_status)))
+	(beginning-of-buffer)
+	(setq buffer-read-only t)
+	ex_status
+	))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun dictem-client-text ()
