@@ -11,8 +11,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;        Main Functions        ;;;;;
 
-
-;;;;;; Functions for Initialising ;;;;;;
+;;;;;; Functions for Initializing ;;;;;;
 
 (defun dictem-set-strategies (&optional server port)
   "Obtain strategy ALIST from a DICT server
@@ -129,6 +128,7 @@ to enter a database name."
 	     dictem-client-prog nil (current-buffer) nil
 	     "-P" "-" "-d" database "-s" strategy
 	     "-h" dictem-server "-p" dictem-port
+	     "--client" (dictem-client-text)
 	     query)))
 
       (cond ((= 0 exit_status)
@@ -160,6 +160,7 @@ to enter a database name."
 	     dictem-client-prog nil (current-buffer) nil
 	     "-P" "-" "-d" database
 	     "-h" dictem-server "-p" dictem-port
+	     "--client" (dictem-client-text)
 	     query)))
 
       (cond ((= 0 exit_status)
@@ -190,6 +191,7 @@ to enter a database name."
 	     dictem-client-prog nil (current-buffer) nil
 	     "-P" "-" "-d" database "-s" strategy
 	     "-h" dictem-server "-p" dictem-port "-m"
+	     "--client" (dictem-client-text)
 	     query)))
       (cond ((= 0 exit_status)
 	     (save-excursion
@@ -213,7 +215,9 @@ to enter a database name."
 	    (call-process
 	     dictem-client-prog nil (current-buffer) nil
 	     "-P" "-" "-i" database
-	     "-h" dictem-server "-p" dictem-port)))
+	     "-h" dictem-server "-p" dictem-port
+	     "--client" (dictem-client-text)
+	     )))
       (cond ((= 0 exit_status)
 	     (save-excursion
 	       (narrow-to-region beg (point))
@@ -234,6 +238,7 @@ to enter a database name."
 	  dictem-client-prog nil (current-buffer) nil
 	  "-P" "-" "-I"
 	  "-h" dictem-server "-p" dictem-port
+	  "--client" (dictem-client-text)
 	  )))
 
     (cond ((= 0 exit_status)
@@ -279,6 +284,11 @@ to enter a database name."
       (beginning-of-buffer)
       (setq buffer-read-only t)
       )))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun dictem-client-text ()
+  "Returns a portion of text sent to the server for identifying a client"
+  (concat "dictem " dictem-version ", DICT client for emacs"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun dictem-next-section ()
@@ -498,6 +508,8 @@ show information about DICT server in it."
   (interactive)
   (dictem-run
    'dictem-showserver-base))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (easy-menu-define
  dictem-menu

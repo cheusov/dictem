@@ -49,6 +49,10 @@ dict-1.9.14 or later (or compatible) is recomented."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;           Variables          ;;;;;
 
+(defvar dictem-version
+  "0.1"
+  "DictEm version information.")
+
 (defvar dictem-strategy-alist
   '(("word"    nil)
     ("exact"     nil)
