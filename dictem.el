@@ -457,7 +457,7 @@ and returns alist containing database names and descriptions"
   (let*
       ((completion-ignore-case t)
        (str (completing-read
-	     (concat prompt " (" default "): ")
+	     (concat prompt " [" default "]: ")
 	     alist
 	     nil
 	     t
@@ -585,7 +585,7 @@ to enter a database name."
   "Switches to minibuffer and asks user to enter a query."
   (interactive)
   (read-string
-   (concat "query (" default-query "): ")
+   (concat "query [" default-query "]: ")
    nil 'dictem-query-history default-query t))
 
 
