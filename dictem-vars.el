@@ -42,7 +42,7 @@ dict-1.9.14 or later (or compatible) is recomented."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;           Variables          ;;;;;
 
-(defvar dictem-strategy-list
+(defvar dictem-strategy-alist
   '(("word"    nil)
     ("exact"     nil)
     ("prefix"    nil)
@@ -56,7 +56,7 @@ dict-1.9.14 or later (or compatible) is recomented."
 
   "ALIST of search strategies")
 
-(defvar dictem-database-list
+(defvar dictem-database-alist
   '(("elements" nil )
     ("web1913" nil )
     ("wn" nil )

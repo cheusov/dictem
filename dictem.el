@@ -16,15 +16,15 @@
 
 (defun dictem-set-strategies (&optional server port)
   "Obtain strategy ALIST from a DICT server
-and sets dictem-strategy-list variable."
+and sets dictem-strategy-alist variable."
   (interactive)
-  (setq dictem-strategy-list (dictem-get-strategies server port)))
+  (setq dictem-strategy-alist (dictem-get-strategies server port)))
 
 (defun dictem-set-databases (&optional server port)
   "Obtain database ALIST from a DICT server
-and sets dictem-database-list variable."
+and sets dictem-database-alist variable."
   (interactive)
-  (setq dictem-database-list (dictem-get-databases server port)))
+  (setq dictem-database-alist (dictem-get-databases server port)))
 
 ;;; Functions related to Minibuffer ;;;;
 
@@ -34,7 +34,7 @@ to enter a search strategy."
   (interactive)
   (dictem-select
    "strategy"
-   (dictem-prepand-special-strats dictem-strategy-list)
+   (dictem-prepand-special-strats dictem-strategy-alist)
    (if default-strat
        default-strat
      (if dictem-strategy-history
@@ -48,7 +48,7 @@ to enter a database name."
   (interactive)
   (dictem-select
    "db"
-   (dictem-prepand-special-dbs dictem-database-list)
+   (dictem-prepand-special-dbs dictem-database-alist)
    (if default-db
        default-db
      (if dictem-database-history
@@ -122,7 +122,6 @@ to enter a database name."
      query))
 
   (let ((exit_status (dictem-call-dict-internal 'run-dict-search databases)))
-    (beginning-of-buffer)
     (cond ((= 0 exit_status)
 	   (let ((dictem-current-dbname databases))
 	     (run-hooks 'dictem-postprocess-define-hook)))
@@ -143,7 +142,6 @@ to enter a database name."
      query))
 
   (let ((exit_status (dictem-call-dict-internal 'run-dict-define databases)))
-    (beginning-of-buffer)
     (cond ((= 0 exit_status)
 	   (let ((dictem-current-dbname databases))
 	     (run-hooks 'dictem-postprocess-define-hook)))
@@ -163,25 +161,24 @@ to enter a database name."
      query))
 
   (let ((exit_status (dictem-call-dict-internal 'run-dict-match databases)))
-    (beginning-of-buffer)
     (cond ((= 0 exit_status)
 	   (run-hooks 'dictem-postprocess-match-hook))
 	  )))
 
-(defun dictem-dbinfo-base (database b c)
+(defun dictem-dbinfo-base (databases b c)
   "dictem: SHOW INFO command"
   (interactive)
 
-  (let ((exit_status
-	 (call-process
-	  dictem-client-prog nil (current-buffer) nil
-	  "-P" "-" "-i" database
-	  "-h" dictem-server "-p" dictem-port
-	  )))
+  (defun run-dict-dbinfo (database)
+    (call-process
+     dictem-client-prog nil (current-buffer) nil
+     "-P" "-" "-i" database
+     "-h" dictem-server "-p" dictem-port
+     ))
 
-    (beginning-of-buffer)
+  (let ((exit_status (dictem-call-dict-internal 'run-dict-dbinfo databases)))
     (cond ((= 0 exit_status)
-	   (let ((dictem-current-dbname database))
+	   (let ((dictem-current-dbname databases))
 	     (run-hooks 'dictem-postprocess-dbinfo-hook))
 	   ))))
 
@@ -196,7 +193,6 @@ to enter a database name."
 	  "-h" dictem-server "-p" dictem-port
 	  )))
 
-    (beginning-of-buffer)
     (cond ((= 0 exit_status)
 	   (run-hooks 'dictem-postprocess-showserver-hook))
 	  )))
@@ -204,6 +200,19 @@ to enter a database name."
 (defun dictem-run (search-fun &optional database query strategy)
   "Creates new *dictem* buffer and run search-fun"
   (interactive)
+
+  (defun run-functions (fun database query strategy)
+    (cond
+     ((functionp fun)
+      (funcall fun database query strategy))
+     ((and (consp fun) (functionp (car fun)))
+      (funcall (car fun) database query strategy)
+      (run-functions (cdr fun) database query strategy))
+     ((null fun)
+      t)
+     (t
+      (error "wrong argument type"))
+     ))
 
   (let ((coding-system nil))
     (if (and (functionp 'coding-system-list)
@@ -223,7 +232,7 @@ to enter a database name."
       (setq dictem-last-database database)
       (setq case-replace nil)
       (setq case-fold-search nil)
-      (funcall search-fun database query strategy)
+      (run-functions search-fun database query strategy)
       (beginning-of-buffer)
       (setq buffer-read-only t)
       )))
@@ -299,61 +308,42 @@ The default key bindings:
 (setq dictem-mode-map (make-sparse-keymap))
 (suppress-keymap dictem-mode-map)
 
-(define-key dictem-mode-map "q"
-  'dictem-close)
+(define-key dictem-mode-map "q" 'dictem-close)
 
-(define-key dictem-mode-map "h"
-  'dictem-help)
+(define-key dictem-mode-map "h" 'dictem-help)
 
 ; SEARCH = MATCH + DEFINE
-(define-key dictem-mode-map "s"
-  '(lambda ()
-    (interactive)
-    (dictem-run
-     'dictem-search-base
-     (dictem-select-database)
-     (dictem-read-query)
-     (dictem-select-strategy))))
+(define-key dictem-mode-map "s" 'dictem-run-search)
 
 ; MATCH
-(define-key dictem-mode-map "m"
-  '(lambda ()
-    (interactive)
-    (dictem-run
-     'dictem-match-base
-     (dictem-select-database)
-     (dictem-read-query)
-     (dictem-select-strategy))))
+(define-key dictem-mode-map "m" 'dictem-run-match)
 
 ; DEFINE
-(define-key dictem-mode-map "d"
-  '(lambda ()
-    (interactive)
-    (dictem-run
-     'dictem-define-base
-     (dictem-select-database)
-     (dictem-read-query)
-     nil)))
+(define-key dictem-mode-map "d" 'dictem-run-define)
 
 ; SHOW SERVER
-(define-key dictem-mode-map "i"
-  '(lambda ()
-    (interactive)
-    (dictem-run
-     'dictem-dbinfo-base
-     (dictem-select-database)
-     nil
-     nil)))
+(define-key dictem-mode-map "i" 'dictem-run-showserver)
 
 ; SHOW INFO
-(define-key dictem-mode-map "r"
+(define-key dictem-mode-map "r" 'dictem-run-dbinfo)
+
+; Move point to the next DEFINITION
+(define-key dictem-mode-map "n"
   '(lambda ()
-    (interactive)
-    (dictem-run
-     'dictem-showserver-base
-     nil
-     nil
-     nil)))
+     (interactive)
+     (forward-char)
+     (if (search-forward-regexp "^From " nil t)
+	 (beginning-of-line)
+       (backward-char))))
+
+; Move point to the previous DEFINITION
+(define-key dictem-mode-map "p"
+  '(lambda ()
+     (interactive)
+     (backward-char)
+     (if (search-backward-regexp "^From " nil t)
+	 (beginning-of-line)
+       (forward-char))))
 
 ; DEFINE for the selected region
 (define-key dictem-mode-map " "
