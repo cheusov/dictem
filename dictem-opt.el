@@ -1,7 +1,3 @@
-(require 'dictem)
-
-;(load-file "dictem.el")
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;            Faces             ;;;;;
 
@@ -147,11 +143,6 @@ link.  Upon clicking the `function' is called with `data' as argument."
 						 (match-end 2))))
 	  )))))
 
-(defun dictem-postprocess-definition ()
-  (interactive)
-  (dictem-postprocess-definition-separator)
-  (dictem-postprocess-definition-hyperlinks))
-
 (defun dictem-postprocess-match ()
   (interactive)
   (let ((last-database dictem-last-database)
@@ -235,7 +226,9 @@ link.  Upon clicking the `function' is called with `data' as argument."
   nil
   "Hook run in dictem mode buffers containing SHOW SERVER result."
   :group 'dictem
-  :type 'hook)
+  :type 'hook
+  :options '(dictem-postprocess-definition-separator
+	     dictem-postprocess-definition-hyperlinks))
 
 (defun dictem-postprocess-each-definition ()
   (beginning-of-buffer)

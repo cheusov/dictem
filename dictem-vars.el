@@ -51,6 +51,13 @@ Valid value looks like this:
   :group 'dictem
   :type '(alist :key-type string))
 
+(defcustom dictem-use-user-databases-only
+  nil
+  "If t, only user's dictionaries from dictem-user-databases-alist
+will be used by dictem-select-database"
+  :group 'dictem
+  :type 'boolean)
+
 (defcustom dictem-mode-hook
   nil
   "Hook run in dictem mode buffers."

@@ -49,9 +49,11 @@ to enter a database name."
   (dictem-select
    "db"
    (dictem-prepand-special-dbs
-    (append
-     dictem-user-databases-alist
-     (dictem-remove-value-from-alist dictem-database-alist)))
+    (if dictem-use-user-databases-only
+	dictem-user-databases-alist
+      (append
+       dictem-user-databases-alist
+       (dictem-remove-value-from-alist dictem-database-alist))))
    (if default-db
        default-db
      (if dictem-database-history
@@ -75,19 +77,24 @@ to enter a database name."
   nil
   "Hook run in dictem mode buffers containing DEFINE result."
   :group 'dictem
-  :type 'hook)
+  :type 'hook
+  :options '(dictem-postprocess-definition-separator
+	     dictem-postprocess-definition-hyperlinks
+	     dictem-postprocess-each-definition))
 
 (defcustom dictem-postprocess-match-hook
   nil
   "Hook run in dictem mode buffers containing MATCH result."
   :group 'dictem
-  :type 'hook)
+  :type 'hook
+  :options '(dictem-postprocess-match))
 
 (defcustom dictem-postprocess-dbinfo-hook
   nil
   "Hook run in dictem mode buffers containing SHOW INFO result."
   :group 'dictem
-  :type 'hook)
+  :type 'hook
+  :options '(dictem-postprocess-definition-hyperlinks))
 
 (defcustom dictem-postprocess-showserver-hook
   nil
@@ -535,5 +542,7 @@ show information about DICT server in it."
    ["Bury Dictem Buffer" dictem-quit t]
    ["Kill Dictem Buffer" dictem-close t]
    ))
+
+(require 'dictem-opt)
 
 (provide 'dictem)
