@@ -4,44 +4,40 @@
 (defgroup dictem nil
   "Client for accessing the DICT server."
   :group 'help
-  :group 'hypermedia
-  )
+  :group 'hypermedia)
 
 (defcustom dictem-server "dict.org"
   "The DICT server"
   :group 'dictem
-  :type 'string
-  )
+  :type 'string)
 
 (defcustom dictem-port "2628"
   "The port of the DICT server"
   :group 'dictem
-  :type 'string
-  )
+  :type 'string)
 
 (defcustom dictem-client-prog "dict"
   "The command line DICT client.
 dictem accesses DICT server through this executable.
 dict-1.9.14 or later (or compatible) is recomented."
   :group 'dictem
-  :type 'string
-  )
+  :type 'string)
 
 (defcustom dictem-default-strategy "."
   "The default search strategy."
   :group 'dictem
-  :group 'string
-  )
+  :group 'string)
 
 (defcustom dictem-default-database "*"
   "The default database name."
   :group 'dictem
-  :group 'string
-  )
+  :group 'string)
 
 (defcustom dictem-mode-hook
   nil
-  "Hook run in dictem mode buffers.")
+  "Hook run in dictem mode buffers."
+  :group 'dictem
+  :type 'hook)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;           Variables          ;;;;;
@@ -103,5 +99,10 @@ dict-1.9.14 or later (or compatible) is recomented."
 (defvar dictem-temp-buffer-name
   "*dict-temp*"
   "Temporary buffer name")
+
+(defvar dictem-current-dbname
+  nil
+  "Check this variable int functions from dictem-color-define-hook.
+You should not change this variable.")
 
 (provide 'dictem-vars)

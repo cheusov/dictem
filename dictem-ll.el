@@ -64,4 +64,16 @@
 	    (dictem-tokenize (substring s (match-end 0))))
     nil))
 
+(defun search-forward-regexp-cs (REGEXP &optional BOUND NOERROR COUNT)
+  "Case-sensitive variant for search-forward-regexp"
+  (let ((case-replace nil)
+	(case-fold-search nil))
+    (search-forward-regexp REGEXP BOUND NOERROR COUNT)))
+
+(defun replace-match-cs (NEWTEXT &optional FIXEDCASE LITERAL STRING SUBEXP)
+  "Case-sensitive variant for replace-match"
+  (let ((case-replace nil)
+	(case-fold-search nil))
+    (replace-match NEWTEXT FIXEDCASE LITERAL STRING SUBEXP)))
+
 (provide 'dictem-ll)

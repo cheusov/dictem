@@ -80,70 +80,97 @@ to enter a database name."
   nil
   "Hook run in dictem mode buffers containing SHOW INFO result.")
 
+(defcustom dictem-color-showserver-hook
+  nil
+  "Hook run in dictem mode buffers containing SHOW SERVER result.")
+
 (defun dictem-search-base (database query strategy)
   "dictem search: MATCH + DEFINE"
   (interactive)
 
-  (if (= 0 (call-process
-	    dictem-client-prog nil (current-buffer) nil
-	    "-P" "-" "-d" database "-s" strategy
-	    "-h" dictem-server "-p" dictem-port
-	    query))
-      (run-hooks 'dictem-color-define-hook)))
+  (let ((exit_status 
+	 (call-process
+	 dictem-client-prog nil (current-buffer) nil
+	 "-P" "-" "-d" database "-s" strategy
+	 "-h" dictem-server "-p" dictem-port
+	 query)))
+
+    (beginning-of-buffer)
+    (cond ((= 0 exit_status)
+	   (let ((dictem-current-dbname database))
+	     (run-hooks 'dictem-color-define-hook)))
+	  ((= 21 exit_status)
+	   (forward-line-nomark)
+	   (run-hooks 'dictem-color-match-hook))
+	  )))
 
 (defun dictem-define-base (database query strategy)
   "dictem search: DEFINE"
   (interactive)
 
-  (if (= 0 (call-process
-	    dictem-client-prog nil (current-buffer) nil
-	    "-P" "-" "-d" database
-	    "-h" dictem-server "-p" dictem-port
-	    query))
-      (run-hooks 'dictem-color-define-hook)))
+  (let ((exit_status
+	 (call-process
+	  dictem-client-prog nil (current-buffer) nil
+	  "-P" "-" "-d" database
+	  "-h" dictem-server "-p" dictem-port
+	  query)))
+
+    (beginning-of-buffer)
+    (cond ((= 0 exit_status)
+	   (let ((dictem-current-dbname database))
+	     (run-hooks 'dictem-color-define-hook)))
+	  ((= 21 exit_status)
+	   (run-hooks 'dictem-color-match-hook))
+	  )))
 
 (defun dictem-match-base (database query strategy)
   "dictem search: MATCH"
   (interactive)
 
-  (if (= 0 (call-process
-	    dictem-client-prog nil (current-buffer) nil
-	    "-P" "-" "-d" database "-s" strategy
-	    "-h" dictem-server "-p" dictem-port "-m"
-	    query))
-      (run-hooks 'dictem-color-match-hook)))
+  (let ((exit_status
+	 (call-process
+	  dictem-client-prog nil (current-buffer) nil
+	  "-P" "-" "-d" database "-s" strategy
+	  "-h" dictem-server "-p" dictem-port "-m"
+	  query)))
 
-(defun dictem-showinfo-base (database b c)
+    (beginning-of-buffer)
+    (cond ((= 0 exit_status)
+	   (run-hooks 'dictem-color-match-hook))
+	  )))
+
+(defun dictem-dbinfo-base (database b c)
+  "dictem: SHOW INFO command"
+  (interactive)
+
+  (let ((exit_status
+	 (call-process
+	  dictem-client-prog nil (current-buffer) nil
+	  "-P" "-" "-i" database
+	  "-h" dictem-server "-p" dictem-port
+	  )))
+
+    (beginning-of-buffer)
+    (cond ((= 0 exit_status)
+	   (let ((dictem-current-dbname database))
+	     (run-hooks 'dictem-color-dbinfo-hook))
+	   ))))
+
+(defun dictem-showserver-base (a b c)
   "dictem: SHOW SERVER command"
   (interactive)
 
-  (call-process
-   dictem-client-prog nil (current-buffer) nil
-   "-P" "-" "-i" database
-   "-h" dictem-server "-p" dictem-port
-   ))
+  (let ((exit_status
+	 (call-process
+	  dictem-client-prog nil (current-buffer) nil
+	  "-P" "-" "-I"
+	  "-h" dictem-server "-p" dictem-port
+	  )))
 
-(defun dictem-showserver-base (a b c)
-  "dictem: SHOW DB command"
-  (interactive)
-
-  (call-process
-   dictem-client-prog nil (current-buffer) nil
-   "-P" "-" "-I"
-   "-h" dictem-server "-p" dictem-port
-   ))
-
-(defun dictem-dbinfo-base (database &rest unused-args)
-  "dictem: SHOW INFO"
-  (interactive)
-
-  (if (= 0 (call-process
-	    dictem-client-prog nil (current-buffer) nil
-	    "-P" "-" "-i" database
-	    "-h" dictem-server "-p" dictem-port))
-      (run-hooks 'dictem-color-dbinfo-hook)
-      t
-      ))
+    (beginning-of-buffer)
+    (cond ((= 0 exit_status)
+	   (run-hooks 'dictem-color-showserver-hook))
+	  )))
 
 (defun dictem-run (search-fun &optional database query strategy)
   "Creates new *dictem* buffer and run search-fun"
@@ -161,8 +188,12 @@ to enter a database name."
       (dictem)
       (make-local-variable 'dictem-last-strategy)
       (make-local-variable 'dictem-last-database)
+      (make-local-variable 'case-replace)
+      (make-local-variable 'case-fold-search)
       (setq dictem-last-strategy strategy)
       (setq dictem-last-database database)
+      (setq case-replace nil)
+      (setq case-fold-search nil)
       (funcall search-fun database query strategy)
       (beginning-of-buffer)
       (setq buffer-read-only t)
@@ -280,7 +311,7 @@ The default key bindings:
   '(lambda ()
     (interactive)
     (dictem-run
-     'dictem-showinfo-base
+     'dictem-dbinfo-base
      (dictem-select-database)
      nil
      nil)))
@@ -340,5 +371,57 @@ The default key bindings:
 	      (progn
 		(select-window selected-window)
 		(set-window-configuration configuration)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;     Top-level Functions     ;;;;;;
+
+(defun dictem-run-match ()
+  "Asks a user about database name, search strategy and query,
+creates new *dictem* buffer and
+shows matches in it."
+  (interactive)
+  (dictem-run
+   'dictem-match-base
+   (dictem-select-database)
+   (dictem-read-query (thing-at-point 'word))
+   (dictem-select-strategy)))
+
+(defun dictem-run-define ()
+  "Asks a user about database name and query,
+creates new *dictem* buffer and
+shows definitions in it."
+  (interactive)
+  (dictem-run
+   'dictem-define-base
+   (dictem-select-database)
+   (dictem-read-query (thing-at-point 'word))
+   nil))
+
+(defun dictem-run-search ()
+  "Asks a user about database name, search strategy and query,
+creates new *dictem* buffer and
+shows definitions in it."
+  (interactive)
+  (dictem-run
+   'dictem-search-base
+   (dictem-select-database)
+   (dictem-read-query (thing-at-point 'word))
+   (dictem-select-strategy)))
+
+(defun dictem-run-dbinfo ()
+  "Asks a user about database name
+creates new *dictem* buffer and
+shows information about it."
+  (interactive)
+  (dictem-run
+   'dictem-dbinfo-base
+   (dictem-select-database)))
+
+(defun dictem-run-showserver ()
+  "Creates new *dictem* buffer and
+show information about DICT server in it."
+  (interactive)
+  (dictem-run
+   'dictem-showserver-base))
 
 (provide 'dictem)

@@ -101,9 +101,8 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 (defun dictem-color-define ()
   (interactive)
-  (let ((regexp "[{]\\([^{}\n]+\\)[}]\\|^\\(From\\) [^\n]+\\[\\([^\n]+\\)\\]")
-	(dbname nil))
-    (beginning-of-buffer)
+  (let ((regexp "[{]\\([^{}\n]+\\)[}]\\|^\\(From\\) [^\n]+\\[\\([^\n]+\\)\\]"))
+
     (while (< (point) (point-max))
       (if (search-forward-regexp regexp nil t)
 	  (if (match-beginning 1)
@@ -118,35 +117,31 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		 'dictem-reference-define-face
 		 'dictem-define-base
 		 (list (cons 'word word)
-		       (cons 'dbname dbname))
+		       (cons 'dbname dictem-current-dbname))
 		 ))
-	    (let* ((beg (match-beginning 2))
-		   (end (match-end 2))
-		   (beg-dbname (match-beginning 3))
-		   (end-dbname (match-end 3))
-		   )
+	    (let ((beg (match-beginning 2))
+		  (end (match-end 2))
+		  (beg-dbname (match-beginning 3))
+		  (end-dbname (match-end 3))
+		  )
 	      (put-text-property beg end 'face 'dictem-reference-dbname-face)
-	      (setq dbname
+	      (setq dictem-current-dbname
 		    (dictem-replace-spaces
 		     (buffer-substring-no-properties beg-dbname end-dbname)))
 	      (link-create-link
 	       beg-dbname end-dbname
 	       'dictem-reference-dbname-face
 	       'dictem-dbinfo-base
-	       (list (cons 'dbname dbname))))
+	       (list (cons 'dbname dictem-current-dbname))))
 	       )
 	(goto-char (point-max))))
-  (beginning-of-buffer)))
+    (beginning-of-buffer)))
 
 (defun dictem-color-match ()
   (interactive)
-  (let* ((last-database dictem-last-database)
-	 (regexp "\\(\"[^\"\n]+\"\\)\\|\\([^ \"\n]+\\)"))
-;	 (regexp1 " \"[^\"\n]*\"")
-;	 (regexp2 " [^ \n][^ \n]*")
-;	 (regexp3 "^[^ :]+"))
+  (let ((last-database dictem-last-database)
+	(regexp "\\(\"[^\"\n]+\"\\)\\|\\([^ \"\n]+\\)"))
 
-    (beginning-of-buffer)
     (while (search-forward-regexp regexp nil t)
       (let* ((beg (match-beginning 0))
 	     (end (match-end 0))
@@ -179,8 +174,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 			 beg end )))
 		 (cons 'dbname last-database))))
 	 )))
-    (beginning-of-buffer)
-    ))
+    (beginning-of-buffer)))
 
 ;;;;;       On-Click Functions     ;;;;;
 
@@ -213,19 +207,53 @@ link.  Upon clicking the `function' is called with `data' as argument."
 ;    (if word
 ;	(dictem-run 'dictem-define-base (dictem-select-database) word nil))))
 
-(defun dictem-new-search (word &optional all)
-;  (interactive)
-  (dictem-run
-   'dictem-define-base
-   dictem-last-database
-   word
-   nil
-   ))
-
 (define-key dictem-mode-map [mouse-2]
   'dictem-define-on-click)
 
-(define-key dictem-mode-map [C-down-mouse-2]
-  'dictem-define-with-db-on-click)
+;(define-key dictem-mode-map [C-down-mouse-2]
+;  'dictem-define-with-db-on-click)
 
+
+;;;     Function for "narrowing" definitions ;;;;;
+
+(defcustom dictem-color-each-definition-hook
+  nil
+  "Hook run in dictem mode buffers containing SHOW SERVER result."
+  :group 'dictem
+  :type 'hook)
+
+(defun dictem-narrow-definitions ()
+  (beginning-of-buffer)
+  (let ((regexp-from-dbname "^From [^\n]+\\[\\([^\n]+\\)\\]")
+	(beg nil)
+	(end nil)
+	(marker (make-marker))
+	(dbname nil))
+    (if (search-forward-regexp regexp-from-dbname nil t)
+	(let ((dictem-current-dbname
+	       (buffer-substring-no-properties
+		(match-beginning 1) (match-end 1))))
+	  (setq beg (match-beginning 0))
+	  (while (search-forward-regexp regexp-from-dbname nil t)
+	    (setq end (match-beginning 0))
+	    (set-marker marker (match-end 0))
+	    (setq dbname
+		  (buffer-substring-no-properties
+		   (match-beginning 1) (match-end 1)))
+
+	    (narrow-to-region beg end)
+	    (run-hooks 'dictem-color-each-definition-hook)
+	    (widen)
+
+	    (setq dictem-current-dbname dbname)
+	    (goto-char marker)
+	    (setq beg end)
+	    )
+	  (narrow-to-region beg (point-max))
+	  (run-hooks 'dictem-color-each-definition-hook)
+	  (widen)
+	  ))
+    (beginning-of-buffer)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'dictem-opt)

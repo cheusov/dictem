@@ -98,7 +98,7 @@
 	  "-p" (if port port dictem-port)
 	  query)))
     (cond
-     ((= exit_status 31)
+     ((= exit_status 20) ;20 means "no matches found", See dict(1)
       nil)
      ((= exit_status 0)
       (progn
