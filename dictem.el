@@ -84,6 +84,19 @@
 (defvar edict-strategy-history nil)
 (defvar edict-database-history nil)
 (defvar edict-query-history nil)
+(defvar edict-last-database
+  "Last requested database name"
+  "*"
+  )
+
+(defvar edict-last-strategy
+  "Last requested strategy name"
+  "."
+  )
+
+(defvar edict-mode-map
+  nil
+  "Keymap for edict mode")
 
 (defun edict-select (prompt alist default history)
   (let
@@ -463,10 +476,6 @@ the protocol defined in RFC 2229.
 ;	  (list selected-window edict-selected-window))
   )
 
-(defvar edict-mode-map
-  nil
-  "Keymap for edict mode")
-
 ;(unless edict-mode-map
 (setq edict-mode-map (make-sparse-keymap))
 (suppress-keymap edict-mode-map)
@@ -640,14 +649,4 @@ the protocol defined in RFC 2229.
       (beginning-of-buffer)
       )
     )
-  )
-
-(defvar edict-last-database
-  "Last requested database name"
-  "*"
-  )
-
-(defvar edict-last-strategy
-  "Last requested strategy name"
-  "."
   )
