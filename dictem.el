@@ -1339,28 +1339,43 @@ link.  Upon clicking the `function' is called with `data' as argument."
 (defun dictem-postprocess-definition-hyperlinks ()
   (save-excursion
     (beginning-of-buffer)
-    (let ((regexp "[{]\\([^{}\n]+\\)[}]\\|^From [^\n]+\\[\\([^\n]+\\)\\]"))
+    (let ((regexp "[{]\\([^{}|\n]+\\)[}]\\|^From [^\n]+\\[\\([^\n]+\\)\\]\\|\\([{]\\([^{}|\n]+\\)|\\([^{}|\n]+\\)[}]\\)"))
 
       (while (search-forward-regexp regexp nil t)
-	(if (match-beginning 1)
-	    (let* ((beg (match-beginning 1))
-		   (end (match-end 1))
-		   (word
-		    (dictem-replace-spaces
-		     (buffer-substring-no-properties beg end))))
-	      (replace-match "\\1")
-	      (link-create-link
-	       (- beg 1) (- end 1)
-	       'dictem-reference-definition-face
-	       'dictem-base-define
-	       (list (cons 'word word)
-		     (cons 'dbname dictem-current-dbname))
-	       ))
-	  (setq dictem-current-dbname
-		(dictem-replace-spaces
-		 (buffer-substring-no-properties (match-beginning 2)
-						 (match-end 2))))
-	  )))))
+	(cond ((match-beginning 1)
+	       (let* ((beg (match-beginning 1))
+		      (end (match-end 1))
+		      (word
+		       (dictem-replace-spaces
+			(buffer-substring-no-properties beg end))))
+		 (replace-match "\\1")
+		 (link-create-link
+		  (- beg 1) (- end 1)
+		  'dictem-reference-definition-face
+		  'dictem-base-define
+		  (list (cons 'word word)
+			(cons 'dbname dictem-current-dbname))
+		  )))
+	      ((match-beginning 2)
+	       (setq dictem-current-dbname
+		     (dictem-replace-spaces
+		      (buffer-substring-no-properties (match-beginning 2)
+						      (match-end 2)))))
+	      ((match-beginning 3)
+	       (let* ((beg (match-beginning 5))
+		      (end (match-end 5))
+		      (word
+		       (dictem-replace-spaces
+			(buffer-substring-no-properties beg end))))
+		 (replace-match "\\4")
+		 (link-create-link
+		  (- (match-beginning 4) 1) (- (match-end 4) 1)
+		  'dictem-reference-definition-face
+		  'dictem-base-define
+		  (list (cons 'word word)
+			(cons 'dbname dictem-current-dbname))
+		  )))
+	      )))))
 
 (defun dictem-postprocess-match ()
   (goto-char (point-min))
