@@ -358,7 +358,7 @@ The default key bindings:
   (setq major-mode 'dictem-mode)
   (setq mode-name "dictem")
 
-  (add-hook 'kill-buffer-hook 'dictem-close t t)
+  (add-hook 'kill-buffer-hook 'dictem-kill t t)
   (run-hooks 'dictem-mode-hook)
   )
 
@@ -391,7 +391,7 @@ The default key bindings:
 (setq dictem-mode-map (make-sparse-keymap))
 (suppress-keymap dictem-mode-map)
 
-(define-key dictem-mode-map "k" 'dictem-close)
+(define-key dictem-mode-map "k" 'dictem-kill)
 (define-key dictem-mode-map "q" 'dictem-quit)
 
 (define-key dictem-mode-map "h" 'dictem-help)
@@ -453,7 +453,7 @@ The default key bindings:
   (interactive)
   (quit-window))
 
-(defun dictem-close ()
+(defun dictem-kill ()
   "Close the current dictem buffer."
   (interactive)
 
@@ -540,7 +540,7 @@ show information about DICT server in it."
    ["Information about database" dictem-run-dbinfo t]
    "--"
    ["Bury Dictem Buffer" dictem-quit t]
-   ["Kill Dictem Buffer" dictem-close t]
+   ["Kill Dictem Buffer" dictem-kill t]
    ))
 
 (require 'dictem-opt)
