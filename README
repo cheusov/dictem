@@ -163,7 +163,7 @@ dictem-run function will ask you about database name.
 
 -------
 
-If your DICT server provides too many databases most of which
+If your DICT server provides too many databases and most of which
 are of no interest for you, you can disable them
 and use only those specified in dictem-user-databases-alist variable. 
 
