@@ -1170,14 +1170,14 @@ shows information about it."
 
 (defun dictem-run-show-server ()
   "Creates new *dictem* buffer and
-show information about DICT server in it."
+shows information about DICT server in it."
   (interactive)
   (dictem-run
    'dictem-base-show-server))
 
 (defun dictem-run-show-databases ()
   "Creates new *dictem* buffer and
-show information about databases provided by DICT."
+shows information about databases provided by DICT."
   (interactive)
   (dictem-run
    'dictem-base-show-databases))
