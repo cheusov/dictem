@@ -244,17 +244,22 @@ to enter a database name."
   "dictem: SHOW SERVER command"
   (interactive)
 
-  (let ((exit_status
-	 (call-process
-	  dictem-client-prog nil (current-buffer) nil
-	  "-P" "-" "-I"
-	  "-h" dictem-server "-p" dictem-port
-	  "--client" (dictem-client-text)
-	  )))
-
+  (let* ((beg (point))
+	 (exit_status
+	  (call-process
+	   dictem-client-prog nil (current-buffer) nil
+	   "-P" "-" "-I"
+	   "-h" dictem-server "-p" dictem-port
+	   "--client" (dictem-client-text)
+	   )))
     (cond ((= 0 exit_status)
-	   (run-hooks 'dictem-postprocess-showserver-hook))
-	  )))
+	   (save-excursion
+	     (narrow-to-region beg (point))
+	     (goto-char beg)
+	     (run-hooks 'dictem-postprocess-showserver-hook)
+	     (widen))))
+    (setq dictem-last-database database)
+    exit_status))
 
 (defun dictem-run (search-fun &optional database query strategy)
   "Creates new *dictem* buffer and run search-fun"

@@ -179,8 +179,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 			(buffer-substring-no-properties
 			 beg end )))
 		 (cons 'dbname last-database))))
-	 )))
-    (beginning-of-buffer)))
+	 )))))
 
 ;;;;;       On-Click Functions     ;;;;;
 
@@ -231,11 +230,9 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	     dictem-postprocess-definition-hyperlinks))
 
 (defun dictem-postprocess-each-definition ()
-  (beginning-of-buffer)
   (let ((regexp-from-dbname "^From [^\n]+\\[\\([^\n]+\\)\\]")
 	(beg nil)
-	(end nil)
-	(marker (make-marker))
+	(end (make-marker))
 	(dbname nil))
     (if (search-forward-regexp regexp-from-dbname nil t)
 	(let ((dictem-current-dbname
@@ -243,25 +240,29 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		(match-beginning 1) (match-end 1))))
 	  (setq beg (match-beginning 0))
 	  (while (search-forward-regexp regexp-from-dbname nil t)
-	    (setq end (match-beginning 0))
-	    (set-marker marker (match-end 0))
+	    (set-marker end (match-beginning 0))
+;	    (set-marker marker (match-end 0))
 	    (setq dbname
 		  (buffer-substring-no-properties
 		   (match-beginning 1) (match-end 1)))
 
-	    (narrow-to-region beg end)
-	    (run-hooks 'dictem-postprocess-each-definition-hook)
-	    (widen)
+	    (save-excursion
+	      (narrow-to-region beg (marker-position end))
+	      (goto-char beg)
+	      (run-hooks 'dictem-postprocess-each-definition-hook)
+	      (widen))
 
 	    (setq dictem-current-dbname dbname)
-	    (goto-char marker)
-	    (setq beg end)
+	    (goto-char end)
+	    (forward-char)
+	    (setq beg (marker-position end))
 	    )
-	  (narrow-to-region beg (point-max))
-	  (run-hooks 'dictem-postprocess-each-definition-hook)
-	  (widen)
-	  ))
-    (beginning-of-buffer)))
+	  (save-excursion
+	    (narrow-to-region beg (point-max))
+	    (goto-char beg)
+	    (run-hooks 'dictem-postprocess-each-definition-hook)
+	    (widen))
+	  ))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide 'dictem-opt)
