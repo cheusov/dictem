@@ -116,7 +116,7 @@ Manual Configuration
 The easiest configuration of dictem may look like this
 
 ; Add to load-path variable a new directory with files of dictem
-;(add-to-list 'load-path "/usr/local/share/emacs/emacs-site")
+(add-to-list 'load-path "/usr/local/share/emacs/emacs-site")
 
 ; Loading dictem functions
 (require 'dictem)
@@ -208,7 +208,7 @@ databases from different DICT server.
 
 (setq dictem-user-databases-alist
    '(("_en-ru" . ("dict://mova.org/mueller7"
-                  "dict://dict.org:2628/gcide"))
+                  "dict://dict.org:2628/web1913"))
      ("_ru-ru" . ("beslov" "dict://mova.org:2628/religion"))
      ))
 
@@ -241,9 +241,9 @@ You'll be asked for host and port.
     (interactive)
     (save-dictem
      (let* ((dictem-server (read-string "server: "
-					dictem-server nil "dict.org" nil))
+					dictem-server nil "dict.org"))
 	    (dictem-port (read-string "port: "
-				      (dictem-get-port) nil "2628" nil)))
+				      (dictem-get-port) nil "2628")))
        (dictem-initialize)
        (call-interactively 'dictem-run-define)))))
 
@@ -254,9 +254,9 @@ You'll be asked for host and port.
     (interactive)
     (save-dictem
      (let* ((dictem-server (read-string "server: "
-					dictem-server nil "dict.org" nil))
+					dictem-server nil "dict.org"))
 	    (dictem-port (read-string "port: "
-				      (dictem-get-port) nil "2628" nil)))
+				      (dictem-get-port) nil "2628")))
        (dictem-initialize)
        (call-interactively 'dictem-run-match)))))
 
@@ -267,9 +267,9 @@ You'll be asked for host and port.
     (interactive)
     (save-dictem
      (let* ((dictem-server (read-string "server: "
-					dictem-server nil "dict.org" nil))
+					dictem-server nil "dict.org"))
 	    (dictem-port (read-string "port: "
-				      (dictem-get-port) nil "2628" nil)))
+				      (dictem-get-port) nil "2628")))
        (dictem-initialize)
        (call-interactively 'dictem-run-search)))))
 
@@ -280,9 +280,9 @@ You'll be asked for host and port.
     (interactive)
     (save-dictem
      (let* ((dictem-server (read-string "server: "
-					dictem-server nil "dict.org" nil))
+					dictem-server nil "dict.org"))
 	    (dictem-port (read-string "port: "
-				      (dictem-get-port) nil "2628" nil)))
+				      (dictem-get-port) nil "2628")))
        (dictem-initialize)
        (call-interactively 'dictem-run-show-info)))))
 
@@ -293,9 +293,9 @@ You'll be asked for host and port.
     (interactive)
     (save-dictem
      (let* ((dictem-server (read-string "server: "
-					dictem-server nil "dict.org" nil))
+					dictem-server nil "dict.org"))
 	    (dictem-port (read-string "port: "
-				      (dictem-get-port) nil "2628" nil)))
+				      (dictem-get-port) nil "2628")))
        (dictem-initialize)
        (call-interactively 'dictem-run-show-server)))))
 
@@ -315,19 +315,17 @@ It is easy to postprocess them.
 
 ; Function for highlighting definition from the database "susv3".
 (defun dictem-highlight-susv3-definition ()
-  (interactive)
   (cond ((string= "susv3" dictem-current-dbname)
 	 (goto-char (point-min))
 	 (while (search-forward-regexp
 		 "^ *[QWERTYUIOPASDFGHJKLZXCVBNM ]+$" nil t)
 	   (put-text-property
-	    (match-beginning 0) (match-end 0) 'face 'white-foreground)
+	    (match-beginning 0) (match-end 0) 'face 'bold)
 	   ))))
 
 ; Function to show roff-formatted text from the database "man".
 (require 'woman)
 (defun dictem-highlight-man-definition ()
-  (interactive)
   (cond ((string= "man" dictem-current-dbname)
 	 (goto-char (point-min))
 	 (while (search-forward-regexp "^  " nil t)
