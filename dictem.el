@@ -164,6 +164,11 @@ and sets edict-database-list variable."
   (kill-buffer "*dict-temp*")
   )
 
+(defun edict-help ()
+  "Display a edict help"
+  (interactive)
+  (describe-function 'edict-mode))
+
 (defun edict-select-strategy (&optional default-strat)
   "Switches to minibuffer and ask user
 to enter a search strategy."
@@ -412,7 +417,26 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 (defun edict-mode ()
   "This is a mode for dict client implementing
-the protocol defined in RFC 2229."
+the protocol defined in RFC 2229.
+
+The default key bindings:
+
+  q         close the edict buffer
+  h         display the help information
+
+  s         make a new SEARCH, i.e. ask for a database, strategy and query
+            and show definitions
+  d         make a new DEFINE, i.e. ask for a database and query
+            and show definitions
+  m         make a new MATCH, i.e. ask for database, strategy and query
+            and show matches
+
+  mouse-2   visit a link (DEFINE using all dictionaries)
+  C-mouse-2 visit a link (DEFINE using asked dictionaries)
+
+  SPC       search the marked region (DEFINE) in all dictionaries
+"
+
   (interactive)
 
   (kill-all-local-variables)
@@ -464,10 +488,10 @@ the protocol defined in RFC 2229."
 (define-key edict-mode-map "h"
   'edict-help)
 
-(define-key edict-mode-map [mouse-3]
+(define-key edict-mode-map [mouse-2]
   'edict-define-on-click)
 
-(define-key edict-mode-map [C-down-mouse-3]
+(define-key edict-mode-map [C-down-mouse-2]
   'edict-define-with-db-on-click)
 
 ; SEARCH = MATCH + DEFINE
@@ -514,7 +538,7 @@ the protocol defined in RFC 2229."
   '(lambda ()
      (interactive)
      (edict-search
-      edict-last-database
+      "*"
       nil
       (thing-at-point 'word)
       'edict-define-base
@@ -522,7 +546,7 @@ the protocol defined in RFC 2229."
      )
   )
 
-  ; DEFINE for the selected region
+; DEFINE for the selected region
 (define-key edict-mode-map [C-SPC]
   '(lambda ()
      (interactive)
