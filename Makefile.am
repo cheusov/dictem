@@ -16,7 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 675 Mass Ave, Cambridge, MA 02139, USA.
 # 
-# $Id: Makefile.am,v 1.9 2004-06-07 15:34:58 cheusov Exp $
+# $Id: Makefile.am,v 1.10 2004-06-07 15:38:54 cheusov Exp $
 #
 
 # Add a _letter_ if you change the version number and release your own version.
@@ -39,10 +39,9 @@ cvsclean : distclean
 ChangeLog:
 	@(echo "***** Making ChangeLog..."; \
 	rm -f ChangeLog; \
-	rcs2log -i 2 -r . dictem-opt.el dictem-vars.el dictem-ll.el \
-		dictem-prog.el | \
+	rcs2log -i 2 -r . | \
 	sed ' \
-		s,/.*cvs.*dictem/,,g; \
+		s,/[^ ]*cvs[^ ]*dictem/,,g; \
 		s,cheusov@[^>]*,vle@gmx.net,g; \
 		s,\(.*\)<\([^@<>]\+\)@\([^@<>]\+\)>\(.*\),\1<\2 at \3}\4,g' \
 	> ChangeLog;)
