@@ -127,7 +127,10 @@ and sets edict-strategy-list variable"
   (if
       (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-S" "-h" edict-server "-p" edict-port))
       (setq edict-strategy-list
-	    (nreverse (list2alist (get-first-tokens-from-temp-buffer)))
+	    (cons
+	     (list "." nil)
+	     (nreverse (list2alist (get-first-tokens-from-temp-buffer) ) )
+	     )
 	    )
     )
   (kill-buffer "*dict-temp*")
@@ -140,7 +143,10 @@ and sets edict-database-list variable"
   (if
       (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-D" "-h" edict-server "-p" edict-port))
       (setq edict-database-list
-	    (nreverse (list2alist (get-first-tokens-from-temp-buffer)))
+	    (cons
+	     (list "*" nil)
+	     (nreverse (list2alist (get-first-tokens-from-temp-buffer)))
+	     )
 	    )
     )
   (kill-buffer "*dict-temp*")
