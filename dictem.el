@@ -1348,11 +1348,11 @@ link.  Upon clicking the `function' is called with `data' as argument."
 (defun dictem-postprocess-definition-hyperlinks ()
   (save-excursion
     (goto-char (point-min))
-    (let ((regexp "{\\([^{}|]+\\)}\\|^From [^\n]+\\[\\([^\n]+\\)\\]\\|\\({\\([^{}|\n]+\\)|\\([^{}|\n]+\\)}\\)"))
+    (let ((regexp "\\({[^{}|]+\\)}\\|^From [^\n]+\\[\\([^\n]+\\)\\]\\|\\({\\([^{}|\n]+\\)|\\([^{}|\n]+\\)}\\)"))
 
       (while (search-forward-regexp regexp nil t)
 	(cond ((match-beginning 1)
-	       (let* ((beg (match-beginning 1))
+	       (let* ((beg (+ 1 (match-beginning 1)))
 		      (end (match-end 1))
 		      (repl (buffer-substring beg end))
 		      (word (buffer-substring-no-properties beg end)))
