@@ -1,3 +1,23 @@
+;This code was initially based on
+;dictionary.el written by Torsten Hilbrich <Torsten.Hilbrich@gmx.net>
+;but now probably doesn't contain original code.
+;Most of the code has been written
+;from scratch by Aleksey Cheusov <vle@gmx.net>, 2004
+;
+;DictEm is free software; you can redistribute it and/or modify
+;it under the terms of the GNU General Public License as published by
+;the Free Software Foundation; either version 2 of the License, or
+;(at your option) any later version.
+;
+;DictEm is distributed in the hope that it will be useful,
+;but WITHOUT ANY WARRANTY; without even the implied warranty of
+;MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;GNU General Public License for more details.
+;
+;You should have received a copy of the GNU General Public License
+;along with this program; if not, write to the Free Software
+;Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
 (require 'cl)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -251,7 +271,7 @@ by functions run from dictem-postprocess-each-definition-hook.")
 ;;;;;        Functions         ;;;;;;
 
 (defmacro save-dictem (&rest funs)
-  `(let ((dictem-port                    "2628")
+  `(let ((dictem-port                    2628)
 	 (dictem-server                  nil)
 	 (dictem-database-alist          nil)
 	 (dictem-strategy-alist          nil)
@@ -680,7 +700,7 @@ to enter a database name."
   "Returns dict:// URL"
   (concat
    "dict://" host ":"
-   (if port (dictem-get-port) "2628")
+   (dictem-get-port (if port port "2628"))
    "/" (if define_or_match "d" "m") ":" query ":" database
    (if (null define_or_match) (concat ":" (if strategy strategy ".")))
    ))
@@ -1082,9 +1102,13 @@ The default key bindings:
 (setq dictem-mode-map (make-sparse-keymap))
 (suppress-keymap dictem-mode-map)
 
+; Kill the buffer
 (define-key dictem-mode-map "k" 'dictem-kill)
+
+; Bury the buffer
 (define-key dictem-mode-map "q" 'dictem-quit)
 
+; Show help message
 (define-key dictem-mode-map "h" 'dictem-help)
 
 ; SEARCH = MATCH + DEFINE
@@ -1113,6 +1137,10 @@ The default key bindings:
 
 ; Scroll down dictem buffer
 (define-key dictem-mode-map "\177" 'scroll-down)
+
+; Define on click
+(define-key dictem-mode-map [mouse-2]
+  'dictem-define-on-click)
 
 (defun dictem-mode-p ()
   "Return non-nil if current buffer has dictem-mode"
@@ -1378,9 +1406,6 @@ link.  Upon clicking the `function' is called with `data' as argument."
 ;	 (word (plist-get properties 'link-data)))
 ;    (if word
 ;	(dictem-run 'dictem-base-define (dictem-select-database) word nil))))
-
-(define-key dictem-mode-map [mouse-2]
-  'dictem-define-on-click)
 
 ;(define-key dictem-mode-map [C-down-mouse-2]
 ;  'dictem-define-with-db-on-click)
