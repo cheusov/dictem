@@ -623,7 +623,8 @@ to enter a database name."
   :type 'hook
   :options '(dictem-postprocess-definition-separator
 	     dictem-postprocess-definition-hyperlinks
-	     dictem-postprocess-each-definition))
+	     dictem-postprocess-each-definition
+	     dictem-postprocess-definition-remove-header))
 
 (defcustom dictem-postprocess-match-hook
   nil
@@ -1362,7 +1363,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
     (remove-text-properties start end properties)
     (add-text-properties start end properties)))
 
-;;;;;;;   Coloring Functions     ;;;;;;;
+;;;;;;;   Postprocessing Functions     ;;;;;;;
 
 (defun dictem-postprocess-definition-separator ()
   (save-excursion
@@ -1472,6 +1473,18 @@ link.  Upon clicking the `function' is called with `data' as argument."
 			 beg end )))
 		 (cons 'dbname last-database))))
 	 )))))
+
+(defun dictem-postprocess-definition-remove-header ()
+  (goto-char (point-min))
+  (end-of-line)
+  (let (eol (point))
+    (goto-char (point-min))
+    (if (search-forward "definition found" eol t)
+	(progn
+	  (goto-char (point-min))
+	  (kill-line 2)
+	  )
+      )))
 
 ;;;;;       On-Click Functions     ;;;;;
 
