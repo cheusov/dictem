@@ -92,7 +92,7 @@ INSTALLATION
 REPORTING BUGS
 ==============
 
-    Please send all bug reports and sudgestions directly to
+    Please send all bug reports and suggestions directly to
     Aleksey Cheusov <vle@gmx.net>
 
 MAILING LISTS
@@ -215,29 +215,70 @@ You are not limited to the default DICT server only.
 The following code will allow you to access any server you want.
 You'll be asked for host and port.
 
+; DEFINE
 (global-set-key
  "\C-c\M-d"
  '(lambda ()
     (interactive)
     (save-dictem
-     (let* ((dictem-server (read-string "server> "
+     (let* ((dictem-server (read-string "server: "
 					dictem-server nil "dict.org" nil))
-	    (dictem-port (read-string "port> "
+	    (dictem-port (read-string "port: "
 				      (dictem-get-port) nil "2628" nil)))
        (dictem-initialize)
-       (dictem-run-define)))))
+       (call-interactively 'dictem-run-define)))))
 
+; MATCH
 (global-set-key
  "\C-c\M-m"
  '(lambda ()
     (interactive)
     (save-dictem
-     (let* ((dictem-server (read-string "server> "
+     (let* ((dictem-server (read-string "server: "
 					dictem-server nil "dict.org" nil))
-	    (dictem-port (read-string "port> "
+	    (dictem-port (read-string "port: "
 				      (dictem-get-port) nil "2628" nil)))
        (dictem-initialize)
-       (dictem-run-match)))))
+       (call-interactively 'dictem-run-match)))))
+
+; SEARCH = MATCH+DEFINE
+(global-set-key
+ "\C-c\M-s"
+ '(lambda ()
+    (interactive)
+    (save-dictem
+     (let* ((dictem-server (read-string "server: "
+					dictem-server nil "dict.org" nil))
+	    (dictem-port (read-string "port: "
+				      (dictem-get-port) nil "2628" nil)))
+       (dictem-initialize)
+       (call-interactively 'dictem-run-search)))))
+
+; SHOW INFO
+(global-set-key
+ "\C-c\M-i"
+ '(lambda ()
+    (interactive)
+    (save-dictem
+     (let* ((dictem-server (read-string "server: "
+					dictem-server nil "dict.org" nil))
+	    (dictem-port (read-string "port: "
+				      (dictem-get-port) nil "2628" nil)))
+       (dictem-initialize)
+       (call-interactively 'dictem-run-show-info)))))
+
+; SHOW SERVER
+(global-set-key
+ "\C-c\M-r"
+ '(lambda ()
+    (interactive)
+    (save-dictem
+     (let* ((dictem-server (read-string "server: "
+					dictem-server nil "dict.org" nil))
+	    (dictem-port (read-string "port: "
+				      (dictem-get-port) nil "2628" nil)))
+       (dictem-initialize)
+       (call-interactively 'dictem-run-show-server)))))
 
 -------
 
@@ -295,7 +336,7 @@ It is easy to postprocess them.
 
 (dictem-run
   '(lambda (a b c)
-     (dictem-define-base
+     (dictem-base-define
       '("man" "susv3")
       (dictem-read-query (thing-at-point 'word))
       nil ))
@@ -304,11 +345,11 @@ It is easy to postprocess them.
 (let ((query (dictem-read-query (thing-at-point 'word))))
   (dictem-run
    `((lambda (a b c)
-       (dictem-match-base
+       (dictem-base-match
 	'("gcide" "wn")
 	,query "exact"))
      (lambda (a b c)
-       (dictem-search-base
+       (dictem-base-search
 	'("mueller7" "korolew_en-ru")
 	,query "word")))))
 
