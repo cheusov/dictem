@@ -530,9 +530,9 @@ and sets dictem-database-alist variable."
 			       (dictem-get-port port))))
 
 (defun dictem-initialize ()
-  "Initialize dictem, i.e. obtaining
+  "Initializes dictem, i.e. obtains
 a list of available databases and strategiss from DICT server
-and making other tasks."
+and makes other tasks."
   (interactive)
   (let ((dbs (dictem-initialize-databases-alist)))
     (if (dictem-error-p dbs)
@@ -542,7 +542,7 @@ and making other tasks."
 ;;; Functions related to Minibuffer ;;;;
 
 (defun dictem-select-strategy (&optional default-strat)
-  "Switches to minibuffer and ask the user
+  "Switches to minibuffer and asks the user
 to enter a search strategy."
   (interactive)
   (if (dictem-error-p dictem-strategy-alist)
@@ -559,7 +559,7 @@ to enter a search strategy."
    'dictem-strategy-history))
 
 (defun dictem-select-database (spec-dbs user-dbs &optional default-db)
-  "Switches to minibuffer and ask user
+  "Switches to minibuffer and asks user
 to enter a database name."
   (interactive)
   (if (dictem-error-p dictem-database-alist)
@@ -582,7 +582,7 @@ to enter a database name."
      'dictem-database-history)))
 
 (defun dictem-read-query (&optional default-query)
-  "Switches to minibuffer and ask user to enter a query."
+  "Switches to minibuffer and asks user to enter a query."
   (interactive)
   (read-string
    (concat "query:(" default-query ") ")
@@ -986,6 +986,40 @@ to enter a database name."
       (beginning-of-line)
     (goto-char (point-min))))
 
+(defun dictem-next-link ()
+  "Move point to the next hyperlink"
+  (interactive)
+
+  (defun next-link2 (limit)
+    (let ((pt nil))
+      (if (and (setq pt (next-single-property-change (point) 'link nil limit))
+	       (/= limit pt))
+	  (if (get-char-property pt 'link)
+	      (goto-char pt)
+	    (goto-char (next-single-property-change pt 'link nil limit))))
+      )
+    )
+
+  (next-link2 (point-max))
+  )
+
+(defun dictem-previous-link ()
+  "Move point to the previous hyperlink"
+  (interactive)
+
+  (defun prev-link2 (limit)
+    (let ((pt nil))
+      (if (and (setq pt (previous-single-property-change (point) 'link nil limit))
+	       (/= limit pt))
+	  (if (get-char-property pt 'link)
+	      (goto-char pt)
+	    (goto-char (previous-single-property-change pt 'link nil limit))))
+      )
+    )
+
+  (prev-link2 (point-min))
+  )
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun dictem-help ()
   "Display a dictem help"
@@ -1012,10 +1046,9 @@ The default key bindings:
   i         ask for a database and show information about it
   n         move point to the next definition
   p         move point to the previous definition
-  SPC       scroll dictem buffer up
-  DEL       scroll dictem buffer down
-  mouse-2   visit a link (DEFINE using all dictionaries)
-  C-mouse-2 visit a link (DEFINE using asked dictionaries)
+  SPC                 scroll dictem buffer up
+  DEL                 scroll dictem buffer down
+  mouse-2 or RET      visit a link (DEFINE using all dictionaries)
 "
 ;  SPC       search the marked region (DEFINE) in all dictionaries
 
@@ -1097,6 +1130,12 @@ The default key bindings:
 ; Move point to the previous DEFINITION
 (define-key dictem-mode-map "p" 'dictem-previous-section)
 
+; Move point to the next HYPER LINK
+(define-key dictem-mode-map "\M-n" 'dictem-next-link)
+
+; Move point to the previous HYPER LINK
+(define-key dictem-mode-map "\M-p" 'dictem-previous-link)
+
 ; Scroll up dictem buffer
 (define-key dictem-mode-map " " 'scroll-up)
 
@@ -1106,6 +1145,8 @@ The default key bindings:
 ; Define on click
 (define-key dictem-mode-map [mouse-2]
   'dictem-define-on-click)
+(define-key dictem-mode-map "\C-m"
+  'dictem-define-on-press)
 
 (defun dictem-mode-p ()
   "Return non-nil if current buffer has dictem-mode"
@@ -1362,11 +1403,10 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 ;;;;;       On-Click Functions     ;;;;;
 
-(defun dictem-define-on-click (event)
-  "Is called upon clicking the link."
-  (interactive "@e")
+(defun dictem-define-on-press ()
+  "Is called upon pressing Enter."
+  (interactive)
 
-  (mouse-set-point event)
   (let* (
 	 (properties (text-properties-at (point)))
 	 (data (plist-get properties 'link-data))
@@ -1379,6 +1419,13 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		    (if dbname (cdr dbname) dictem-last-database)
 		    (if word (cdr word) nil)
 		    nil))))
+
+(defun dictem-define-on-click (event)
+  "Is called upon clicking the link."
+  (interactive "@e")
+
+  (mouse-set-point event)
+  (dictem-define-on-press))
 
 ;(defun dictem-define-with-db-on-click (event)
 ;  "Is called upon clicking the link."
