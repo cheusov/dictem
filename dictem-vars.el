@@ -102,7 +102,7 @@ dict-1.9.14 or later (or compatible) is recomented."
 
 (defvar dictem-current-dbname
   nil
-  "Check this variable int functions from dictem-color-define-hook.
+  "Check this variable int functions from dictem-postprocess-define-hook.
 You should not change this variable.")
 
 (provide 'dictem-vars)

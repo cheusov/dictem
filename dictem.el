@@ -68,19 +68,19 @@ to enter a database name."
 
 ;;;;;;;;    Search Functions     ;;;;;;;
 
-(defcustom dictem-color-define-hook
+(defcustom dictem-postprocess-define-hook
   nil
   "Hook run in dictem mode buffers containing DEFINE result.")
 
-(defcustom dictem-color-match-hook
+(defcustom dictem-postprocess-match-hook
   nil
   "Hook run in dictem mode buffers containing MATCH result.")
 
-(defcustom dictem-color-dbinfo-hook
+(defcustom dictem-postprocess-dbinfo-hook
   nil
   "Hook run in dictem mode buffers containing SHOW INFO result.")
 
-(defcustom dictem-color-showserver-hook
+(defcustom dictem-postprocess-showserver-hook
   nil
   "Hook run in dictem mode buffers containing SHOW SERVER result.")
 
@@ -98,10 +98,10 @@ to enter a database name."
     (beginning-of-buffer)
     (cond ((= 0 exit_status)
 	   (let ((dictem-current-dbname database))
-	     (run-hooks 'dictem-color-define-hook)))
+	     (run-hooks 'dictem-postprocess-define-hook)))
 	  ((= 21 exit_status)
 	   (forward-line-nomark)
-	   (run-hooks 'dictem-color-match-hook))
+	   (run-hooks 'dictem-postprocess-match-hook))
 	  )))
 
 (defun dictem-define-base (database query strategy)
@@ -118,9 +118,9 @@ to enter a database name."
     (beginning-of-buffer)
     (cond ((= 0 exit_status)
 	   (let ((dictem-current-dbname database))
-	     (run-hooks 'dictem-color-define-hook)))
+	     (run-hooks 'dictem-postprocess-define-hook)))
 	  ((= 21 exit_status)
-	   (run-hooks 'dictem-color-match-hook))
+	   (run-hooks 'dictem-postprocess-match-hook))
 	  )))
 
 (defun dictem-match-base (database query strategy)
@@ -136,7 +136,7 @@ to enter a database name."
 
     (beginning-of-buffer)
     (cond ((= 0 exit_status)
-	   (run-hooks 'dictem-color-match-hook))
+	   (run-hooks 'dictem-postprocess-match-hook))
 	  )))
 
 (defun dictem-dbinfo-base (database b c)
@@ -153,7 +153,7 @@ to enter a database name."
     (beginning-of-buffer)
     (cond ((= 0 exit_status)
 	   (let ((dictem-current-dbname database))
-	     (run-hooks 'dictem-color-dbinfo-hook))
+	     (run-hooks 'dictem-postprocess-dbinfo-hook))
 	   ))))
 
 (defun dictem-showserver-base (a b c)
@@ -169,7 +169,7 @@ to enter a database name."
 
     (beginning-of-buffer)
     (cond ((= 0 exit_status)
-	   (run-hooks 'dictem-color-showserver-hook))
+	   (run-hooks 'dictem-postprocess-showserver-hook))
 	  )))
 
 (defun dictem-run (search-fun &optional database query strategy)

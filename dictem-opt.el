@@ -99,7 +99,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 ;;;;;;;   Coloring Functions     ;;;;;;;
 
-(defun dictem-color-define ()
+(defun dictem-postprocess-define ()
   (interactive)
   (let ((regexp "[{]\\([^{}\n]+\\)[}]\\|^\\(From\\) [^\n]+\\[\\([^\n]+\\)\\]"))
 
@@ -137,7 +137,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	(goto-char (point-max))))
     (beginning-of-buffer)))
 
-(defun dictem-color-match ()
+(defun dictem-postprocess-match ()
   (interactive)
   (let ((last-database dictem-last-database)
 	(regexp "\\(\"[^\"\n]+\"\\)\\|\\([^ \"\n]+\\)"))
@@ -216,7 +216,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 ;;;     Function for "narrowing" definitions ;;;;;
 
-(defcustom dictem-color-each-definition-hook
+(defcustom dictem-postprocess-each-definition-hook
   nil
   "Hook run in dictem mode buffers containing SHOW SERVER result."
   :group 'dictem
@@ -242,7 +242,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		   (match-beginning 1) (match-end 1)))
 
 	    (narrow-to-region beg end)
-	    (run-hooks 'dictem-color-each-definition-hook)
+	    (run-hooks 'dictem-postprocess-each-definition-hook)
 	    (widen)
 
 	    (setq dictem-current-dbname dbname)
@@ -250,7 +250,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	    (setq beg end)
 	    )
 	  (narrow-to-region beg (point-max))
-	  (run-hooks 'dictem-color-each-definition-hook)
+	  (run-hooks 'dictem-postprocess-each-definition-hook)
 	  (widen)
 	  ))
     (beginning-of-buffer)))
