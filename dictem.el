@@ -1046,9 +1046,9 @@ to enter a database name."
   "Hyperlinks menu with autocompletion"
   (interactive)
   (let ((link (completing-read "Go to:" dictem-hyperlinks-alist)))
-    (if link
+    (if (and link (setq link (assoc link dictem-hyperlinks-alist)))
 	(dictem-run-define
-	 (cadr (assoc link dictem-hyperlinks-alist))
+	 (cadr link)
 	 dictem-last-database))
     ))
 
@@ -1474,7 +1474,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		      (end (match-end 1))
 		      (repl (buffer-substring beg end))
 		      (word (buffer-substring-no-properties beg end)))
-		 (replace-match repl)
+		 (replace-match repl t t)
 		 (dictem-create-link
 		  (- beg 1) (- end 1)
 		  'dictem-reference-definition-face
@@ -1495,7 +1495,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		      (repl-end (match-end 4))
 		      (repl (buffer-substring repl-beg repl-end))
 		      (word (buffer-substring-no-properties beg end)))
-		 (replace-match repl)
+		 (replace-match repl t t)
 		 (dictem-create-link
 		  (- repl-beg 1) (- repl-end 1)
 		  'dictem-reference-definition-face
