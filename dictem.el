@@ -121,14 +121,15 @@ a single word in a MATCH search."
   :group 'dictem-faces)
 
 (defface dictem-reference-dbname-face
-  '((((background light)) (:foreground "black"))
+  '((((background light)) (:foreground "darkgreen"))
     (((background dark))  (:bold t :foreground "white")))
 
   "The face that is used for displaying a reference to database"
   :group 'dictem-faces)
 
 (defface dictem-database-description-face
-  '((t (:bold t)))
+  '((((background light)) (:bold t :foreground "darkblue"))
+    (((background dark))  (:bold t :foreground "white")))
 
   "The face that is used for displaying a database description"
   :group 'dictem-faces)
@@ -647,7 +648,7 @@ to enter a database name."
     (if (= exit-status -1) 0 exit-status)
     ))
 
-(defun dictem-url (host port database define_or_match query &optional strategy)
+(defun dictem-make-url (host port database define_or_match query &optional strategy)
   "Returns dict:// URL"
   (concat
    "dict://" host ":"
@@ -675,9 +676,10 @@ to enter a database name."
 	   (if (/= beg (point))
 	       (setq dictem-error-messages
 		     (append
-		      (list (dictem-url (dictem-get-server)
+		      (list
+		       (dictem-make-url (dictem-get-server)
 					(dictem-get-port) "" t "")
-			    (buffer-substring-no-properties beg (point)))
+		       (buffer-substring-no-properties beg (point)))
 		      dictem-error-messages)))
 	   (kill-region beg (point))))))
 
@@ -685,12 +687,12 @@ to enter a database name."
   "dictem search: MATCH + DEFINE"
   (interactive)
 
-  (let ((ex_status -1))
+  (let ((ex_status -1) (splitted-url nil))
   (defun run-dict-search (database)
-    (if (string-match dictem-dict-server-and-database-url database)
-	(save-dictem (setq dictem-server (match-string 1 database))
-		     (setq dictem-port   (match-string 3 database))
-		     (setq database      (match-string 4 database))
+    (if (setq splitted-url (dictem-parse-url database))
+	(save-dictem (setq dictem-server (nth 1 splitted-url))
+		     (setq dictem-port (dictem-get-port (nth 2 splitted-url)))
+		     (setq database      (nth 3 splitted-url))
 		     (dictem-initialize)
 		     (run-dict-search database)
 		     )
@@ -722,9 +724,10 @@ to enter a database name."
 	     (if (/= beg (point))
 		 (setq dictem-error-messages
 		       (append
-			(list (dictem-url (dictem-get-server)
+			(list
+			 (dictem-make-url (dictem-get-server)
 					  (dictem-get-port) query t database)
-			      (buffer-substring-no-properties beg (point)))
+			 (buffer-substring-no-properties beg (point)))
 			dictem-error-messages)))
 	     (kill-region beg (point))))
       (setq dictem-last-database database)
@@ -738,10 +741,10 @@ to enter a database name."
 
   (let ((ex_status -1))
   (defun run-dict-define (database)
-    (if (string-match dictem-dict-server-and-database-url database)
-	(save-dictem (setq dictem-server (match-string 1 database))
-		     (setq dictem-port   (match-string 3 database))
-		     (setq database      (match-string 4 database))
+    (if (setq splitted-url (dictem-parse-url database))
+	(save-dictem (setq dictem-server (nth 1 splitted-url))
+		     (setq dictem-port (dictem-get-port (nth 2 splitted-url)))
+		     (setq database      (nth 3 splitted-url))
 		     (dictem-initialize)
 		     (run-dict-define database)
 		     )
@@ -770,9 +773,10 @@ to enter a database name."
 	     (if (/= beg (point))
 		 (setq dictem-error-messages
 		       (append
-			(list (dictem-url (dictem-get-server)
+			(list
+			 (dictem-make-url (dictem-get-server)
 					  (dictem-get-port) query t database)
-			      (buffer-substring-no-properties beg (point)))
+			 (buffer-substring-no-properties beg (point)))
 			dictem-error-messages)))
 	     (kill-region beg (point))))
       (setq dictem-last-database database)
@@ -786,10 +790,10 @@ to enter a database name."
 
   (let ((ex_status -1))
   (defun run-dict-match (database)
-    (if (string-match dictem-dict-server-and-database-url database)
-	(save-dictem (setq dictem-server (match-string 1 database))
-		     (setq dictem-port   (match-string 3 database))
-		     (setq database      (match-string 4 database))
+    (if (setq splitted-url (dictem-parse-url database))
+	(save-dictem (setq dictem-server (nth 1 splitted-url))
+		     (setq dictem-port (dictem-get-port (nth 2 splitted-url)))
+		     (setq database      (nth 3 splitted-url))
 		     (dictem-initialize)
 		     (run-dict-match database)
 		     )
@@ -812,9 +816,10 @@ to enter a database name."
 	     (if (/= beg (point))
 		 (setq dictem-error-messages
 		       (append
-			(list (dictem-url (dictem-get-server)
+			(list
+			 (dictem-make-url (dictem-get-server)
 					  (dictem-get-port) query t database)
-			      (buffer-substring-no-properties beg (point)))
+			 (buffer-substring-no-properties beg (point)))
 			dictem-error-messages)))
 	     (kill-region beg (point))))
       (setq dictem-last-database database)
@@ -847,9 +852,10 @@ to enter a database name."
 	     (if (/= beg (point))
 		 (setq dictem-error-messages
 		       (append
-			(list (dictem-url (dictem-get-server)
+			(list
+			 (dictem-make-url (dictem-get-server)
 					  (dictem-get-port) "" t database)
-			      (buffer-substring-no-properties beg (point)))
+			 (buffer-substring-no-properties beg (point)))
 			dictem-error-messages)))
 	     (kill-region beg (point))))
       (setq dictem-last-database database)
@@ -1091,8 +1097,20 @@ The default key bindings:
 (defconst dictem-buffer-name
   "*dictem buffer*")
 
-(defconst dictem-dict-server-and-database-url
-  "^dict://\\([^:]+\\)\\(:\\([0-9]+\\)?\\)/\\(.*\\)$")
+(defconst dictem-url-regexp
+  "^\\(dict\\)://\\([^/:]+\\)\\(:\\([0-9]+\\)\\)?/\\(.*\\)$")
+
+(defun dictem-parse-url (url)
+  "Parses string like dict://dict.org:2628/foldoc
+and returns a list containing protocol, server, port and path on nil if fails"
+  (if (string-match dictem-url-regexp url)
+      (list
+       (match-string 1 url )
+       (match-string 2 url)
+       (match-string 4 url)
+       (match-string 5 url)
+       )
+    nil))
 
 (defun dictem ()
   "Create a new dictem buffer and install dictem-mode"
