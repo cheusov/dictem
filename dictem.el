@@ -319,7 +319,7 @@ by functions run from dictem-postprocess-each-definition-hook.")
   (let ((exit_status
 	 (call-process
 	  dictem-client-prog nil
-	  dictem-temp-buffer-name nil
+	  (get-buffer-create dictem-temp-buffer-name) nil
 	  "-P" "-" "-m"
 	  "-d" (if database database "*")
 	  "-s" (if strategy strategy dictem-default-strategy)
@@ -352,7 +352,7 @@ and returns alist containing strategies and their descriptions"
   (let ((exit_status
 	 (call-process
 	  dictem-client-prog nil
-	  dictem-temp-buffer-name nil
+	  (get-buffer-create dictem-temp-buffer-name) nil
 	  "-P" "-" "-S"
 	  "-h" (if server server dictem-server)
 	  "-p" (dictem-get-port port)
@@ -389,7 +389,7 @@ and returns alist containing database names and descriptions"
   (let ((exit_status
 	 (call-process
 	  dictem-client-prog nil
-	  dictem-temp-buffer-name nil
+	  (get-buffer-create dictem-temp-buffer-name) nil
 	  "-P" "-" "-D"
 	  "-h" (if server server dictem-server)
 	  "-p" (dictem-get-port port)
@@ -581,9 +581,13 @@ to enter a database name."
 (defun dictem-read-query (&optional default-query)
   "Switches to minibuffer and asks user to enter a query."
   (interactive)
-  (read-string
-   (concat "query [" default-query "]: ")
-   nil 'dictem-query-history default-query t))
+  (if (featurep 'xemacs)
+      (read-string
+       (concat "query [" default-query "]: ")
+       nil 'dictem-query-history default-query)
+    (read-string
+     (concat "query [" default-query "]: ")
+     nil 'dictem-query-history default-query t)))
 
 
 ;;;;;;;;    Search Functions     ;;;;;;;
@@ -666,10 +670,6 @@ to enter a database name."
 	   )))
 
     (cond ((= 0 exit_status)
-;	     (save-excursion
-;	       (narrow-to-region beg (point))
-;	       (run-hooks 'dictem-postprocess-databases-hook)
-;	       (widen))
 	   nil)
 	  (t
 	   (if (/= beg (point))
@@ -1161,8 +1161,12 @@ The default key bindings:
 (define-key dictem-mode-map "\177" 'scroll-down)
 
 ; Define on click
-(define-key dictem-mode-map [mouse-2]
-  'dictem-define-on-click)
+(if (featurep `xemacs)
+    (define-key dictem-mode-map [button2]
+      'dictem-define-on-click)
+  (define-key dictem-mode-map [mouse-2]
+    'dictem-define-on-click))
+
 (define-key dictem-mode-map "\C-m"
   'dictem-define-on-press)
 
@@ -1181,7 +1185,9 @@ The default key bindings:
 (defun dictem-quit ()
   "Bury the current dictem buffer."
   (interactive)
-  (quit-window))
+  (if (featurep 'xemacs)
+      (bury-buffer)
+    (quit-window)))
 
 (defun dictem-kill ()
   "Kill the current dictem buffer."
