@@ -113,6 +113,8 @@ M-x customize-group <RET> dictem <RET>
 Manual Configuration
 --------------------
 
+Ex.1)
+
 The easiest configuration of dictem may look like this
 
 ; Add to load-path variable a new directory with files of dictem
@@ -159,6 +161,7 @@ The easiest configuration of dictem may look like this
 (global-set-key "\C-c\M-b" 'dictem-run-show-databases)
 
 -------
+Ex.2)
 
 There are a few functions that can make dictem look
 a bit nicer and be more functional. They should
@@ -186,6 +189,7 @@ be added to special hooks like the following.
 	  'dictem-postprocess-definition-hyperlinks)
 
 -------
+Ex.3)
 
 If you want to combine some databases in you own "virtual" dictionary,
 create them like this
@@ -202,6 +206,7 @@ and new names will appear when
 dictem-run function will ask you about database name.
 
 -------
+Ex.4)
 
 You can even create virtual dictionaries which consist of
 databases from different DICT server.
@@ -213,6 +218,7 @@ databases from different DICT server.
      ))
 
 -------
+Ex.5)
 
 If your DICT server provides too many databases and most of which
 are of no interest for you, you can disable them
@@ -221,6 +227,7 @@ and use only those specified in dictem-user-databases-alist variable.
 (setq dictem-use-user-databases-only t)
 
 -------
+Ex.6)
 
 Of course, you can assign you can
 assign your own key bendings in dictem buffer
@@ -229,6 +236,7 @@ assign your own key bendings in dictem buffer
 (define-key dictem-mode-map [(backtab)] 'dictem-previous-link)
 
 -------
+Ex.7)
 
 You are not limited to the default DICT server only.
 The following code will allow you to access any server you want.
@@ -300,6 +308,7 @@ You'll be asked for host and port.
        (call-interactively 'dictem-run-show-server)))))
 
 -------
+Ex.8)
 
 Some databases may have specially formatted definitions,
 for example, HTML, MIME, DICF or ROFF formats.
@@ -341,6 +350,7 @@ It is easy to postprocess them.
 	  'dictem-highlight-man-definition)
 
 -------
+Ex.9)
 
 ; By using dictem-run function more advanced ELISP programmers
 ; may create their own search scenaria. Look at this code.
@@ -371,8 +381,30 @@ It is easy to postprocess them.
 	,query "word")))))
 
 -------
+Ex.10)
+
+By default dictem remembers the database name and strategy that
+was used last time and the following call
+of dictem-select-database and dictem-select-strategy will use
+these values as a default in the minibuffer.
+If you dislike this behaviour, set variables
+dictem-default-database and/or dictem-default-strategy.
+
+(add-hook 'c-mode-common-hook
+	  '(lambda ()
+	     (interactive)
+	     (make-local-variable 'dictem-default-database)
+	     (setq dictem-default-database "man")
+	     ))
+
+The example above sets default database to "man"
+in C buffers.
+
+-------
 
 If you have read to this point and all the examples above seem easy
 for you, you are probably a LISP Guru.
 So, I have nothing more to tell you ;-)
 Feel free to inspect the code, and I hope you found DictEm useful.
+
+Dict'Em All! ;-)
