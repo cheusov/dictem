@@ -1,22 +1,22 @@
-;This code was initially based on
-;dictionary.el written by Torsten Hilbrich <Torsten.Hilbrich@gmx.net>
-;but now probably doesn't contain original code.
-;Most of the code has been written
-;from scratch by Aleksey Cheusov <vle@gmx.net>, 2004
+; This code was initially based on
+; dictionary.el written by Torsten Hilbrich <Torsten.Hilbrich@gmx.net>
+; but now probably doesn't contain original code.
+; Most of the code has been written
+; from scratch by Aleksey Cheusov <vle@gmx.net>, 2004
 ;
-;DictEm is free software; you can redistribute it and/or modify
-;it under the terms of the GNU General Public License as published by
-;the Free Software Foundation; either version 2 of the License, or
-;(at your option) any later version.
+; DictEm is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version.
 ;
-;DictEm is distributed in the hope that it will be useful,
-;but WITHOUT ANY WARRANTY; without even the implied warranty of
-;MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;GNU General Public License for more details.
+; DictEm is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
 ;
-;You should have received a copy of the GNU General Public License
-;along with this program; if not, write to the Free Software
-;Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
 (require 'cl)
 
@@ -438,12 +438,19 @@ and returns alist containing database names and descriptions"
 
 (defun dictem-get-default-database (&optional def-db)
   "Gets the default database"
+  (defun dictem-extract-dbname (database)
+    (cond
+     ((consp database) (dictem-extract-dbname (car database)))
+     ((stringp database) database)
+     (t (error "The database should be either stringp or consp"))
+     ))
+
   (if def-db
-      def-db
+      (dictem-extract-dbname def-db)
     (if dictem-default-database
-	dictem-default-database
+	(dictem-extract-dbname dictem-default-database)
       (if dictem-last-database
-	  dictem-last-database
+	  (dictem-extract-dbname dictem-last-database)
 	"*"))))
 
 ;;;;;      Low Level Functions     ;;;;;
@@ -482,18 +489,12 @@ and returns alist containing database names and descriptions"
       ((completion-ignore-case t)
        (str (completing-read
 	     (concat prompt " [" default "]: ")
-	     alist
-	     nil
-	     t
-	     nil
-	     history
-	     default))
+	     alist nil t nil history default))
        (str-cons (assoc str alist)))
-;    str-cons))
     (cond
-     ((and str-cons (cdr str-cons))
-      (cdr str-cons))
-     ((and str-cons (null (cdr str-cons)))
+     ((and str-cons (consp str-cons) (cdr str-cons))
+      str-cons)
+     ((and str-cons (consp str-cons))
       (car str-cons))
      (t nil))))
 
@@ -660,7 +661,7 @@ to enter a database name."
      ((stringp databases)
       (dictem-local-call-dict-internal-iter fun (cons databases nil)))
      ((consp databases)
-      (dictem-local-call-dict-internal-iter fun databases))
+      (dictem-local-call-dict-internal-iter fun (cdr databases)))
      (t (error "wrong type of argument"))
      )
 
@@ -750,10 +751,10 @@ to enter a database name."
 			     (buffer-substring-no-properties beg (point)))
 			    dictem-error-messages)))
 		 (kill-region beg (point))))
-	  (setq dictem-last-database database)
-	  (setq dictem-last-strategy strategy)
 	  ex_status))))
 
+  (setq dictem-last-database database)
+  (setq dictem-last-strategy strategy)
   (dictem-call-dict-internal 'dictem-local-run-dict-search databases)))
 
 (defun dictem-base-define (databases query strategy)
@@ -801,9 +802,9 @@ to enter a database name."
 			     (buffer-substring-no-properties beg (point)))
 			    dictem-error-messages)))
 		 (kill-region beg (point))))
-	  (setq dictem-last-database database)
 	  ex_status))))
 
+  (setq dictem-last-database database)
   (dictem-call-dict-internal 'dictem-local-run-dict-define databases)))
 
 (defun dictem-base-match (databases query strategy)
@@ -845,10 +846,10 @@ to enter a database name."
 			     (buffer-substring-no-properties beg (point)))
 			    dictem-error-messages)))
 		 (kill-region beg (point))))
-	  (setq dictem-last-database database)
-	  (setq dictem-last-strategy strategy)
 	  ex_status))))
 
+  (setq dictem-last-database database)
+  (setq dictem-last-strategy strategy)
   (dictem-call-dict-internal 'dictem-local-run-dict-match databases)))
 
 (defun dictem-base-show-info (databases b c)
@@ -882,9 +883,9 @@ to enter a database name."
 			 (buffer-substring-no-properties beg (point)))
 			dictem-error-messages)))
 	     (kill-region beg (point))))
-      (setq dictem-last-database database)
       ex_status))
 
+  (setq dictem-last-database database)
   (dictem-call-dict-internal 'run-dict-show-info databases)))
 
 (defun dictem-base-show-server (a b c)
