@@ -436,7 +436,7 @@ and returns alist containing database names and descriptions"
        (list2alist (cdr l))))))
 
 (defun dictem-replace-spaces (str)
-  (while (string-match "  +" str)
+  (while (string-match "[ \n][ \n]+" str)
     (setq str (replace-match " " t t str)))
   (if (string-match "^ +" str)
       (setq str (replace-match "" t t str)))
@@ -1271,7 +1271,7 @@ shows information about databases provided by DICT."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;      Optional Features       ;;;;;
-(defun link-create-link (start end face function &optional data help)
+(defun dictem-create-link (start end face function &optional data help)
   "Create a link in the current buffer starting from `start' going to `end'.
 The `face' is used for displaying, the `data' are stored together with the
 link.  Upon clicking the `function' is called with `data' as argument."
@@ -1308,7 +1308,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		(dictem-replace-spaces
 		 (buffer-substring-no-properties
 		  (+ beg-dbname 1) (- end-dbname 1))))
-	  (link-create-link
+	  (dictem-create-link
 	   beg-dbname end-dbname
 	   'dictem-reference-dbname-face
 	   'dictem-base-show-info
@@ -1318,23 +1318,22 @@ link.  Upon clicking the `function' is called with `data' as argument."
 (defun dictem-postprocess-definition-hyperlinks ()
   (save-excursion
     (goto-char (point-min))
-    (let ((regexp "[{]\\([^{}|\n]+\\)[}]\\|^From [^\n]+\\[\\([^\n]+\\)\\]\\|\\([{]\\([^{}|\n]+\\)|\\([^{}|\n]+\\)[}]\\)"))
+    (let ((regexp "{\\([^{}|]+\\)}\\|^From [^\n]+\\[\\([^\n]+\\)\\]\\|\\({\\([^{}|\n]+\\)|\\([^{}|\n]+\\)}\\)"))
 
       (while (search-forward-regexp regexp nil t)
 	(cond ((match-beginning 1)
 	       (let* ((beg (match-beginning 1))
 		      (end (match-end 1))
-		      (word
-		       (dictem-replace-spaces
-			(buffer-substring-no-properties beg end))))
-		 (replace-match "\\1")
-		 (link-create-link
+		      (repl (buffer-substring beg end))
+		      (word (buffer-substring-no-properties beg end)))
+		 (replace-match repl)
+		 (dictem-create-link
 		  (- beg 1) (- end 1)
 		  'dictem-reference-definition-face
 		  'dictem-base-define
-		  (list (cons 'word word)
-			(cons 'dbname dictem-current-dbname))
-		  )))
+		  (list (cons 'word (dictem-replace-spaces word))
+			(cons 'dbname dictem-current-dbname)))
+		 ))
 	      ((match-beginning 2)
 	       (setq dictem-current-dbname
 		     (dictem-replace-spaces
@@ -1343,15 +1342,16 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	      ((match-beginning 3)
 	       (let* ((beg (match-beginning 5))
 		      (end (match-end 5))
-		      (word
-		       (dictem-replace-spaces
-			(buffer-substring-no-properties beg end))))
-		 (replace-match "\\4")
-		 (link-create-link
-		  (- (match-beginning 4) 1) (- (match-end 4) 1)
+	              (repl-beg (match-beginning 4))
+		      (repl-end (match-end 4))
+		      (repl (buffer-substring repl-beg repl-end))
+		      (word (buffer-substring-no-properties beg end)))
+		 (replace-match repl)
+		 (dictem-create-link
+		  (- repl-beg 1) (- repl-end 1)
 		  'dictem-reference-definition-face
 		  'dictem-base-define
-		  (list (cons 'word word)
+		  (list (cons 'word (dictem-replace-spaces word))
 			(cons 'dbname dictem-current-dbname))
 		  )))
 	      )))))
@@ -1371,12 +1371,12 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	  (setq last-database
 		(dictem-replace-spaces
 		 (buffer-substring-no-properties beg (- end 1))))
-	  (link-create-link
+	  (dictem-create-link
 	   beg (- end 1)
 	   'dictem-reference-dbname-face 'dictem-base-show-info
 	   (list (cons 'dbname last-database))))
 	 ((match-beginning 1)
-	  (link-create-link
+	  (dictem-create-link
 	   beg end
 	   'dictem-reference-m1-face 'dictem-base-define
 	   (list (cons 'word
@@ -1385,7 +1385,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 			 (+ beg 1) (- end 1))))
 		 (cons 'dbname last-database))))
 	 (t
-	  (link-create-link
+	  (dictem-create-link
 	   beg end
 	   'dictem-reference-m2-face 'dictem-base-define
 	   (list (cons 'word
