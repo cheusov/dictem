@@ -1,0 +1,3 @@
+#!/bin/sh
+
+emacs --no-window --no-site-file --no-init-file -f info
