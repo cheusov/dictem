@@ -237,7 +237,7 @@ to enter a query be searched"
   '((((type x)
       (class color)
       (background dark))
-     (:foreground "yellow"))
+     (:foreground "cyan"))
     (((type tty)
       (class color)
       (background dark))
@@ -579,7 +579,7 @@ the protocol defined in RFC 2229.
 
 ; search type may be "", 'edict-define or 'edict-match
 (defun edict-search (database strategy query search-fun)
-  "Creates new *Edict* buffer and fun search-fun"
+  "Creates new *Edict* buffer and run search-fun"
   (interactive)
 
   (let ((coding-system nil))
