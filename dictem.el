@@ -147,7 +147,7 @@ a single word in a MATCH search."
 ;;;;;           Variables          ;;;;;
 
 (defvar dictem-version
-  "0.0.2"
+  "0.0.5"
   "DictEm version information.")
 
 (defvar dictem-strategy-alist
@@ -216,7 +216,14 @@ by functions run from dictem-postprocess-each-definition-hook.")
 
 (defvar dictem-error-messages
   nil
-"A list of error messages collected by dictem-run")
+  "A list of error messages collected by dictem-run")
+
+(defvar dictem-hyperlinks-alist
+  nil
+  "ALIST of hyperlinks collected from dictem buffer by
+the function dictem-postprocess-collect-hyperlinks
+(add this function to the hook dictem-postprocess-definition-hook).
+This variable is local to buffer")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1035,6 +1042,16 @@ to enter a database name."
       (beginning-of-line)
     (goto-char (point-min))))
 
+(defun dictem-hyperlinks-menu ()
+  "Hyperlinks menu with autocompletion"
+  (interactive)
+  (let ((link (completing-read "Go to:" dictem-hyperlinks-alist)))
+    (if link
+	(dictem-run-define
+	 (cadr (assoc link dictem-hyperlinks-alist))
+	 dictem-last-database))
+    ))
+
 (defun dictem-next-link ()
   "Move point to the next hyperlink"
   (interactive)
@@ -1121,6 +1138,10 @@ The default key bindings:
   nil
   "The currently selected window")
 
+(defvar dictem-content-history
+  nil
+  "A list of pairs (buffer_content, point)")
+
 (defconst dictem-buffer-name
   "*dictem buffer*")
 
@@ -1152,6 +1173,7 @@ and returns a list containing protocol, server, port and path on nil if fails"
 
     (make-local-variable 'dictem-window-configuration)
     (make-local-variable 'dictem-selected-window)
+    (make-local-variable 'dictem-content-history)
     (setq dictem-window-configuration window-configuration)
     (setq dictem-selected-window selected-window)
     ))
@@ -1168,6 +1190,9 @@ and returns a list containing protocol, server, port and path on nil if fails"
 
 ; Bury the buffer
 (define-key dictem-mode-map "q" 'dictem-quit)
+
+; LAST, works like in Info-mode
+(define-key dictem-mode-map "l" 'dictem-last)
 
 ; Show help message
 (define-key dictem-mode-map "h" 'dictem-help)
@@ -1199,6 +1224,9 @@ and returns a list containing protocol, server, port and path on nil if fails"
 ; Move point to the previous HYPER LINK
 (define-key dictem-mode-map "\M-p" 'dictem-previous-link)
 
+; Hyperlinks menu
+(define-key dictem-mode-map "e" 'dictem-hyperlinks-menu)
+
 ; Scroll up dictem buffer
 (define-key dictem-mode-map " " 'scroll-up)
 
@@ -1223,6 +1251,10 @@ and returns a list containing protocol, server, port and path on nil if fails"
   "If current buffer is not a dictem buffer, create a new one."
   (if (dictem-mode-p)
       (progn
+	(setq dictem-content-history
+	      (cons (cons (buffer-substring
+			   (point-min) (point-max))
+			  (point)) dictem-content-history))
 	(setq buffer-read-only nil)
 	(erase-buffer))
     (dictem)))
@@ -1249,21 +1281,31 @@ and returns a list containing protocol, server, port and path on nil if fails"
 		(select-window selected-window)
 		(set-window-configuration configuration)))))))
 
+(defun dictem-last ()
+  "Go back to the last buffer visited visited."
+  (interactive)
+  (if (eq major-mode 'dictem-mode)
+      (if dictem-content-history
+	  (progn
+	    (setq buffer-read-only nil)
+	    (delete-region (point-min) (point-max))
+	    (insert-string (car (car dictem-content-history)))
+	    (goto-char (cdr (car dictem-content-history)))
+	    (setq dictem-content-history (cdr dictem-content-history))
+	    )
+	  )
+    ))
+
 (defun dictem-kill-all-buffers ()
   "Kill all dictem buffers."
   (interactive)
-  (defun dictem-local-list-buffer-names (l)
-    (cond
-     (l
-      (let ((buf-name (buffer-name (car l))))
-	(if (and (<= (length dictem-buffer-name) (length buf-name))
-		 (string= dictem-buffer-name
-			  (substring buf-name 0 (length dictem-buffer-name))))
-	    (kill-buffer buf-name)))
-      (dictem-local-list-buffer-names (cdr l)))
-     ))
-
-  (dictem-local-list-buffer-names (buffer-list)))
+  (dolist (buffer (buffer-list))
+    (let ((buf-name (buffer-name buffer)))
+      (if (and (<= (length dictem-buffer-name) (length buf-name))
+	       (string= dictem-buffer-name
+			(substring buf-name 0 (length dictem-buffer-name))))
+	  (kill-buffer buf-name))
+      )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;     Top-level Functions     ;;;;;;
@@ -1392,6 +1434,34 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	   'dictem-base-show-info
 	   (list (cons 'dbname dictem-current-dbname))))
 	))))
+
+(defun dictem-postprocess-collect-hyperlinks ()
+  (save-excursion
+    (setq dictem-hyperlinks-alist nil)
+;    (make-variable-buffer-local dictem-hyperlinks-alist)
+    (goto-char (point-min))
+    (let ((regexp "\\({[^{}|\n]+\\)}\\|\\({\\([^{}|\n]+\\)|\\([^{}|\n]+\\)}\\)"))
+
+      (while (search-forward-regexp regexp nil t)
+	(cond ((match-beginning 1)
+	       (let* ((word (buffer-substring-no-properties
+			     (+ (match-beginning 1) 1)
+			     (- (match-end 1) 1 ))))
+		 (setq dictem-hyperlinks-alist
+		       (cons (list word word) dictem-hyperlinks-alist))
+		 ))
+	      ((match-beginning 2)
+	       (let* ((word (buffer-substring-no-properties
+			     (match-beginning 3)
+			     (match-end 3)))
+		      (link (buffer-substring-no-properties
+			     (match-beginning 4)
+			     (match-end 4)))
+		      )
+		 (setq dictem-hyperlinks-alist
+		       (cons (list word link) dictem-hyperlinks-alist))
+		 )))))
+    ))
 
 (defun dictem-postprocess-definition-hyperlinks ()
   (save-excursion
