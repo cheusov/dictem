@@ -68,7 +68,7 @@ to enter a database name."
 
 ;;;;;;;;    Search Functions     ;;;;;;;
 
-(defcustom dictem-postprocess-define-hook
+(defcustom dictem-postprocess-definition-hook
   nil
   "Hook run in dictem mode buffers containing DEFINE result.")
 
@@ -127,7 +127,7 @@ to enter a database name."
 	     (save-excursion
 	       (narrow-to-region beg (point))
 	       (goto-char beg)
-	       (run-hooks 'dictem-postprocess-define-hook)
+	       (run-hooks 'dictem-postprocess-definition-hook)
 	       (widen)))
 	    ((= 21 exit_status)
 	     (save-excursion
@@ -158,7 +158,7 @@ to enter a database name."
 	     (save-excursion
 	       (narrow-to-region beg (point))
 	       (goto-char beg)
-	       (run-hooks 'dictem-postprocess-define-hook)
+	       (run-hooks 'dictem-postprocess-definition-hook)
 	       (widen)))
 	    ((= 21 exit_status)
 	     (save-excursion

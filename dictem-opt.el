@@ -5,7 +5,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;            Faces             ;;;;;
 
-(defface dictem-reference-define-face
+(defface dictem-reference-definition-face
   '((((type x)
       (class color)
       (background dark))
@@ -99,43 +99,58 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 ;;;;;;;   Coloring Functions     ;;;;;;;
 
-(defun dictem-postprocess-define ()
+(defun dictem-postprocess-definition-separator ()
   (interactive)
-  (let ((regexp "[{]\\([^{}\n]+\\)[}]\\|^\\(From\\) [^\n]+\\[\\([^\n]+\\)\\]"))
+  (save-excursion
+    (let ((regexp "^\\(From\\) [^\n]+\\[\\([^\n]+\\)\\]"))
 
-    (while (< (point) (point-max))
-      (if (search-forward-regexp regexp nil t)
-	  (if (match-beginning 1)
-	      (let* ((beg (match-beginning 1))
-		     (end (match-end 1))
-		     (word
-		      (dictem-replace-spaces
-		       (buffer-substring-no-properties beg end))))
-		(replace-match "\\1")
-		(link-create-link
-		 (- beg 1) (- end 1)
-		 'dictem-reference-define-face
-		 'dictem-define-base
-		 (list (cons 'word word)
-		       (cons 'dbname dictem-current-dbname))
-		 ))
-	    (let ((beg (match-beginning 2))
-		  (end (match-end 2))
-		  (beg-dbname (match-beginning 3))
-		  (end-dbname (match-end 3))
-		  )
-	      (put-text-property beg end 'face 'dictem-reference-dbname-face)
-	      (setq dictem-current-dbname
+      (while (search-forward-regexp regexp nil t)
+	(let ((beg (match-beginning 1))
+	      (end (match-end 1))
+	      (beg-dbname (match-beginning 2))
+	      (end-dbname (match-end 2))
+	      )
+	  (put-text-property beg end 'face 'dictem-reference-dbname-face)
+	  (setq dictem-current-dbname
+		(dictem-replace-spaces
+		 (buffer-substring-no-properties beg-dbname end-dbname)))
+	  (link-create-link
+	   beg-dbname end-dbname
+	   'dictem-reference-dbname-face
+	   'dictem-dbinfo-base
+	   (list (cons 'dbname dictem-current-dbname))))
+	))))
+
+(defun dictem-postprocess-definition-hyperlinks ()
+  (interactive)
+  (save-excursion
+    (let ((regexp "[{]\\([^{}\n]+\\)[}]\\|^From [^\n]+\\[\\([^\n]+\\)\\]"))
+
+      (while (search-forward-regexp regexp nil t)
+	(if (match-beginning 1)
+	    (let* ((beg (match-beginning 1))
+		   (end (match-end 1))
+		   (word
 		    (dictem-replace-spaces
-		     (buffer-substring-no-properties beg-dbname end-dbname)))
+		     (buffer-substring-no-properties beg end))))
+	      (replace-match "\\1")
 	      (link-create-link
-	       beg-dbname end-dbname
-	       'dictem-reference-dbname-face
-	       'dictem-dbinfo-base
-	       (list (cons 'dbname dictem-current-dbname))))
-	       )
-	(goto-char (point-max))))
-    (beginning-of-buffer)))
+	       (- beg 1) (- end 1)
+	       'dictem-reference-definition-face
+	       'dictem-define-base
+	       (list (cons 'word word)
+		     (cons 'dbname dictem-current-dbname))
+	       ))
+	  (setq dictem-current-dbname
+		(dictem-replace-spaces
+		 (buffer-substring-no-properties (match-beginning 2)
+						 (match-end 2))))
+	  )))))
+
+(defun dictem-postprocess-definition ()
+  (interactive)
+  (dictem-postprocess-definition-separator)
+  (dictem-postprocess-definition-hyperlinks))
 
 (defun dictem-postprocess-match ()
   (interactive)
