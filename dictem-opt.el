@@ -222,7 +222,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
   :group 'dictem
   :type 'hook)
 
-(defun dictem-narrow-definitions ()
+(defun dictem-postprocess-each-definition ()
   (beginning-of-buffer)
   (let ((regexp-from-dbname "^From [^\n]+\\[\\([^\n]+\\)\\]")
 	(beg nil)
