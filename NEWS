@@ -1,0 +1,26 @@
+Version 0.0.2, Tue, 30 Nov 2004 16:40:00 +0200
+
+  added: new function `dictem-kill-all-buffers' killing all dictem buffers.
+      The key "x" press in dictem buffer use it.
+
+  dictem-postprocess-definition-hyperlinks function:
+     When a substring {foo|bar} is encountered in a definition,
+     `foo' is used for highlighting and `bar' is used for subsearch.
+
+  new functions: `dictem-next-link' and `dictem-previous-link' which
+     set pointer to the next (or previous) hyper link
+  \M-n and \M-p key
+     are assigned to `dictem-next-link' and `dictem-previous-link'
+  When pressing RET (C-m) key on hyper link, subsearch
+     DICT server is sent a DEFINE command
+
+  added: new customizable variable: `dictem-use-existing-buffer'
+      which can be used
+      to use existing dictem buffer instead of creating a new one
+      for subsearches. This variable is local to buffer.
+
+  Documentation update
+
+Version 0.0.1, Thu, 08 Jul 2004 13:58:59 +0300
+
+  first publicly available release
