@@ -1,3 +1,5 @@
 #!/bin/sh
 
-emacs --no-window --no-site-file --no-init-file -f info
+#emacs --no-window --no-site-file --no-init-file -f info
+echo "does nothing yet"
+exit 1

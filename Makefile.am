@@ -16,14 +16,16 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 675 Mass Ave, Cambridge, MA 02139, USA.
 # 
-# $Id: Makefile.am,v 1.1 2003-10-22 03:24:13 cheusov Exp $
+# $Id: Makefile.am,v 1.2 2003-10-28 18:00:10 cheusov Exp $
 #
 
 # Add a _letter_ if you change the version number and release your own version.
 # Numbers are for the original author(s) only.
 
-bin_SCRIPTS = edict
-man_MANS    = edict.1
+AUTOMAKE_OPTIONS = foreign
+
+#bin_SCRIPTS = edict
+#man_MANS    = edict.1
 lisp_LISP   = edict.el
 
 .PHONY : cvsclean
