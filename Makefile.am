@@ -16,19 +16,17 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 675 Mass Ave, Cambridge, MA 02139, USA.
 # 
-# $Id: Makefile.am,v 1.10 2004-06-07 15:38:54 cheusov Exp $
+# $Id: Makefile.am,v 1.11 2004-11-30 14:44:09 cheusov Exp $
 #
 
 # Add a _letter_ if you change the version number and release your own version.
 # Numbers are for the original author(s) only.
 
-DICTEM_VERSION = 0.0.1
-
-AUTOMAKE_OPTIONS = foreign
+DICTEM_VERSION=0.0.2
 
 #bin_SCRIPTS = dictem
 #man_MANS    = dictem.1
-lisp_LISP   = dictem.el
+lisp_LISP=dictem.el
 
 .PHONY : cvsclean
 cvsclean : distclean
