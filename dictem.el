@@ -1,3 +1,6 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;         Custom Things        ;;;;;
+
 (defgroup dictem nil
   "Client for accessing the DICT server."
   :group 'help
@@ -18,38 +21,10 @@
 
 (defcustom dictem-client-prog "dict"
   "The command line DICT client.
-dictem accesses DICT server through this executable."
+dictem accesses DICT server through this executable.
+dict-1.9.14 or later (or compatible) is recomented."
   :group 'dictem
   :type 'string
-  )
-
-(defvar dictem-strategy-list
-  '(
-    ("word"    nil)
-    ("exact"     nil)
-    ("prefix"    nil)
-    ("substring" nil)
-    ("suffix"  nil)
-    ("re"      nil)
-    ("regexp"  nil)
-    ("soundex" nil)
-    ("lev"     nil)
-    )
-  )
-
-(defvar dictem-database-list
-  '(( "elements" nil )
-    ( "web1913" nil )
-    ( "wn" nil )
-    ( "gazetteer" nil )
-    ( "jargon" nil )
-    ( "foldoc" nil )
-    ( "easton" nil )
-    ( "hitchcock" nil )
-    ( "devils" nil )
-    ( "world02" nil )
-    ( "vera" nil )
-    )
   )
 
 (defcustom dictem-default-strategy "."
@@ -63,6 +38,43 @@ dictem accesses DICT server through this executable."
   :group 'dictem
   :group 'string
   )
+
+(defcustom dictem-mode-hook
+  nil
+  "Hook run in dictem mode buffers.")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;           Variables          ;;;;;
+
+(defvar dictem-strategy-list
+  '(("word"    nil)
+    ("exact"     nil)
+    ("prefix"    nil)
+    ("substring" nil)
+    ("suffix"  nil)
+    ("re"      nil)
+    ("regexp"  nil)
+    ("soundex" nil)
+    ("lev"     nil)
+    )
+
+  "ALIST of search strategies")
+
+(defvar dictem-database-list
+  '(("elements" nil )
+    ("web1913" nil )
+    ("wn" nil )
+    ("gazetteer" nil )
+    ("jargon" nil )
+    ("foldoc" nil )
+    ("easton" nil )
+    ("hitchcock" nil )
+    ("devils" nil )
+    ("world02" nil )
+    ("vera" nil )
+    )
+
+  "ALIST of databases")
 
 (defvar dictem-strategy-history
   nil
@@ -88,6 +100,22 @@ dictem accesses DICT server through this executable."
   nil
   "Keymap for dictem mode")
 
+(defvar dictem-temp-buffer-name
+  "*dict-temp*"
+  "Temporary buffer name")
+
+;(require 'dictem-opt)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;                              ;;;;;
+
+(defun get-line ()
+  "Replacement for (thing-at-point 'line)"
+  (save-excursion
+    (buffer-substring-no-properties
+     (progn (beginning-of-line) (point))
+     (progn (end-of-line) (point)))))
+
 (defun list2alist (l)
   (cond
    ((null l) nil)
@@ -95,9 +123,58 @@ dictem accesses DICT server through this executable."
        (list (car l) nil)
        (list2alist (cdr l))))))
 
-(defvar dictem-temp-buffer-name
-  "*dict-temp*"
-  "Temporary buffer name")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Functions Related to Error Object  ;;
+
+(defun dictem-make-error (error_status &optional buffer-or-string)
+  "Creates dictem error object"
+  (cond
+   ((stringp buffer-or-string)
+    (list 'dictem-error error_status buffer-or-string))
+   ((bufferp buffer-or-string)
+    (dictem-make-error
+     error_status
+     (save-excursion
+       (set-buffer buffer-or-string)
+;       (buffer-substring-no-properties
+;	(progn (beginning-of-buffer) (point))
+;	(progn (end-of-buffer) (point)))
+       (beginning-of-buffer)
+       (get-line)
+       )))
+   ((eq nil buffer-or-string)
+    (list 'dictem-error error_status buffer-or-string))
+   (t
+    (error "Invalid type of argument"))
+   ))
+
+(defun dictem-error-p (OBJECT)
+  "Returns t if OBJECT is the dictem error object"
+  (and
+   (listp OBJECT)
+   (eq (car OBJECT) 'dictem-error)
+   ))
+
+(defun dictem-error-message (err)
+  "Extract error message from dictem error object"
+  (cond
+   ((dictem-error-p err)
+    (nth 2 err))
+   (t
+    (error "Invalid type of argument"))
+   ))
+
+(defun dictem-error-status (err)
+  "Extract error status from dictem error object"
+  (cond
+   ((dictem-error-p err)
+    (nth 1 err))
+   (t
+    (error "Invalid type of argument"))
+   ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;      Low Level Functions     ;;;;;
 
 (defun dictem-select (prompt alist default history)
   (let
@@ -109,20 +186,13 @@ dictem accesses DICT server through this executable."
      t
      nil
      history
-     default
-     )
-    )
-  )
+     default)))
 
 (defun dictem-get-first-token ()
   (let
       ((str (thing-at-point 'line)))
-    (if
-     (string-match "^ [^ ][^ ]*" str )
-     (list (substring str ( + (match-beginning 0) 1) (match-end 0)))
-     )
-    )
-  )
+    (if (string-match "^ [^ ][^ ]*" str )
+	(list (substring str (+ (match-beginning 0) 1) (match-end 0))))))
 
 (defun dictem-get-first-tokens-from-temp-buffer ()
 ;    (switch-to-buffer dictem-temp-buffer-name)
@@ -134,63 +204,162 @@ dictem accesses DICT server through this executable."
 	(setq
 	 list-of-first-tokens
 	 (append (dictem-get-first-token) list-of-first-tokens)))
-      list-of-first-tokens
-      )
-    )
-  )
+      list-of-first-tokens)))
+
+(defun dictem-tokenize (s)
+  (if (string-match "\"[^\"]+\"\\|[^ \"]+" s )
+;	(substring s (match-beginning 0) (match-end 0))
+      (cons (substring s (match-beginning 0) (match-end 0)) 
+	    (dictem-tokenize (substring s (match-end 0))))
+    nil))
+
+(defun dictem-collect-matches ()
+  ; nreverse, setcar and nconc are used to reduce a number of cons
+  (defvar dictem-temp nil)
+  (beginning-of-buffer)
+  (loop
+   (let ((line (get-line)))
+     (if (string-match "^[^ ]+" line)
+	 (progn
+	   (if (consp dictem-temp)
+	       (setcar (cdar dictem-temp)
+		       (nreverse (cadar dictem-temp))))
+	   (setq
+	    dictem-temp
+	    (cons
+	     (list
+	      (substring line (match-beginning 0) (match-end 0))
+	      (nreverse 
+	       (dictem-tokenize (substring line (match-end 0)))))
+	     dictem-temp)))
+       (if (consp dictem-temp)
+	   (setcar (cdar dictem-temp)
+		   (nconc (nreverse (dictem-tokenize line))
+			  (cadar dictem-temp))
+		   ))
+       ))
+   (if (or (> (forward-line 1) 0)
+	   (> (current-column) 0))
+       (return (nreverse dictem-temp)))
+   ))
+
+(defun dictem-prepand-special-strats (l)
+  (cons '("." nil) l))
+
+(defun dictem-prepand-special-dbs (l)
+  (cons '("*" nil) (cons '("!" nil) l)))
+
+(defun dictem-replace-spaces (str)
+  (while (string-match "  +" str)
+    (setq str (replace-match " " t t str)))
+  (if (string-match "^ +" str)
+      (setq str (replace-match "" t t str)))
+  (if (string-match " +$" str)
+      (setq str (replace-match "" t t str)))
+  str)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;        Main Functions        ;;;;;
+
+
+;;;;;        GET Functions         ;;;;;
+
+(defun dictem-get-matches (query &optional database strategy server port)
+  "Returns ALIST of matches"
+  (let ((exit_status
+	 (call-process
+	  dictem-client-prog nil
+	  dictem-temp-buffer-name nil
+	  "-P" "-" "-m"
+	  "-d" (if database database "*")
+	  "-s" (if strategy strategy dictem-default-strategy)
+	  "-h" (if server server dictem-server)
+	  "-p" (if port port dictem-port)
+	  query)))
+    (cond
+     ((= exit_status 31)
+      nil)
+     ((= exit_status 0)
+      (progn
+	(save-excursion
+	  (set-buffer dictem-temp-buffer-name)
+	  (let ((matches (dictem-collect-matches)))
+	    (kill-buffer dictem-temp-buffer-name)
+	    matches))))
+     (t
+      (let
+	  ((err (dictem-make-error exit_status
+				   (get-buffer dictem-temp-buffer-name))))
+	(kill-buffer dictem-temp-buffer-name)
+	err))
+     )))
 
 (defun dictem-get-strategies (&optional server port)
-  "Obtains strategy list from a DICT server
+  "Obtains strategy ALIST from a DICT server
 and returns alist containing strategies and their descriptions"
-  (if (eq 0 (call-process
+  (let ((exit_status
+	 (call-process
 	     dictem-client-prog nil
 	     dictem-temp-buffer-name nil
 	     "-P" "-" "-S"
 	     "-h" (if server server dictem-server)
-	     "-p" (if port port dictem-port)))
+	     "-p" (if port port dictem-port))))
+    (cond
+     ((= exit_status 0)
       (let ((dblist (nreverse
 		     (list2alist
 		      (dictem-get-first-tokens-from-temp-buffer)))))
 	(kill-buffer dictem-temp-buffer-name)
-	dblist)
-    ))
+	dblist))
+     (t
+      (let
+	  ((err (dictem-make-error exit_status
+				   (get-buffer dictem-temp-buffer-name))))
+	(kill-buffer dictem-temp-buffer-name)
+	err))
+    )))
+
+(defun dictem-get-databases (&optional server port)
+  "Obtains database ALIST from a DICT server
+and returns alist containing database names and descriptions"
+  (let ((exit_status
+	 (call-process
+	  dictem-client-prog nil
+	  dictem-temp-buffer-name nil
+	  "-P" "-" "-D"
+	  "-h" (if server server dictem-server)
+	  "-p" (if port port dictem-port))))
+    (cond
+     ((= exit_status 0)
+      (let ((dblist (nreverse
+		     (list2alist
+		      (dictem-get-first-tokens-from-temp-buffer)))))
+	(kill-buffer dictem-temp-buffer-name)
+	dblist))
+     (t
+      (let
+	  ((err (dictem-make-error exit_status
+				   (get-buffer dictem-temp-buffer-name))))
+	(kill-buffer dictem-temp-buffer-name)
+	err))
+     )))
+
+
+;;;;;; Functions for Initialising ;;;;;;
 
 (defun dictem-set-strategies (&optional server port)
-  "Obtain strategy list from a DICT server
+  "Obtain strategy ALIST from a DICT server
 and sets dictem-strategy-list variable."
   (interactive)
   (setq dictem-strategy-list (dictem-get-strategies server port)))
 
-(defun dictem-get-databases (&optional server port)
-  "Obtains database list from a DICT server
-and returns alist containing database names and descriptions"
-  (if (eq 0 (call-process
-	     dictem-client-prog nil
-	     dictem-temp-buffer-name nil
-	     "-P" "-" "-D"
-	     "-h" (if server server dictem-server)
-	     "-p" (if port port dictem-port)))
-      (let ((dblist (nreverse
-		     (list2alist
-		      (dictem-get-first-tokens-from-temp-buffer)))))
-	(kill-buffer dictem-temp-buffer-name)
-	dblist)
-    ))
-
 (defun dictem-set-databases (&optional server port)
-  "Obtain database list from a DICT server
+  "Obtain database ALIST from a DICT server
 and sets dictem-database-list variable."
   (interactive)
   (setq dictem-database-list (dictem-get-databases server port)))
 
-(defun dictem-help ()
-  "Display a dictem help"
-  (interactive)
-  (describe-function 'dictem-mode)
-  )
-
-(defun dictem-prepand-special-strats (l)
-  (cons '("." nil) l))
+;;; Functions related to Minibuffer ;;;;
 
 (defun dictem-select-strategy (&optional default-strat)
   "Switches to minibuffer and ask the user
@@ -205,9 +374,6 @@ to enter a search strategy."
 	 (car dictem-strategy-history)
        dictem-default-strategy))
    'dictem-strategy-history))
-
-(defun dictem-prepand-special-dbs (l)
-  (cons '("*" nil) (cons '("!" nil) l)))
 
 (defun dictem-select-database (&optional default-db)
   "Switches to minibuffer and ask user
@@ -233,187 +399,114 @@ to enter a database name."
    default-query
    t))
 
-(defun dictem-replace-spaces (str)
-  (while (string-match "  +" str)
-    (setq str (replace-match " " t t str)))
-  (if (string-match "^ +" str)
-      (setq str (replace-match "" t t str)))
-  (if (string-match " +$" str)
-      (setq str (replace-match "" t t str)))
-  str
-  )
+;;;;;;;;    Search Functions     ;;;;;;;
 
-;(dictem-replace-spaces " qwe   ertrwww   ")
-
-(defface dictem-reference-define-face
-  '((((type x)
-      (class color)
-      (background dark))
-     (:foreground "cyan"))
-    (((type tty)
-      (class color)
-      (background dark))
-     (:foreground "cyan"))
-    (((class color)
-      (background light))
-     (:foreground "blue"))
-    (t
-     (:underline t)))
-
-  "The face that is used for displaying a reference to
-a phrase in a DEFINE search."
-  :group 'dictem)
-
-(defface dictem-reference-m1-face
-  '((((type x)
-      (class color)
-      (background dark))
-     (:foreground "cyan"))
-    (((type tty)
-      (class color)
-      (background dark))
-     (:foreground "cyan"))
-    (((class color)
-      (background light))
-     (:foreground "blue"))
-    (t
-     (:underline t)))
-
-  "The face that is used for displaying a reference to
-a phrase in a MATCH search."
-  :group 'dictem)
-
-(defface dictem-reference-m2-face
+(defcustom dictem-color-define-hook
   nil
+  "Hook run in dictem mode buffers containing DEFINE result.")
 
-  "The face that is used for displaying a reference to
-a single word in a MATCH search."
-  :group 'dictem)
+(defcustom dictem-color-match-hook
+  nil
+  "Hook run in dictem mode buffers containing MATCH result.")
 
-(defun dictem-define-on-click (event)
-  "Is called upon clicking the link."
-  (interactive "@e")
+(defcustom dictem-color-dbinfo-hook
+  nil
+  "Hook run in dictem mode buffers containing SHOW INFO result.")
 
-  (mouse-set-point event)
-  (let* (
-	 (properties (text-properties-at (point)))
-	 (word (plist-get properties 'link-data)))
-    (if word
-	(dictem-run 'dictem-define-base dictem-last-database word nil))))
+(defun dictem-search-base (database query strategy)
+  "dictem search: MATCH + DEFINE"
+  (interactive)
 
-(defun dictem-define-with-db-on-click (event)
-  "Is called upon clicking the link."
-  (interactive "@e")
+  (if (= 0 (call-process
+	    dictem-client-prog nil (current-buffer) nil
+	    "-P" "-" "-d" database "-s" strategy
+	    "-h" dictem-server "-p" dictem-port
+	    query))
+      (run-hooks 'dictem-color-define-hook)))
 
-  (mouse-set-point event)
-  (let* (
-	 (properties (text-properties-at (point)))
-	 (word (plist-get properties 'link-data)))
-    (if word
-	(dictem-run 'dictem-define-base (dictem-select-database) word nil))))
+(defun dictem-define-base (database query strategy)
+  "dictem search: DEFINE"
+  (interactive)
 
-(defun link-create-link (start end face function &optional data help)
-  "Create a link in the current buffer starting from `start' going to `end'.
-The `face' is used for displaying, the `data' are stored together with the
-link.  Upon clicking the `function' is called with `data' as argument."
-  (let ((properties `(face ,face
-	              mouse-face highlight
-		      link t
-		      link-data ,data)
-;		      help-echo ,help
-;		      link-function ,function)
-	  ))
-    (remove-text-properties start end properties)
-    (add-text-properties start end properties)))
+  (if (= 0 (call-process
+	    dictem-client-prog nil (current-buffer) nil
+	    "-P" "-" "-d" database
+	    "-h" dictem-server "-p" dictem-port
+	    query))
+      (run-hooks 'dictem-color-define-hook)))
 
-(defun dictem-new-search (word &optional all)
-;  (interactive)
-  (dictem-run
-   'dictem-define-base
-   dictem-last-database
-   word
-   nil
+(defun dictem-match-base (database query strategy)
+  "dictem search: MATCH"
+  (interactive)
+
+  (if (= 0 (call-process
+	    dictem-client-prog nil (current-buffer) nil
+	    "-P" "-" "-d" database "-s" strategy
+	    "-h" dictem-server "-p" dictem-port "-m"
+	    query))
+      (run-hooks 'dictem-color-match-hook)))
+
+(defun dictem-showinfo-base (database b c)
+  "dictem: SHOW SERVER command"
+  (interactive)
+
+  (call-process
+   dictem-client-prog nil (current-buffer) nil
+   "-P" "-" "-i" database
+   "-h" dictem-server "-p" dictem-port
    ))
 
-(defun dictem-colorit-define ()
-;  (interactive)
-  (let ((regexp "\\({\\)\\([^}]*\\)\\(}\\)"))
-    (beginning-of-buffer)
-    (while (< (point) (point-max))
-      (if (search-forward-regexp regexp nil t)
-	  (progn
-	    (let* (
-		   (match-length (- (match-end 2) (match-beginning 2)))
-		   (match-string (match-string 2))
-		   (match-start (match-beginning 1))
-		   (match-finish (+ (match-beginning 1) match-length))
-		   )
-	      (replace-match "\\2")
-	      (link-create-link
-	       match-start
-	       match-finish
-	       'dictem-reference-define-face
-	       'dictem-new-search
-	       (dictem-replace-spaces
-		(buffer-substring-no-properties match-start match-finish))
-	       )
-	      )
-	    )
-	  (goto-char (point-max))
-	  )
-      )
-    )
-  (beginning-of-buffer)
-  )
-
-(defun dictem-colorit-match ()
+(defun dictem-showserver-base (a b c)
+  "dictem: SHOW DB command"
   (interactive)
-  (let ((regexp1 "\"[^\"\n]*\"") (regexp2 "[^ \n][^ \n]*"))
-    (beginning-of-buffer)
-    (while (< (point) (point-max))
-      (if (search-forward-regexp regexp1 nil t)
-	  (link-create-link
-	   (match-beginning 0)
-	   (match-end 0)
-	   'dictem-reference-m1-face
-	   'dictem-new-search
-	   (dictem-replace-spaces
-	    (buffer-substring-no-properties
-	     (+ (match-beginning 0) 1)
-	     (- (match-end 0) 1)))
-	   )
-	  (goto-char (point-max))
-	  )
-      )
-    (beginning-of-buffer)
-    (while (< (point) (point-max))
-      (if (search-forward-regexp regexp2 nil t)
-	  (unless
-	      (or
-	       (equal 0 (match-beginning 0))
-	       (get-text-property (match-beginning 0) 'link-data)
-	       )
-	    (link-create-link
-	     (match-beginning 0)
-	     (match-end 0)
-	     'dictem-reference-m2-face
-	     'dictem-new-search
-	     (dictem-replace-spaces
-	      (buffer-substring-no-properties
-	       (match-beginning 0)
-	       (match-end 0)))
-	     )
-	    )
-	(goto-char (point-max))
-	)
-      )
-    )
-  (beginning-of-buffer)
-  )
 
-(defcustom dictem-mode-hook
-  nil
-  "Hook run in dictem mode buffers.")
+  (call-process
+   dictem-client-prog nil (current-buffer) nil
+   "-P" "-" "-I"
+   "-h" dictem-server "-p" dictem-port
+   ))
+
+(defun dictem-dbinfo-base (database &rest unused-args)
+  "dictem: SHOW INFO"
+  (interactive)
+
+  (if (= 0 (call-process
+	    dictem-client-prog nil (current-buffer) nil
+	    "-P" "-" "-i" database
+	    "-h" dictem-server "-p" dictem-port))
+      (run-hooks 'dictem-color-dbinfo-hook)
+      t
+      ))
+
+(defun dictem-run (search-fun &optional database query strategy)
+  "Creates new *dictem* buffer and run search-fun"
+  (interactive)
+
+  (let ((coding-system nil))
+    (if (and (functionp 'coding-system-list)
+	     (member 'utf-8 (coding-system-list)))
+ 	(setq coding-system 'utf-8))
+    (let (
+	  (selected-window (frame-selected-window))
+	  (coding-system-for-read coding-system)
+	  (coding-system-for-write coding-system)
+	  )
+      (dictem)
+      (make-local-variable 'dictem-last-strategy)
+      (make-local-variable 'dictem-last-database)
+      (setq dictem-last-strategy strategy)
+      (setq dictem-last-database database)
+      (funcall search-fun database query strategy)
+      (beginning-of-buffer)
+      (setq buffer-read-only t)
+      )))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun dictem-help ()
+  "Display a dictem help"
+  (interactive)
+  (describe-function 'dictem-mode))
 
 (defun dictem-mode ()
   "This is a mode for dict client implementing
@@ -446,8 +539,6 @@ The default key bindings:
   (setq major-mode 'dictem-mode)
   (setq mode-name "dictem")
 
-;  (toggle-read-only t)
-
   (add-hook 'kill-buffer-hook 'dictem-close t t)
   (run-hooks 'dictem-mode-hook)
   )
@@ -467,8 +558,7 @@ The default key bindings:
   (let (
 	(buffer (generate-new-buffer "*dictem buffer*"))
 	(window-configuration (current-window-configuration))
-	(selected-window (frame-selected-window))
-	)
+	(selected-window (frame-selected-window)))
     (switch-to-buffer-other-window buffer)
     (dictem-mode)
 
@@ -476,8 +566,7 @@ The default key bindings:
     (make-local-variable 'dictem-selected-window)
     (setq dictem-window-configuration window-configuration)
     (setq dictem-selected-window selected-window)
-    )
-  )
+    ))
 
 ;(unless dictem-mode-map
 (setq dictem-mode-map (make-sparse-keymap))
@@ -489,12 +578,6 @@ The default key bindings:
 (define-key dictem-mode-map "h"
   'dictem-help)
 
-(define-key dictem-mode-map [mouse-2]
-  'dictem-define-on-click)
-
-(define-key dictem-mode-map [C-down-mouse-2]
-  'dictem-define-with-db-on-click)
-
 ; SEARCH = MATCH + DEFINE
 (define-key dictem-mode-map "s"
   '(lambda ()
@@ -503,10 +586,7 @@ The default key bindings:
      'dictem-search-base
      (dictem-select-database)
      (dictem-read-query)
-     (dictem-select-strategy)
-     )
-    )
-  )
+     (dictem-select-strategy))))
 
 ; MATCH
 (define-key dictem-mode-map "m"
@@ -516,10 +596,7 @@ The default key bindings:
      'dictem-match-base
      (dictem-select-database)
      (dictem-read-query)
-     (dictem-select-strategy)
-     )
-    )
-  )
+     (dictem-select-strategy))))
 
 ; DEFINE
 (define-key dictem-mode-map "d"
@@ -529,10 +606,7 @@ The default key bindings:
      'dictem-define-base
      (dictem-select-database)
      (dictem-read-query)
-     nil
-     )
-    )
-  )
+     nil)))
 
 ; SHOW SERVER
 (define-key dictem-mode-map "i"
@@ -542,10 +616,7 @@ The default key bindings:
      'dictem-showinfo-base
      (dictem-select-database)
      nil
-     nil
-     )
-    )
-  )
+     nil)))
 
 ; SHOW INFO
 (define-key dictem-mode-map "r"
@@ -555,10 +626,7 @@ The default key bindings:
      'dictem-showserver-base
      nil
      nil
-     nil
-     )
-    )
-  )
+     nil)))
 
 ; DEFINE for the selected region
 (define-key dictem-mode-map " "
@@ -568,10 +636,7 @@ The default key bindings:
      'dictem-define-base
      "*"
      (thing-at-point 'word)
-     nil
-     )
-    )
-  )
+     nil)))
 
 ; DEFINE for the selected region
 (define-key dictem-mode-map [C-SPC]
@@ -581,10 +646,7 @@ The default key bindings:
      'dictem-define-base
      (dictem-select-database dictem-last-database)
      (thing-at-point 'word)
-     nil
-     )
-    )
-  )
+     nil)))
 
 ;  (link-initialize-keymap dictem-mode-map)
 
@@ -595,9 +657,7 @@ The default key bindings:
 (defun dictem-ensure-buffer ()
   "If current buffer is not a dictem buffer, create a new one."
   (unless (dictem-mode-p)
-    (dictem)
-    )
-  )
+    (dictem)))
 
 (defun dictem-close ()
   "Close the current dictem buffer"
@@ -612,91 +672,4 @@ The default key bindings:
 	  (if (window-live-p selected-window)
 	      (progn
 		(select-window selected-window)
-		(set-window-configuration configuration)))
-	  )
-	)
-      )
-  )
-
-(defun dictem-search-base (database query strategy)
-  "dictem search: MATCH + DEFINE"
-  (interactive)
-
-  (call-process
-   dictem-client-prog nil (current-buffer) nil
-   "-P" "-" "-d" database "-s" strategy
-   "-h" dictem-server "-p" dictem-port
-   query
-   )
-  (dictem-colorit-define)
-  )
-
-(defun dictem-define-base (database query strategy)
-  "dictem search: DEFINE"
-  (interactive)
-
-  (call-process
-   dictem-client-prog nil (current-buffer) nil
-   "-P" "-" "-d" database
-   "-h" dictem-server "-p" dictem-port
-   query
-   )
-  (dictem-colorit-define)
-  )
-
-(defun dictem-match-base (database query strategy)
-  "dictem search: MATCH"
-  (interactive)
-
-  (call-process
-   dictem-client-prog nil (current-buffer) nil
-   "-P" "-" "-d" database "-s" strategy
-   "-h" dictem-server "-p" dictem-port "-m"
-   query
-   )
-  (dictem-colorit-match)
-  )
-
-(defun dictem-showinfo-base (database b c)
-  "dictem: SHOW SERVER command"
-  (interactive)
-
-  (call-process
-   dictem-client-prog nil (current-buffer) nil
-   "-P" "-" "-i" database
-   "-h" dictem-server "-p" dictem-port
-   )
-  )
-
-(defun dictem-showserver-base (a b c)
-  "dictem: SHOW DB command"
-  (interactive)
-
-  (call-process
-   dictem-client-prog nil (current-buffer) nil
-   "-P" "-" "-I"
-   "-h" dictem-server "-p" dictem-port
-   )
-  )
-
-; search type may be "", 'dictem-define or 'dictem-match
-(defun dictem-run (search-fun &optional database query strategy)
-  "Creates new *dictem* buffer and run search-fun"
-  (interactive)
-
-  (let ((coding-system nil))
-    (if (and (functionp 'coding-system-list)
-	     (member 'utf-8 (coding-system-list)))
- 	(setq coding-system 'utf-8))
-    (let (
-	  (selected-window (frame-selected-window))
-	  (coding-system-for-read coding-system)
-	  (coding-system-for-write coding-system)
-	  )
-      (dictem)
-      (make-local-variable 'dictem-last-strategy)
-      (make-local-variable 'dictem-last-database)
-      (setq dictem-last-strategy strategy)
-      (setq dictem-last-database database)
-      (funcall search-fun database query strategy)
-      (beginning-of-buffer))))
+		(set-window-configuration configuration)))))))
