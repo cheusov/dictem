@@ -24,8 +24,7 @@ dictem accesses DICT server through this executable."
   )
 
 (defvar dictem-strategy-list
-  '(
-    ("."         nil)
+  '(("."         nil)
 ;    ("word"    nil)
     ("exact"     nil)
     ("prefix"    nil)
@@ -39,8 +38,7 @@ dictem accesses DICT server through this executable."
   )
 
 (defvar dictem-database-list
-  '(
-    ( "*"   nil )
+  '(( "*"   nil )
     ( "elements" nil )
     ( "web1913" nil )
     ( "wn" nil )
@@ -86,13 +84,13 @@ dictem accesses DICT server through this executable."
 
 (defun list2alist (list)
   (if
-      list
-      (cons
-       (list (car list) nil)
-       (list2alist (cdr list))
-       )
-    nil
+   list
+   (cons
+    (list (car list) nil)
+    (list2alist (cdr list))
     )
+   nil
+   )
   )
 
 (defun dictem-select (prompt alist default history)
@@ -114,9 +112,9 @@ dictem accesses DICT server through this executable."
   (let
       ((str (thing-at-point 'line)))
     (if
-	(string-match "^ [^ ][^ ]*" str )
-	(list (substring str ( + (match-beginning 0) 1) (match-end 0)))
-      )
+     (string-match "^ [^ ][^ ]*" str )
+     (list (substring str ( + (match-beginning 0) 1) (match-end 0)))
+     )
     )
   )
 
@@ -136,15 +134,17 @@ dictem accesses DICT server through this executable."
   "Obtain strategy list from a DICT server
 and sets dictem-strategy-list variable."
   (interactive)
+;  (if (buffer-live-p "*dict-temp*")
+;      (kill-buffer "*dict-temp*"))
   (if
-      (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-S" "-h" dictem-server "-p" dictem-port))
-      (setq dictem-strategy-list
-	    (cons
-	     (list "." nil)
-	     (nreverse (list2alist (get-first-tokens-from-temp-buffer) ) )
-	     )
-	    )
-    )
+   (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-S" "-h" dictem-server "-p" dictem-port))
+   (setq dictem-strategy-list
+	 (cons
+	  (list "." nil)
+	  (nreverse (list2alist (get-first-tokens-from-temp-buffer) ) )
+	  )
+	 )
+   )
   (kill-buffer "*dict-temp*")
   )
 
@@ -152,40 +152,42 @@ and sets dictem-strategy-list variable."
   "Obtain database list from a DICT server
 and sets dictem-database-list variable."
   (interactive)
+;  (if (buffer-live-p "*dict-temp*")
+;      (kill-buffer "*dict-temp*"))
   (if
-      (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-D" "-h" dictem-server "-p" dictem-port))
-      (setq dictem-database-list
-	    (cons
-	     (list "*" nil)
-	     (nreverse (list2alist (get-first-tokens-from-temp-buffer)))
-	     )
-	    )
-    )
+   (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-D" "-h" dictem-server "-p" dictem-port))
+   (setq dictem-database-list
+	 (cons
+	  (list "*" nil)
+	  (nreverse (list2alist (get-first-tokens-from-temp-buffer)))
+	  )
+	 )
+   )
   (kill-buffer "*dict-temp*")
   )
 
 (defun dictem-help ()
   "Display a dictem help"
   (interactive)
-  (describe-function 'dictem-mode))
+  (describe-function 'dictem-mode)
+  )
 
 (defun dictem-select-strategy (&optional default-strat)
   "Switches to minibuffer and ask user
 to enter a search strategy."
   (interactive)
-
   (setq dictem-last-strategy
 	(dictem-select
 	 "strategy"
 	 dictem-strategy-list
 	 (if
-	     default-strat
-	     default-strat
-	   (if dictem-strategy-history
-	       (car dictem-strategy-history)
-	     "exact"
-	     )
-	   )
+	  default-strat
+	  default-strat
+	  (if dictem-strategy-history
+	      (car dictem-strategy-history)
+	      "exact"
+	      )
+	  )
 	 'dictem-strategy-history
 	 )
 	)
@@ -195,19 +197,18 @@ to enter a search strategy."
   "Switches to minibuffer and ask user
 to enter a database name."
   (interactive)
-
   (setq dictem-last-database
 	(dictem-select
 	 "db"
 	 dictem-database-list
 	 (if
-	     default-db
-	     default-db
-	   (if dictem-database-history
-	       (car dictem-database-history)
-	     "*"
-	     )
-	   )
+	  default-db
+	  default-db
+	  (if dictem-database-history
+	      (car dictem-database-history)
+	      "*"
+	      )
+	  )
 	 'dictem-database-history
 	 )
 	)
@@ -217,7 +218,6 @@ to enter a database name."
   "Switches to minibuffer and ask user
 to enter a query."
   (interactive)
-
   (read-string
    (concat "query:(" default-query ") ")
    nil
@@ -293,7 +293,7 @@ a single word in a MATCH search."
 	 (word (plist-get properties 'link-data)))
     (if word
 	(dictem-run 'dictem-define-base dictem-last-database word nil)
-      )
+	)
     )
   )
 
@@ -307,7 +307,7 @@ a single word in a MATCH search."
 	 (word (plist-get properties 'link-data)))
     (if word
 	(dictem-run 'dictem-define-base (dictem-select-database) word nil)
-      )
+	)
     )
   )
 
@@ -321,7 +321,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		      link-data ,data)
 ;		      help-echo ,help
 ;		      link-function ,function)
-		    )
+	  )
 	)
     (remove-text-properties start end properties)
     (add-text-properties start end properties)))
@@ -344,11 +344,11 @@ link.  Upon clicking the `function' is called with `data' as argument."
       (if (search-forward-regexp regexp nil t)
 	  (progn
 	    (let* (
-		  (match-length (- (match-end 2) (match-beginning 2)))
-		  (match-string (match-string 2))
-		  (match-start (match-beginning 1))
-		  (match-finish (+ (match-beginning 1) match-length))
-		  )
+		   (match-length (- (match-end 2) (match-beginning 2)))
+		   (match-string (match-string 2))
+		   (match-start (match-beginning 1))
+		   (match-finish (+ (match-beginning 1) match-length))
+		   )
 	      (replace-match "\\2")
 	      (link-create-link
 	       match-start
@@ -360,8 +360,8 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	       )
 	      )
 	    )
-	(goto-char (point-max))
-	)
+	  (goto-char (point-max))
+	  )
       )
     )
   (beginning-of-buffer)
@@ -383,8 +383,8 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	     (+ (match-beginning 0) 1)
 	     (- (match-end 0) 1)))
 	   )
-	(goto-char (point-max))
-	)
+	  (goto-char (point-max))
+	  )
       )
     (beginning-of-buffer)
     (while (< (point) (point-max))
@@ -499,92 +499,92 @@ The default key bindings:
 ; SEARCH = MATCH + DEFINE
 (define-key dictem-mode-map "s"
   '(lambda ()
-     (interactive)
-     (dictem-run
-      'dictem-search-base
-      (dictem-select-database)
-      (dictem-read-query)
-      (dictem-select-strategy)
-      )
+    (interactive)
+    (dictem-run
+     'dictem-search-base
+     (dictem-select-database)
+     (dictem-read-query)
+     (dictem-select-strategy)
      )
+    )
   )
 
 ; MATCH
 (define-key dictem-mode-map "m"
   '(lambda ()
-     (interactive)
-     (dictem-run
-      'dictem-match-base
-      (dictem-select-database)
-      (dictem-read-query)
-      (dictem-select-strategy)
-      )
+    (interactive)
+    (dictem-run
+     'dictem-match-base
+     (dictem-select-database)
+     (dictem-read-query)
+     (dictem-select-strategy)
      )
+    )
   )
 
 ; DEFINE
 (define-key dictem-mode-map "d"
   '(lambda ()
-     (interactive)
-     (dictem-run
-      'dictem-define-base
-      (dictem-select-database)
-      (dictem-read-query)
-      nil
-      )
+    (interactive)
+    (dictem-run
+     'dictem-define-base
+     (dictem-select-database)
+     (dictem-read-query)
+     nil
      )
+    )
   )
 
 ; SHOW SERVER
 (define-key dictem-mode-map "i"
   '(lambda ()
-     (interactive)
-     (dictem-run
-      'dictem-showinfo-base
-      (dictem-select-database)
-      nil
-      nil
-      )
+    (interactive)
+    (dictem-run
+     'dictem-showinfo-base
+     (dictem-select-database)
+     nil
+     nil
      )
+    )
   )
 
 ; SHOW INFO
 (define-key dictem-mode-map "r"
   '(lambda ()
-     (interactive)
-     (dictem-run
-      'dictem-showserver-base
-      nil
-      nil
-      nil
-      )
+    (interactive)
+    (dictem-run
+     'dictem-showserver-base
+     nil
+     nil
+     nil
      )
+    )
   )
 
 ; DEFINE for the selected region
 (define-key dictem-mode-map " "
   '(lambda ()
-     (interactive)
-     (dictem-run
-      'dictem-define-base
-      "*"
-      (thing-at-point 'word)
-      nil
-      )
+    (interactive)
+    (dictem-run
+     'dictem-define-base
+     "*"
+     (thing-at-point 'word)
+     nil
      )
+    )
   )
 
 ; DEFINE for the selected region
 (define-key dictem-mode-map [C-SPC]
   '(lambda ()
-     (interactive)
-     (dictem-run
-      'dictem-define-base
-      (dictem-select-database dictem-last-database)
-      (thing-at-point 'word)
-      nil
-      )
+    (interactive)
+    (dictem-run
+     'dictem-define-base
+     (dictem-select-database dictem-last-database)
+     (thing-at-point 'word)
+     nil
      )
+    )
   )
 
 ;  (link-initialize-keymap dictem-mode-map)
@@ -616,7 +616,7 @@ The default key bindings:
 		(set-window-configuration configuration)))
 	  )
 	)
-    )
+      )
   )
 
 (defun dictem-search-base (database query strategy)
