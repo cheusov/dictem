@@ -1,6 +1,27 @@
-(defvar edict-server "dict.org")
-(defvar edict-port "2628")
-(defvar edict-client-prog "dict")
+(defgroup edict nil
+  "Client for accessing the DICT server."
+  :group 'help
+  :group 'hypermedia
+  )
+
+(defcustom edict-server "dict.org"
+  "The DICT server"
+  :group 'edict
+  :type 'string
+  )
+
+(defcustom edict-port "2628"
+  "The port of the DICT server"
+  :group 'edict
+  :type 'string
+  )
+
+(defcustom edict-client-prog "dict"
+  "The command line DICT client.
+edict accesses DICT server through this executable."
+  :group 'edict
+  :type 'string
+  )
 
 (defvar edict-strategy-list
   '(
@@ -34,6 +55,35 @@
     )
   )
 
+(defcustom edict-default-strategy "."
+  "The default search strategy."
+  :group 'edict
+  :group 'string
+  )
+
+(defcustom edict-default-database "*"
+  "The default database name."
+  :group 'edict
+  :group 'string
+  )
+
+(defvar edict-strategy-history nil)
+(defvar edict-database-history nil)
+(defvar edict-query-history nil)
+(defvar edict-last-database
+  "Last used database name"
+  "*"
+  )
+
+(defvar edict-last-strategy
+  "Last used strategy name"
+  "."
+  )
+
+(defvar edict-mode-map
+  nil
+  "Keymap for edict mode")
+
 (defun list2alist (list)
   (if
       list
@@ -44,25 +94,6 @@
     nil
     )
   )
-
-(defvar edict-default-strategy ".")
-(defvar edict-default-database "*")
-(defvar edict-strategy-history nil)
-(defvar edict-database-history nil)
-(defvar edict-query-history nil)
-(defvar edict-last-database
-  "Last requested database name"
-  "*"
-  )
-
-(defvar edict-last-strategy
-  "Last requested strategy name"
-  "."
-  )
-
-(defvar edict-mode-map
-  nil
-  "Keymap for edict mode")
 
 (defun edict-select (prompt alist default history)
   (let
@@ -103,7 +134,7 @@
 
 (defun edict-set-strategies ()
   "Obtain strategy list from a DICT server
-and sets edict-strategy-list variable"
+and sets edict-strategy-list variable."
   (interactive)
   (if
       (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-S" "-h" edict-server "-p" edict-port))
@@ -119,7 +150,7 @@ and sets edict-strategy-list variable"
 
 (defun edict-set-databases ()
   "Obtain database list from a DICT server
-and sets edict-database-list variable"
+and sets edict-database-list variable."
   (interactive)
   (if
       (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-D" "-h" edict-server "-p" edict-port))
@@ -135,7 +166,7 @@ and sets edict-database-list variable"
 
 (defun edict-select-strategy (&optional default-strat)
   "Switches to minibuffer and ask user
-to enter a search strategy"
+to enter a search strategy."
   (interactive)
 
   (setq edict-last-strategy
@@ -157,7 +188,7 @@ to enter a search strategy"
 
 (defun edict-select-database (&optional default-db)
   "Switches to minibuffer and ask user
-to enter a database to be searched in"
+to enter a database name."
   (interactive)
 
   (setq edict-last-database
@@ -179,7 +210,7 @@ to enter a database to be searched in"
 
 (defun edict-read-query (&optional default-query)
   "Switches to minibuffer and ask user
-to enter a query be searched"
+to enter a query."
   (interactive)
 
   (read-string
@@ -202,7 +233,7 @@ to enter a query be searched"
 
 ;(edict-replace-spaces " qwe   ertrwww   ")
 
-(defface edict-reference-d-face
+(defface edict-reference-define-face
   '((((type x)
       (class color)
       (background dark))
@@ -216,7 +247,7 @@ to enter a query be searched"
      (:foreground "blue"))
     (t
      (:underline t)))
-  
+
   "The face that is used for displaying a reference to
 a phrase in a DEFINE search."
   :group 'edict)
@@ -235,7 +266,7 @@ a phrase in a DEFINE search."
      (:foreground "blue"))
     (t
      (:underline t)))
-  
+
   "The face that is used for displaying a reference to
 a phrase in a MATCH search."
   :group 'edict)
@@ -291,17 +322,16 @@ link.  Upon clicking the `function' is called with `data' as argument."
     (add-text-properties start end properties)))
 
 (defun edict-new-search (word &optional all)
-  (interactive)
+;  (interactive)
   (edict-search
    edict-last-database
    "exact"
    word
    'edict-define-base)
   )
-;(edict-new-search "apple")
 
 (defun edict-colorit-define ()
-  (interactive)
+;  (interactive)
   (let ((regexp "\\({\\)\\([^}]*\\)\\(}\\)"))
     (beginning-of-buffer)
     (while (< (point) (point-max))
@@ -317,7 +347,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	      (link-create-link
 	       match-start
 	       match-finish
-	       'edict-reference-d-face
+	       'edict-reference-define-face
 	       'edict-new-search
 	       (edict-replace-spaces
 		(buffer-substring-no-properties match-start match-finish))
@@ -382,12 +412,8 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 (defun edict-mode ()
   "This is a mode for dict client implementing
-the protocol defined in RFC 2229.
-"
+the protocol defined in RFC 2229."
   (interactive)
-
-;  (unless (eq major-mode 'edict-mode)
-;    (incf edict-instances))
 
   (kill-all-local-variables)
   (buffer-disable-undo)
@@ -395,16 +421,6 @@ the protocol defined in RFC 2229.
   (setq major-mode 'edict-mode)
   (setq mode-name "EDict")
 
-;  (make-local-variable 'edict-data-stack)
-;  (setq edict-data-stack nil)
-;  (make-local-variable 'edict-position-stack)
-;  (setq edict-position-stack nil)
-
-;  (make-local-variable 'edict-current-data)
-;  (make-local-variable 'edict-positions)
-
-;  (make-local-variable 'edict-default-edict)
-;  (make-local-variable 'edict-default-strategy)
 ;  (toggle-read-only t)
 
   (add-hook 'kill-buffer-hook 'edict-close t t)
@@ -436,10 +452,6 @@ the protocol defined in RFC 2229.
     (setq edict-window-configuration window-configuration)
     (setq edict-selected-window selected-window)
     )
-;    (setq edict-window-configuration
-;	  (list window-configuration edict-window-configuration))
-;    (setq edict-selected-window
-;	  (list selected-window edict-selected-window))
   )
 
 ;(unless edict-mode-map
@@ -539,6 +551,7 @@ the protocol defined in RFC 2229.
 (defun edict-close ()
   "Close the current edict buffer"
   (interactive)
+
   (if (eq major-mode 'edict-mode)
       (progn
 	(setq major-mode nil)
@@ -549,8 +562,6 @@ the protocol defined in RFC 2229.
 	      (progn
 		(select-window selected-window)
 		(set-window-configuration configuration)))
-;	  (setq edict-selected-window (cdr edict-selected-window))
-;	  (setq edict-window-configuration (cdr edict-window-configration))
 	  )
 	)
     )
@@ -581,7 +592,6 @@ the protocol defined in RFC 2229.
    )
   (edict-colorit-define)
   )
-;(edict-new-search "apple")
 
 (defun edict-match-base (database query strategy)
   "Edict search: MATCH"
