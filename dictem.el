@@ -247,7 +247,7 @@ by functions run from dictem-postprocess-each-definition-hook.")
      (save-excursion
        (set-buffer buffer-or-string)
        (goto-char (point-min))
-       (get-line)
+       (dictem-get-line)
        )))
    ((eq nil buffer-or-string)
     (list 'dictem-error error_status buffer-or-string))
@@ -287,7 +287,7 @@ by functions run from dictem-postprocess-each-definition-hook.")
   (goto-char (point-min))
   (let ((dictem-temp nil))
     (loop
-     (let ((line (get-line)))
+     (let ((line (dictem-get-line)))
        (if (string-match "^[^ ]+" line)
 	   (progn
 	     (if (consp dictem-temp)
@@ -421,19 +421,19 @@ and returns alist containing database names and descriptions"
 
 ;;;;;      Low Level Functions     ;;;;;
 
-(defun get-line ()
+(defun dictem-get-line ()
   "Replacement for (thing-at-point 'line)"
   (save-excursion
     (buffer-substring-no-properties
      (progn (beginning-of-line) (point))
      (progn (end-of-line) (point)))))
 
-(defun list2alist (l)
+(defun dictem-list2alist (l)
   (cond
    ((null l) nil)
    (t (cons
        (list (car l) nil)
-       (list2alist (cdr l))))))
+       (dictem-list2alist (cdr l))))))
 
 (defun dictem-replace-spaces (str)
   (while (string-match "[ \n][ \n]+" str)
@@ -477,17 +477,17 @@ and returns alist containing database names and descriptions"
 	    (dictem-tokenize (substring s (match-end 0))))
     nil))
 
-(defun search-forward-regexp-cs (REGEXP &optional BOUND NOERROR COUNT)
-  "Case-sensitive variant for search-forward-regexp"
-  (let ((case-replace nil)
-	(case-fold-search nil))
-    (search-forward-regexp REGEXP BOUND NOERROR COUNT)))
+;(defun dictem-search-forward-regexp-cs (REGEXP &optional BOUND NOERROR COUNT)
+;  "Case-sensitive variant for search-forward-regexp"
+;  (let ((case-replace nil)
+;	(case-fold-search nil))
+;    (search-forward-regexp REGEXP BOUND NOERROR COUNT)))
 
-(defun replace-match-cs (NEWTEXT &optional FIXEDCASE LITERAL STRING SUBEXP)
-  "Case-sensitive variant for replace-match"
-  (let ((case-replace nil)
-	(case-fold-search nil))
-    (replace-match NEWTEXT FIXEDCASE LITERAL STRING SUBEXP)))
+;(defun dictem-replace-match-cs (NEWTEXT &optional FIXEDCASE LITERAL STRING SUBEXP)
+;  "Case-sensitive variant for replace-match"
+;  (let ((case-replace nil)
+;	(case-fold-search nil))
+;    (replace-match NEWTEXT FIXEDCASE LITERAL STRING SUBEXP)))
 
 (defun dictem-get-port (&optional port)
   (let ((p (if port port dictem-port)))
