@@ -24,8 +24,8 @@ dictem accesses DICT server through this executable."
   )
 
 (defvar dictem-strategy-list
-  '(("."         nil)
-;    ("word"    nil)
+  '(
+    ("word"    nil)
     ("exact"     nil)
     ("prefix"    nil)
     ("substring" nil)
@@ -38,8 +38,7 @@ dictem accesses DICT server through this executable."
   )
 
 (defvar dictem-database-list
-  '(( "*"   nil )
-    ( "elements" nil )
+  '(( "elements" nil )
     ( "web1913" nil )
     ( "wn" nil )
     ( "gazetteer" nil )
@@ -65,33 +64,40 @@ dictem accesses DICT server through this executable."
   :group 'string
   )
 
-(defvar dictem-strategy-history nil)
-(defvar dictem-database-history nil)
-(defvar dictem-query-history nil)
+(defvar dictem-strategy-history
+  nil
+  "List of strategies entered from minibuffer")
+
+(defvar dictem-database-history
+  nil
+  "List of database names entered from minibuffer")
+
+(defvar dictem-query-history
+  nil
+  "List of queries entered from minibuffer")
+
 (defvar dictem-last-database
-  "Last used database name"
   "*"
-  )
+  "Last used database name")
 
 (defvar dictem-last-strategy
-  "Last used strategy name"
   "."
-  )
+  "Last used strategy name")
 
 (defvar dictem-mode-map
   nil
   "Keymap for dictem mode")
 
-(defun list2alist (list)
-  (if
-   list
-   (cons
-    (list (car list) nil)
-    (list2alist (cdr list))
-    )
-   nil
-   )
-  )
+(defun list2alist (l)
+  (cond
+   ((null l) nil)
+   (t (cons
+       (list (car l) nil)
+       (list2alist (cdr l))))))
+
+(defvar dictem-temp-buffer-name
+  "*dict-temp*"
+  "Temporary buffer name")
 
 (defun dictem-select (prompt alist default history)
   (let
@@ -108,7 +114,7 @@ dictem accesses DICT server through this executable."
     )
   )
 
-(defun get-first-token ()
+(defun dictem-get-first-token ()
   (let
       ((str (thing-at-point 'line)))
     (if
@@ -118,53 +124,64 @@ dictem accesses DICT server through this executable."
     )
   )
 
-(defun get-first-tokens-from-temp-buffer ()
-;    (switch-to-buffer "*dict-temp*")
-  (set-buffer "*dict-temp*")
-  (beginning-of-buffer)
-  (let ((list-of-first-tokens nil )) ;(get-first-tokens)))
-    (while (= (forward-line 1) 0)
-      (setq list-of-first-tokens (append (get-first-token) list-of-first-tokens))
+(defun dictem-get-first-tokens-from-temp-buffer ()
+;    (switch-to-buffer dictem-temp-buffer-name)
+  (save-excursion
+    (set-buffer dictem-temp-buffer-name)
+    (beginning-of-buffer)
+    (let ((list-of-first-tokens nil )) ;(dictem-get-first-tokens)))
+      (while (= (forward-line 1) 0)
+	(setq
+	 list-of-first-tokens
+	 (append (dictem-get-first-token) list-of-first-tokens)))
+      list-of-first-tokens
       )
-    list-of-first-tokens
     )
   )
 
-(defun dictem-set-strategies ()
+(defun dictem-get-strategies (&optional server port)
+  "Obtains strategy list from a DICT server
+and returns alist containing strategies and their descriptions"
+  (if (eq 0 (call-process
+	     dictem-client-prog nil
+	     dictem-temp-buffer-name nil
+	     "-P" "-" "-S"
+	     "-h" (if server server dictem-server)
+	     "-p" (if port port dictem-port)))
+      (let ((dblist (nreverse
+		     (list2alist
+		      (dictem-get-first-tokens-from-temp-buffer)))))
+	(kill-buffer dictem-temp-buffer-name)
+	dblist)
+    ))
+
+(defun dictem-set-strategies (&optional server port)
   "Obtain strategy list from a DICT server
 and sets dictem-strategy-list variable."
   (interactive)
-;  (if (buffer-live-p "*dict-temp*")
-;      (kill-buffer "*dict-temp*"))
-  (if
-   (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-S" "-h" dictem-server "-p" dictem-port))
-   (setq dictem-strategy-list
-	 (cons
-	  (list "." nil)
-	  (nreverse (list2alist (get-first-tokens-from-temp-buffer) ) )
-	  )
-	 )
-   )
-  (kill-buffer "*dict-temp*")
-  )
+  (setq dictem-strategy-list (dictem-get-strategies server port)))
 
-(defun dictem-set-databases ()
+(defun dictem-get-databases (&optional server port)
+  "Obtains database list from a DICT server
+and returns alist containing database names and descriptions"
+  (if (eq 0 (call-process
+	     dictem-client-prog nil
+	     dictem-temp-buffer-name nil
+	     "-P" "-" "-D"
+	     "-h" (if server server dictem-server)
+	     "-p" (if port port dictem-port)))
+      (let ((dblist (nreverse
+		     (list2alist
+		      (dictem-get-first-tokens-from-temp-buffer)))))
+	(kill-buffer dictem-temp-buffer-name)
+	dblist)
+    ))
+
+(defun dictem-set-databases (&optional server port)
   "Obtain database list from a DICT server
 and sets dictem-database-list variable."
   (interactive)
-;  (if (buffer-live-p "*dict-temp*")
-;      (kill-buffer "*dict-temp*"))
-  (if
-   (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-D" "-h" dictem-server "-p" dictem-port))
-   (setq dictem-database-list
-	 (cons
-	  (list "*" nil)
-	  (nreverse (list2alist (get-first-tokens-from-temp-buffer)))
-	  )
-	 )
-   )
-  (kill-buffer "*dict-temp*")
-  )
+  (setq dictem-database-list (dictem-get-databases server port)))
 
 (defun dictem-help ()
   "Display a dictem help"
@@ -172,59 +189,49 @@ and sets dictem-database-list variable."
   (describe-function 'dictem-mode)
   )
 
+(defun dictem-prepand-special-strats (l)
+  (cons '("." nil) l))
+
 (defun dictem-select-strategy (&optional default-strat)
-  "Switches to minibuffer and ask user
+  "Switches to minibuffer and ask the user
 to enter a search strategy."
   (interactive)
-  (setq dictem-last-strategy
-	(dictem-select
-	 "strategy"
-	 dictem-strategy-list
-	 (if
-	  default-strat
-	  default-strat
-	  (if dictem-strategy-history
-	      (car dictem-strategy-history)
-	      "exact"
-	      )
-	  )
-	 'dictem-strategy-history
-	 )
-	)
-  )
+  (dictem-select
+   "strategy"
+   (dictem-prepand-special-strats dictem-strategy-list)
+   (if default-strat
+       default-strat
+     (if dictem-strategy-history
+	 (car dictem-strategy-history)
+       dictem-default-strategy))
+   'dictem-strategy-history))
+
+(defun dictem-prepand-special-dbs (l)
+  (cons '("*" nil) (cons '("!" nil) l)))
 
 (defun dictem-select-database (&optional default-db)
   "Switches to minibuffer and ask user
 to enter a database name."
   (interactive)
-  (setq dictem-last-database
-	(dictem-select
-	 "db"
-	 dictem-database-list
-	 (if
-	  default-db
-	  default-db
-	  (if dictem-database-history
-	      (car dictem-database-history)
-	      "*"
-	      )
-	  )
-	 'dictem-database-history
-	 )
-	)
-  )
+  (dictem-select
+   "db"
+   (dictem-prepand-special-dbs dictem-database-list)
+   (if default-db
+       default-db
+     (if dictem-database-history
+	 (car dictem-database-history)
+       "*"))
+   'dictem-database-history))
 
 (defun dictem-read-query (&optional default-query)
-  "Switches to minibuffer and ask user
-to enter a query."
+  "Switches to minibuffer and ask user to enter a query."
   (interactive)
   (read-string
    (concat "query:(" default-query ") ")
    nil
    'dictem-query-history
    default-query
-   t)
-  )
+   t))
 
 (defun dictem-replace-spaces (str)
   (while (string-match "  +" str)
@@ -292,10 +299,7 @@ a single word in a MATCH search."
 	 (properties (text-properties-at (point)))
 	 (word (plist-get properties 'link-data)))
     (if word
-	(dictem-run 'dictem-define-base dictem-last-database word nil)
-	)
-    )
-  )
+	(dictem-run 'dictem-define-base dictem-last-database word nil))))
 
 (defun dictem-define-with-db-on-click (event)
   "Is called upon clicking the link."
@@ -306,10 +310,7 @@ a single word in a MATCH search."
 	 (properties (text-properties-at (point)))
 	 (word (plist-get properties 'link-data)))
     (if word
-	(dictem-run 'dictem-define-base (dictem-select-database) word nil)
-	)
-    )
-  )
+	(dictem-run 'dictem-define-base (dictem-select-database) word nil))))
 
 (defun link-create-link (start end face function &optional data help)
   "Create a link in the current buffer starting from `start' going to `end'.
@@ -321,8 +322,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		      link-data ,data)
 ;		      help-echo ,help
 ;		      link-function ,function)
-	  )
-	)
+	  ))
     (remove-text-properties start end properties)
     (add-text-properties start end properties)))
 
@@ -332,9 +332,8 @@ link.  Upon clicking the `function' is called with `data' as argument."
    'dictem-define-base
    dictem-last-database
    word
-   "exact"
-   )
-  )
+   nil
+   ))
 
 (defun dictem-colorit-define ()
 ;  (interactive)
@@ -695,8 +694,9 @@ The default key bindings:
 	  (coding-system-for-write coding-system)
 	  )
       (dictem)
+      (make-local-variable 'dictem-last-strategy)
+      (make-local-variable 'dictem-last-database)
+      (setq dictem-last-strategy strategy)
+      (setq dictem-last-database database)
       (funcall search-fun database query strategy)
-      (beginning-of-buffer)
-      )
-    )
-  )
+      (beginning-of-buffer))))
