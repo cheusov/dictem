@@ -1,3 +1,26 @@
+Version 0.0.4, Thu, 24 Feb 2005 19:40:24 +0200
+
+  dictem-default-database (dictem-default-strategy) variables override
+  value of dictem-last-database (dictem-last-strategy) variable,
+  i.e. when dictem-default-xxx is set to non-nil
+  this database (strategy) is always used by default,
+  otherwise the last used database (strategy) is used.
+
+  All examples in README file are know numbered.
+
+  New examples #10 and #11 in README file.
+
+  By default dictem uses the default query as an initial
+  input, this may be very useful.
+  To disable this behaviour set `dictem-empty-initial-input' to `t'.
+  See (describe-variable 'dictem-empty-initial-input)
+  and REAME example #11.
+
+  FIXED: `dictem-last-database' keeps "low-level" database name
+  but the user's virtual one. As a result virtual dictionary
+  could not be the default one (kept in dictem-last-database or
+  dictem-default-database variable ).
+
 Version 0.0.3, Tue, 14 Dec 2004 20:43:34 +0200
 
   DictEm has been ported to XEmacs
