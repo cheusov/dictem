@@ -3,10 +3,10 @@
 (require 'dictem-prog)
 
 (defun dictem-prepand-special-strats (l)
-  (cons '("." nil) l))
+  (cons '(".") l))
 
 (defun dictem-prepand-special-dbs (l)
-  (cons '("*" nil) (cons '("!" nil) l)))
+  (cons '("*") (cons '("!") l)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;        Main Functions        ;;;;;
@@ -33,7 +33,8 @@ to enter a search strategy."
   (interactive)
   (dictem-select
    "strategy"
-   (dictem-prepand-special-strats dictem-strategy-alist)
+   (dictem-prepand-special-strats
+    (dictem-remove-value-from-alist dictem-strategy-alist))
    (if default-strat
        default-strat
      (if dictem-strategy-history
@@ -47,7 +48,10 @@ to enter a database name."
   (interactive)
   (dictem-select
    "db"
-   (dictem-prepand-special-dbs dictem-database-alist)
+   (dictem-prepand-special-dbs
+    (append
+     dictem-user-databases-alist
+     (dictem-remove-value-from-alist dictem-database-alist)))
    (if default-db
        default-db
      (if dictem-database-history

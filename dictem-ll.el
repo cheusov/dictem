@@ -27,17 +27,31 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;      Low Level Functions     ;;;;;
 
+(defun dictem-remove-value-from-alist (l)
+  (cond
+   ((symbolp l) l)
+   (t (cons (list (caar l))
+	    (dictem-remove-value-from-alist (cdr l))))))
+
 (defun dictem-select (prompt alist default history)
-  (let
-      ((completion-ignore-case t))
-    (completing-read
-     (concat prompt " (" default "): ")
-     alist
-     nil
-     t
-     nil
-     history
-     default)))
+  (let*
+      ((completion-ignore-case t)
+       (str (completing-read
+	     (concat prompt " (" default "): ")
+	     alist
+	     nil
+	     t
+	     nil
+	     history
+	     default))
+       (str-cons (assoc str alist)))
+;    str-cons))
+    (cond
+     ((and str-cons (cdr str-cons))
+      (cdr str-cons))
+     ((and str-cons (null (cdr str-cons)))
+      (car str-cons))
+     (t nil))))
 
 (defun dictem-tokenize (s)
   (if (string-match "\"[^\"]+\"\\|[^ \"]+" s )

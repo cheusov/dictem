@@ -40,6 +40,17 @@ dict-1.9.14 or later (or compatible) is recomented."
   :group 'dictem
   :group 'string)
 
+(defcustom dictem-user-databases-alist
+  nil
+  "ALIST of user's \"virtual\"databases.
+Valid value looks like this:
+'((\"en-ru\" .  (\"mueller7\" \"korolew_en-ru\"))
+  ((\"en-en\" . (\"foldoc\" \"gcide\" \"wn\")))
+  ((\"gazetteer\" . \"gaz\")))
+"
+  :group 'dictem
+  :type '(alist :key-type string))
+
 (defcustom dictem-mode-hook
   nil
   "Hook run in dictem mode buffers."
