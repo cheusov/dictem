@@ -84,56 +84,85 @@ to enter a database name."
   nil
   "Hook run in dictem mode buffers containing SHOW SERVER result.")
 
-(defun dictem-search-base (database query strategy)
+(defun dictem-call-dict-internal (fun databases)
+  (let ((exit-status -1))
+
+    (defun dictem-call-dict-internal-iter (fun databases)
+      (if databases
+	  (let ((ex_st (funcall fun (car databases))))
+	    (cond
+	     ((= ex_st 0)
+	      (setq exit-status 0))
+	     (t (if (/= 0 exit-status)
+		    (setq exit-status ex_st)))
+	     )
+	    (dictem-call-dict-internal-iter fun (cdr databases)))))
+
+    (cond
+     ((null databases) 0)
+     ((stringp databases)
+      (dictem-call-dict-internal-iter fun (cons databases nil)))
+     ((consp databases)
+      (dictem-call-dict-internal-iter fun databases))
+     (t (error "wrong type of argument"))
+     )
+
+    (if (= exit-status -1) 0 exit-status)
+    ))
+
+(defun dictem-search-base (databases query strategy)
   "dictem search: MATCH + DEFINE"
   (interactive)
 
-  (let ((exit_status 
-	 (call-process
-	 dictem-client-prog nil (current-buffer) nil
-	 "-P" "-" "-d" database "-s" strategy
-	 "-h" dictem-server "-p" dictem-port
-	 query)))
+  (defun run-dict-search (database)
+    (call-process
+     dictem-client-prog nil (current-buffer) nil
+     "-P" "-" "-d" database "-s" strategy
+     "-h" dictem-server "-p" dictem-port
+     query))
 
+  (let ((exit_status (dictem-call-dict-internal 'run-dict-search databases)))
     (beginning-of-buffer)
     (cond ((= 0 exit_status)
-	   (let ((dictem-current-dbname database))
+	   (let ((dictem-current-dbname databases))
 	     (run-hooks 'dictem-postprocess-define-hook)))
 	  ((= 21 exit_status)
 	   (forward-line-nomark)
 	   (run-hooks 'dictem-postprocess-match-hook))
 	  )))
 
-(defun dictem-define-base (database query strategy)
+(defun dictem-define-base (databases query strategy)
   "dictem search: DEFINE"
   (interactive)
 
-  (let ((exit_status
-	 (call-process
-	  dictem-client-prog nil (current-buffer) nil
-	  "-P" "-" "-d" database
-	  "-h" dictem-server "-p" dictem-port
-	  query)))
+  (defun run-dict-define (database)
+    (call-process
+     dictem-client-prog nil (current-buffer) nil
+     "-P" "-" "-d" database
+     "-h" dictem-server "-p" dictem-port
+     query))
 
+  (let ((exit_status (dictem-call-dict-internal 'run-dict-define databases)))
     (beginning-of-buffer)
     (cond ((= 0 exit_status)
-	   (let ((dictem-current-dbname database))
+	   (let ((dictem-current-dbname databases))
 	     (run-hooks 'dictem-postprocess-define-hook)))
 	  ((= 21 exit_status)
 	   (run-hooks 'dictem-postprocess-match-hook))
 	  )))
 
-(defun dictem-match-base (database query strategy)
+(defun dictem-match-base (databases query strategy)
   "dictem search: MATCH"
   (interactive)
 
-  (let ((exit_status
-	 (call-process
-	  dictem-client-prog nil (current-buffer) nil
-	  "-P" "-" "-d" database "-s" strategy
-	  "-h" dictem-server "-p" dictem-port "-m"
-	  query)))
+  (defun run-dict-match (database)
+    (call-process
+     dictem-client-prog nil (current-buffer) nil
+     "-P" "-" "-d" database "-s" strategy
+     "-h" dictem-server "-p" dictem-port "-m"
+     query))
 
+  (let ((exit_status (dictem-call-dict-internal 'run-dict-match databases)))
     (beginning-of-buffer)
     (cond ((= 0 exit_status)
 	   (run-hooks 'dictem-postprocess-match-hook))
