@@ -104,7 +104,7 @@ to enter a database name."
   :type 'hook
   :options '(dictem-postprocess-definition-hyperlinks))
 
-(defcustom dictem-postprocess-showserver-hook
+(defcustom dictem-postprocess-show-server-hook
   nil
   "Hook run in dictem mode buffers containing SHOW SERVER result."
   :group 'dictem
@@ -145,7 +145,7 @@ to enter a database name."
    (if (null define_or_match) (concat ":" (if strategy strategy ".")))
    ))
 
-(defun dictem-showdb-base (a b c)
+(defun dictem-base-show-info (a b c)
   "Show a list of databases"
   (interactive)
 
@@ -174,7 +174,7 @@ to enter a database name."
 		      dictem-error-messages)))
 	   (kill-region beg (point))))))
 
-(defun dictem-search-base (databases query strategy)
+(defun dictem-base-search (databases query strategy)
   "dictem search: MATCH + DEFINE"
   (interactive)
 
@@ -218,7 +218,7 @@ to enter a database name."
 
   (dictem-call-dict-internal 'run-dict-search databases)))
 
-(defun dictem-define-base (databases query strategy)
+(defun dictem-base-define (databases query strategy)
   "dictem search: DEFINE"
   (interactive)
 
@@ -259,7 +259,7 @@ to enter a database name."
 
   (dictem-call-dict-internal 'run-dict-define databases)))
 
-(defun dictem-match-base (databases query strategy)
+(defun dictem-base-match (databases query strategy)
   "dictem search: MATCH"
   (interactive)
 
@@ -294,7 +294,7 @@ to enter a database name."
 
   (dictem-call-dict-internal 'run-dict-match databases)))
 
-(defun dictem-show-info-base (databases b c)
+(defun dictem-base-show-info (databases b c)
   "dictem: SHOW INFO command"
   (interactive)
 
@@ -329,7 +329,7 @@ to enter a database name."
 
   (dictem-call-dict-internal 'run-dict-show-info databases)))
 
-(defun dictem-showserver-base (a b c)
+(defun dictem-base-show-server (a b c)
   "dictem: SHOW SERVER command"
   (interactive)
 
@@ -344,7 +344,7 @@ to enter a database name."
     (cond ((= 0 exit_status)
 	   (save-excursion
 	     (narrow-to-region beg (point))
-	     (run-hooks 'dictem-postprocess-showserver-hook)
+	     (run-hooks 'dictem-postprocess-show-server-hook)
 	     (widen))))
     (setq dictem-last-database database)
     exit_status))
@@ -547,7 +547,7 @@ The default key bindings:
 (define-key dictem-mode-map "d" 'dictem-run-define)
 
 ; SHOW SERVER
-(define-key dictem-mode-map "i" 'dictem-run-showserver)
+(define-key dictem-mode-map "i" 'dictem-run-show-server)
 
 ; SHOW INFO
 (define-key dictem-mode-map "r" 'dictem-run-show-info)
@@ -563,28 +563,6 @@ The default key bindings:
 
 ; Scroll down dictem buffer
 (define-key dictem-mode-map "\177" 'scroll-down)
-
-; DEFINE for the selected region
-;(define-key dictem-mode-map " "
-;  '(lambda ()
-;    (interactive)
-;    (dictem-run
-;     'dictem-define-base
-;     "*"
-;     (thing-at-point 'word)
-;     nil)))
-
-; DEFINE for the selected region
-;(define-key dictem-mode-map [C-SPC]
-;  '(lambda ()
-;    (interactive)
-;    (dictem-run
-;     'dictem-define-base
-;     (dictem-select-database dictem-last-database)
-;     (thing-at-point 'word)
-;     nil)))
-
-;  (link-initialize-keymap dictem-mode-map)
 
 (defun dictem-mode-p ()
   "Return non-nil if current buffer has dictem-mode"
@@ -628,7 +606,7 @@ shows matches in it."
        (dbname (dictem-select-database t t dictem-last-database))
        (strat  (dictem-select-strategy)))
     (dictem-run
-     'dictem-match-base
+     'dictem-base-match
      dbname
      query
      strat)))
@@ -642,7 +620,7 @@ shows definitions in it."
       ((query  (dictem-read-query (thing-at-point 'word)))
        (dbname (dictem-select-database t t dictem-last-database)))
     (dictem-run
-     'dictem-define-base
+     'dictem-base-define
      dbname
      query
      nil)))
@@ -657,7 +635,7 @@ shows definitions in it."
        (dbname (dictem-select-database t t dictem-last-database))
        (strat  (dictem-select-strategy)))
     (dictem-run
-     'dictem-search-base
+     'dictem-base-search
      dbname
      query
      strat)))
@@ -668,22 +646,22 @@ creates new *dictem* buffer and
 shows information about it."
   (interactive)
   (dictem-run
-   'dictem-show-info-base
+   'dictem-base-show-info
    (dictem-select-database nil nil dictem-last-database)))
 
-(defun dictem-run-showserver ()
+(defun dictem-run-show-server ()
   "Creates new *dictem* buffer and
 show information about DICT server in it."
   (interactive)
   (dictem-run
-   'dictem-showserver-base))
+   'dictem-base-show-server))
 
 (defun dictem-run-show-databases ()
   "Creates new *dictem* buffer and
 show information about databases provided by DICT."
   (interactive)
   (dictem-run
-   'dictem-showdb-base))
+   'dictem-base-show-info))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -701,7 +679,7 @@ show information about databases provided by DICT."
    ["Definition"       dictem-run-define t]
    ["Search"           dictem-run-search t]
    "--"
-   ["Information about server"   dictem-run-showserver t]
+   ["Information about server"   dictem-run-show-server t]
    ["Information about database" dictem-run-show-info t]
    ["A list of available databases" dictem-run-show-databases t]
    "--"

@@ -140,7 +140,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	  (link-create-link
 	   beg-dbname end-dbname
 	   'dictem-reference-dbname-face
-	   'dictem-show-info-base
+	   'dictem-base-show-info
 	   (list (cons 'dbname dictem-current-dbname))))
 	))))
 
@@ -160,7 +160,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	      (link-create-link
 	       (- beg 1) (- end 1)
 	       'dictem-reference-definition-face
-	       'dictem-define-base
+	       'dictem-base-define
 	       (list (cons 'word word)
 		     (cons 'dbname dictem-current-dbname))
 	       ))
@@ -187,12 +187,12 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		 (buffer-substring-no-properties beg (- end 1))))
 	  (link-create-link
 	   beg (- end 1)
-	   'dictem-reference-dbname-face 'dictem-show-info-base
+	   'dictem-reference-dbname-face 'dictem-base-show-info
 	   (list (cons 'dbname last-database))))
 	 ((match-beginning 1)
 	  (link-create-link
 	   beg end
-	   'dictem-reference-m1-face 'dictem-define-base
+	   'dictem-reference-m1-face 'dictem-base-define
 	   (list (cons 'word
 		       (dictem-replace-spaces
 			(buffer-substring-no-properties
@@ -201,7 +201,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	 (t
 	  (link-create-link
 	   beg end
-	   'dictem-reference-m2-face 'dictem-define-base
+	   'dictem-reference-m2-face 'dictem-base-define
 	   (list (cons 'word
 		       (dictem-replace-spaces
 			(buffer-substring-no-properties
@@ -238,7 +238,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 ;	 (properties (text-properties-at (point)))
 ;	 (word (plist-get properties 'link-data)))
 ;    (if word
-;	(dictem-run 'dictem-define-base (dictem-select-database) word nil))))
+;	(dictem-run 'dictem-base-define (dictem-select-database) word nil))))
 
 (define-key dictem-mode-map [mouse-2]
   'dictem-define-on-click)
