@@ -52,12 +52,12 @@ dict-1.9.14 or later (or compatible) is recomented."
   :group 'dictem
   :type 'string)
 
-(defcustom dictem-default-strategy "."
+(defcustom dictem-default-strategy nil
   "The default search strategy."
   :group 'dictem
   :group 'string)
 
-(defcustom dictem-default-database "*"
+(defcustom dictem-default-database nil
   "The default database name."
   :group 'dictem
   :group 'string)
@@ -323,7 +323,7 @@ by functions run from dictem-postprocess-each-definition-hook.")
 	  (get-buffer-create dictem-temp-buffer-name) nil
 	  "-P" "-" "-m"
 	  "-d" (if database database "*")
-	  "-s" (if strategy strategy dictem-default-strategy)
+	  "-s" (if strategy strategy ".")
 	  "-h" (if server server dictem-server)
 	  "-p" (dictem-get-port port)
 	  "--client" (dictem-client-text)
@@ -419,6 +419,26 @@ and returns alist containing database names and descriptions"
 	(kill-buffer dictem-temp-buffer-name)
 	err))
      )))
+
+(defun dictem-get-default-strategy (&optional def-strat)
+  "Gets the default search strategy"
+  (if def-strat
+      def-strat
+    (if dictem-default-strategy
+	dictem-default-strategy
+      (if dictem-last-strategy
+	  dictem-last-strategy
+	"."))))
+
+(defun dictem-get-default-database (&optional def-db)
+  "Gets the default database"
+  (if def-db
+      def-db
+    (if dictem-default-database
+	dictem-default-database
+      (if dictem-last-database
+	  dictem-last-database
+	"*"))))
 
 ;;;;;      Low Level Functions     ;;;;;
 
@@ -549,11 +569,7 @@ to enter a search strategy."
    "strategy"
    (dictem-prepand-special-strats
     (dictem-remove-value-from-alist dictem-strategy-alist))
-   (if default-strat
-       default-strat
-     (if dictem-strategy-history
-	 (car dictem-strategy-history)
-       dictem-default-strategy))
+   (dictem-get-default-strategy default-strat)
    'dictem-strategy-history))
 
 (defun dictem-select-database (spec-dbs user-dbs &optional default-db)
@@ -572,11 +588,7 @@ to enter a database name."
     (dictem-select
      "db"
      (if spec-dbs (dictem-prepand-special-dbs dbs2) dbs2)
-     (if default-db
-	 default-db
-       (if dictem-database-history
-	   (car dictem-database-history)
-	 "*"))
+     (dictem-get-default-database default-db)
      'dictem-database-history)))
 
 (defun dictem-read-query (&optional default-query)
@@ -732,6 +744,7 @@ to enter a database name."
 			    dictem-error-messages)))
 		 (kill-region beg (point))))
 	  (setq dictem-last-database database)
+	  (setq dictem-last-strategy strategy)
 	  ex_status))))
 
   (dictem-call-dict-internal 'dictem-local-run-dict-search databases)))
@@ -826,6 +839,7 @@ to enter a database name."
 			    dictem-error-messages)))
 		 (kill-region beg (point))))
 	  (setq dictem-last-database database)
+	  (setq dictem-last-strategy strategy)
 	  ex_status))))
 
   (dictem-call-dict-internal 'dictem-local-run-dict-match databases)))
@@ -966,8 +980,8 @@ to enter a database name."
 	    (dictem-ensure-buffer)
 	  (dictem))
 ;	(set-buffer-file-coding-system coding-system)
-	(make-local-variable 'dictem-last-strategy)
-	(make-local-variable 'dictem-last-database)
+	(make-local-variable 'dictem-default-strategy)
+	(make-local-variable 'dictem-default-database)
 	(make-local-variable 'case-replace)
 	(make-local-variable 'case-fold-search)
 
@@ -981,8 +995,6 @@ to enter a database name."
 	(set (make-local-variable 'dictem-use-existing-buffer) use-existing-buf)
 
 	;;;;;;;;;;;;;;
-	(setq dictem-last-strategy strategy)
-	(setq dictem-last-database database)
 	(setq case-replace nil)
 	(setq case-fold-search nil)
 	(setq dictem-error-messages nil)
@@ -1251,8 +1263,8 @@ shows matches in it."
   (interactive
    (list 
     (dictem-read-query (thing-at-point 'word))
-    (dictem-select-database t t dictem-last-database)
-    (dictem-select-strategy)))
+    (dictem-select-database t t (dictem-get-default-database))
+    (dictem-select-strategy (dictem-get-default-strategy))))
   (dictem-run 'dictem-base-match database query strat))
 
 (defun dictem-run-define (query database)
@@ -1262,7 +1274,7 @@ shows definitions in it."
   (interactive
    (list
     (dictem-read-query (thing-at-point 'word))
-    (dictem-select-database t t dictem-last-database)))
+    (dictem-select-database t t (dictem-get-default-database))))
   (dictem-run 'dictem-base-define database query nil))
 
 (defun dictem-run-search (query database strat)
@@ -1272,15 +1284,18 @@ shows definitions in it."
   (interactive
    (list
     (dictem-read-query (thing-at-point 'word))
-    (dictem-select-database t t dictem-last-database)
-    (dictem-select-strategy)))
+    (dictem-select-database t t (dictem-get-default-database))
+    (dictem-select-strategy (dictem-get-default-strategy))))
   (dictem-run 'dictem-base-search database query strat))
 
 (defun dictem-run-show-info (database)
   "Asks a user about database name
 creates new *dictem* buffer and
 shows information about it."
-  (interactive (list (dictem-select-database nil nil dictem-last-database)))
+  (interactive (list
+		(dictem-select-database
+		 nil nil
+		 (dictem-get-default-database))))
   (dictem-run 'dictem-base-show-info database))
 
 (defun dictem-run-show-server ()
