@@ -18,15 +18,6 @@
 
 (defvar edict-database-list
   '(
-    ( "gcide" nil )
-    ( "wn" nil )
-    ( "foldoc" nil )
-    ( "jargon" nil )
-    ( "vera" nil )
-    ( "devil" nil )
-    ( "elements" nil )
-    ( "easton" nil )
-    ( "hitchcock" nil )
     ( "gaz" nil )
     ( "hi127" nil )
     ( "church" nil )
@@ -63,6 +54,15 @@
     ( "business" nil )
     ( "computer" nil )
     ( "eng-rus" nil )
+    ( "gcide" nil )
+    ( "wn" nil )
+    ( "foldoc" nil )
+    ( "jargon" nil )
+    ( "vera" nil )
+    ( "devil" nil )
+    ( "elements" nil )
+    ( "easton" nil )
+    ( "hitchcock" nil )
   )
 )
 
@@ -121,12 +121,25 @@
   )
 
 (defun edict-set-strategies ()
-  "Obtain stratgy list from a DICT server
+  "Obtain strategy list from a DICT server
 and sets edict-strategy-list variable"
   (interactive)
   (if
       (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-S" "-h" edict-server "-p" edict-port))
       (setq edict-strategy-list
+	    (nreverse (list2alist (get-first-tokens-from-temp-buffer)))
+	    )
+    )
+  (kill-buffer "*dict-temp*")
+  )
+
+(defun edict-set-databases ()
+  "Obtain database list from a DICT server
+and sets edict-database-list variable"
+  (interactive)
+  (if
+      (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-D" "-h" edict-server "-p" edict-port))
+      (setq edict-database-list
 	    (nreverse (list2alist (get-first-tokens-from-temp-buffer)))
 	    )
     )
