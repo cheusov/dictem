@@ -87,12 +87,12 @@ a single word in a MATCH search."
   "Create a link in the current buffer starting from `start' going to `end'.
 The `face' is used for displaying, the `data' are stored together with the
 link.  Upon clicking the `function' is called with `data' as argument."
-  (let ((properties `(face ,face
-			   mouse-face highlight
-			   link t
-			   link-data ,data
-;		      help-echo ,help
-			   link-function ,function)
+  (let ((properties
+	 (list 'face face
+	       'mouse-face 'highlight
+	       'link t
+	       'link-data data
+	       'link-function function)
 	  ))
     (remove-text-properties start end properties)
     (add-text-properties start end properties)))
@@ -101,32 +101,42 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 (defun dictem-color-define ()
   (interactive)
-  (let ((regexp "\\({\\)\\([^}]*\\)\\(}\\)"))
+  (let ((regexp "[{]\\([^{}\n]+\\)[}]\\|^\\(From\\) [^\n]+\\[\\([^\n]+\\)\\]")
+	(dbname nil))
     (beginning-of-buffer)
     (while (< (point) (point-max))
       (if (search-forward-regexp regexp nil t)
-	  (progn
-	    (let* (
-		   (match-length (- (match-end 2) (match-beginning 2)))
-		   (match-string (match-string 2))
-		   (match-start (match-beginning 1))
-		   (match-finish (+ (match-beginning 1) match-length))
+	  (if (match-beginning 1)
+	      (let* ((beg (match-beginning 1))
+		     (end (match-end 1))
+		     (word
+		      (dictem-replace-spaces
+		       (buffer-substring-no-properties beg end))))
+		(replace-match "\\1")
+		(link-create-link
+		 (- beg 1) (- end 1)
+		 'dictem-reference-define-face
+		 'dictem-define-base
+		 (list (cons 'word word)
+		       (cons 'dbname dbname))
+		 ))
+	    (let* ((beg (match-beginning 2))
+		   (end (match-end 2))
+		   (beg-dbname (match-beginning 3))
+		   (end-dbname (match-end 3))
 		   )
-	      (replace-match "\\2")
+	      (put-text-property beg end 'face 'dictem-reference-dbname-face)
+	      (setq dbname
+		    (dictem-replace-spaces
+		     (buffer-substring-no-properties beg-dbname end-dbname)))
 	      (link-create-link
-	       match-start
-	       match-finish
-	       'dictem-reference-define-face
-	       'dictem-define-base
-;	       'dictem-new-search
-	       (list (cons 'word
-			   (dictem-replace-spaces
-			    (buffer-substring-no-properties
-			     match-start match-finish)))
-		     (cons 'dbname dictem-last-database))
-	       )))
-	  (goto-char (point-max)))))
-  (beginning-of-buffer))
+	       beg-dbname end-dbname
+	       'dictem-reference-dbname-face
+	       'dictem-dbinfo-base
+	       (list (cons 'dbname dbname))))
+	       )
+	(goto-char (point-max))))
+  (beginning-of-buffer)))
 
 (defun dictem-color-match ()
   (interactive)
@@ -172,70 +182,6 @@ link.  Upon clicking the `function' is called with `data' as argument."
     (beginning-of-buffer)
     ))
 
-;	(goto-char (match-end 0))
-;	     (goto-char (point-max))))))
-
-;;     (while (< (point) (point-max))
-;;       (if (search-forward-regexp regexp3 nil t)
-;; 	  (link-create-link
-;; 	   (match-beginning 0)
-;; 	   (match-end 0)
-;; 	   'dictem-reference-dbname-face
-;; 	   'dictem-dbinfo-base
-;; ;	   'dictem-dbinfo-on-click
-;; 	   (list (cons 'dbname
-;; 		       (dictem-replace-spaces
-;; 			(buffer-substring-no-properties
-;; 			 (match-beginning 0)
-;; 			 (match-end 0)))))
-;; 	   )
-;; ;	(goto-char (match-end 0))
-;; 	(goto-char (point-max))))
-
-;;     (beginning-of-buffer)
-;;     (while (< (point) (point-max))
-;;       (if (search-forward-regexp regexp1 nil t)
-;; 	  (link-create-link
-;; 	   (match-beginning 0)
-;; 	   (match-end 0)
-;; 	   'dictem-reference-m1-face
-;; 	   'dictem-define-base
-;; ;	   'dictem-new-search
-;; 	   (list (cons 'word
-;; 		       (dictem-replace-spaces
-;; 			(buffer-substring-no-properties
-;; 			 (+ (match-beginning 0) 2)
-;; 			 (- (match-end 0) 1))))
-;; 		 (cons 'dbname dictem-last-database))
-;; 	   )
-;; ;	(goto-char (match-end 0))
-;; 	(goto-char (point-max))))
-
-;;     (beginning-of-buffer)
-;;     (while (< (point) (point-max))
-;;       (if (search-forward-regexp regexp2 nil t)
-;; 	  (unless
-;; 	      (or
-;; 	       (equal 0 (match-beginning 0))
-;; 	       (get-text-property (match-beginning 0) 'link-data)
-;; 	       )
-;; 	    (link-create-link
-;; 	     (match-beginning 0)
-;; 	     (match-end 0)
-;; 	     'dictem-reference-m2-face
-;; 	     'dictem-define-base
-;; ;	     'dictem-new-search
-;; 	     (list (cons 'word
-;; 		   (dictem-replace-spaces
-;; 		    (buffer-substring-no-properties
-;; 		     (match-beginning 0)
-;; 		     (match-end 0))))
-;; 		   (cons 'dbname dictem-last-database))
-;; 	     ))
-;; ;	    (goto-char (match-end 0)))
-;; 	(goto-char (point-max))))
-;;     (beginning-of-buffer)))
-
 ;;;;;       On-Click Functions     ;;;;;
 
 (defun dictem-define-on-click (event)
@@ -275,17 +221,6 @@ link.  Upon clicking the `function' is called with `data' as argument."
    word
    nil
    ))
-
-(defun dictem-dbinfo-on-click (event)
-  "Is called upon clicking the link."
-  (interactive "@e")
-
-  (mouse-set-point event)
-  (let* (
-	 (properties (text-properties-at (point)))
-	 (word (plist-get properties 'link-data)))
-    (if word
-	(dictem-run 'dictem-dbinfo-base dictem-last-database word nil))))
 
 (define-key dictem-mode-map [mouse-2]
   'dictem-define-on-click)
