@@ -1,4 +1,4 @@
-# Makefile.in -- Makefile for edict
+# Makefile.in -- Makefile for dictem
 # Created: Mon Oct 20 17:23:29 2003 Aleksey Cheusov <vle@gmx.net>
 # Copyright: 2003 Aleksey Cheusov <vle@gmx.met>
 #
@@ -16,7 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 675 Mass Ave, Cambridge, MA 02139, USA.
 # 
-# $Id: Makefile.am,v 1.6 2004-06-07 13:36:30 cheusov Exp $
+# $Id: Makefile.am,v 1.7 2004-06-07 14:36:19 cheusov Exp $
 #
 
 # Add a _letter_ if you change the version number and release your own version.
