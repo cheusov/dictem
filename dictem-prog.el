@@ -127,11 +127,21 @@ and returns alist containing strategies and their descriptions"
 	     "-p" (if port port dictem-port))))
     (cond
      ((= exit_status 0)
-      (let ((dblist (nreverse
-		     (list2alist
-		      (dictem-get-first-tokens-from-temp-buffer)))))
-	(kill-buffer dictem-temp-buffer-name)
-	dblist))
+      (save-excursion
+	(set-buffer dictem-temp-buffer-name)
+	(beginning-of-buffer)
+	(let ((regexp "^ \\([^ ]+\\) +\\(.*\\)$")
+	      (l nil))
+	  (while (search-forward-regexp regexp nil t)
+	    (setq l (cons
+		     (list
+		      (buffer-substring-no-properties
+		       (match-beginning 1) (match-end 1))
+		      (buffer-substring-no-properties
+		       (match-beginning 2) (match-end 2)))
+		     l)))
+	  (kill-buffer dictem-temp-buffer-name)
+	  l)))
      (t
       (let
 	  ((err (dictem-make-error exit_status
@@ -152,11 +162,21 @@ and returns alist containing database names and descriptions"
 	  "-p" (if port port dictem-port))))
     (cond
      ((= exit_status 0)
-      (let ((dblist (nreverse
-		     (list2alist
-		      (dictem-get-first-tokens-from-temp-buffer)))))
-	(kill-buffer dictem-temp-buffer-name)
-	dblist))
+      (save-excursion
+	(set-buffer dictem-temp-buffer-name)
+	(beginning-of-buffer)
+	(let ((regexp "^ \\([^ ]+\\) +\\(.*\\)$")
+	      (l nil))
+	  (while (search-forward-regexp regexp nil t)
+	    (setq l (cons
+		     (list
+		      (buffer-substring-no-properties
+		       (match-beginning 1) (match-end 1))
+		      (buffer-substring-no-properties
+		       (match-beginning 2) (match-end 2)))
+		     l)))
+	  (kill-buffer dictem-temp-buffer-name)
+	  l)))
      (t
       (let
 	  ((err (dictem-make-error exit_status

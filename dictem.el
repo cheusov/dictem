@@ -285,7 +285,8 @@ the protocol defined in RFC 2229.
 
 The default key bindings:
 
-  q         close the dictem buffer
+  q         bury the dictem buffer
+  k         kill the dictem buffer
   h         display the help information
 
   s         make a new SEARCH, i.e. ask for a database, strategy and query
@@ -345,7 +346,8 @@ The default key bindings:
 (setq dictem-mode-map (make-sparse-keymap))
 (suppress-keymap dictem-mode-map)
 
-(define-key dictem-mode-map "q" 'dictem-close)
+(define-key dictem-mode-map "k" 'dictem-close)
+(define-key dictem-mode-map "q" 'dictem-quit)
 
 (define-key dictem-mode-map "h" 'dictem-help)
 
@@ -412,6 +414,11 @@ The default key bindings:
   "If current buffer is not a dictem buffer, create a new one."
   (unless (dictem-mode-p)
     (dictem)))
+
+(defun dictem-quit ()
+  "Bury the buffer containing the manpage."
+  (interactive)
+  (quit-window))
 
 (defun dictem-close ()
   "Close the current dictem buffer"
