@@ -16,11 +16,13 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 675 Mass Ave, Cambridge, MA 02139, USA.
 # 
-# $Id: Makefile.am,v 1.5 2004-06-04 18:23:12 cheusov Exp $
+# $Id: Makefile.am,v 1.6 2004-06-07 13:36:30 cheusov Exp $
 #
 
 # Add a _letter_ if you change the version number and release your own version.
 # Numbers are for the original author(s) only.
+
+DICTEM_VERSION = 0.0.1
 
 AUTOMAKE_OPTIONS = foreign
 
@@ -32,3 +34,39 @@ lisp_LISP   = dictem.el
 cvsclean : distclean
 	rm -f Makefile.in configure aclocal.m4
 	rm -rf autom4te.cache stamp-h.in
+
+.PHONY: ChangeLog
+ChangeLog:
+	@(echo "***** Making ChangeLog..."; \
+	rm -f ChangeLog; \
+	rcs2log -i 2 -r . | \
+	sed ' \
+		s,/cvsroot/dict/dictd1/,,g; \
+		s,/cvs/dict/dictd1/,,g; \
+		s,cheusov@[^>]*,vle@gmx.net,g; \
+		s,\(.*\)<\([^@<>]\+\)@\([^@<>]\+\)>\(.*\),\1<\2 at \3}\4,g' \
+	> ChangeLog;)
+
+cvsdist:
+	@( CVSROOT=`cat CVS/Root` && \
+	export CVSROOT && \
+	VERSION=$(DICTEM_VERSION) && \
+	VERSION_CVS=`echo $${VERSION} | tr . -` && \
+	export VERSION VERSION_CVS && \
+	make ChangeLog && \
+	cp ChangeLog /tmp/dictem.ChangeLog.$${VERSION} && \
+	echo "***** Exporting files for dictem-$${VERSION}..." && \
+	cd /tmp && \
+	rm -rf /tmp/dictem-$${VERSION} && \
+	cvs export -fd dictem-$${VERSION} -r dictem-$${VERSION_CVS} dictem && \
+	cd dictem-$${VERSION} && \
+	mv /tmp/dictem.ChangeLog.$${VERSION} ChangeLog && \
+	autoreconf && \
+	automake && \
+	rm -rf autom4te.cache libmaa/autom4te.cache && \
+	chmod -R a+rX,g-w . && \
+	cd .. && \
+	echo "***** Taring and zipping dictem-$${VERSION}.tar.gz..." && \
+	tar cvvf dictem-$${VERSION}.tar dictem-$${VERSION} && \
+	gzip -9f dictem-$${VERSION}.tar && \
+	echo "***** Done making /tmp/dictem-$${VERSION}.tar.gz")

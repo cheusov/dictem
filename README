@@ -181,7 +181,7 @@ You'll be asked for host and port.
      (let* ((dictem-server (read-string "server> "
 					dictem-server nil "dict.org" nil))
 	    (dictem-port (read-string "port> "
-				      dictem-port nil "2628" nil)))
+				      (dictem-get-port) nil "2628" nil)))
        (dictem-initialize)
        (dictem-run-define)))))
 
@@ -193,7 +193,7 @@ You'll be asked for host and port.
      (let* ((dictem-server (read-string "server> "
 					dictem-server nil "dict.org" nil))
 	    (dictem-port (read-string "port> "
-				      dictem-port nil "2628" nil)))
+				      (dictem-get-port) nil "2628" nil)))
        (dictem-initialize)
        (dictem-run-match)))))
 
