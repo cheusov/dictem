@@ -94,6 +94,12 @@ Instead, existing buffer will be erased and used to show results.
   :group 'dictem
   :type 'boolean)
 
+(defcustom dictem-empty-initial-input
+  nil
+  "If `t' the `dictem-read-query' leave initial input empty"
+  :group 'dictem
+  :type 'boolean)
+
 ;;;;;            Faces             ;;;;;
 
 (defface dictem-reference-definition-face
@@ -600,7 +606,8 @@ to enter a database name."
        nil 'dictem-query-history default-query)
     (read-string
      (concat "query [" default-query "]: ")
-     nil 'dictem-query-history default-query t)))
+     (if dictem-empty-initial-input nil default-query)
+     'dictem-query-history default-query t)))
 
 
 ;;;;;;;;    Search Functions     ;;;;;;;
