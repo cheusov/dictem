@@ -246,10 +246,7 @@ by functions run from dictem-postprocess-each-definition-hook.")
      error_status
      (save-excursion
        (set-buffer buffer-or-string)
-;       (buffer-substring-no-properties
-;	(progn (beginning-of-buffer) (point))
-;	(progn (end-of-buffer) (point)))
-       (beginning-of-buffer)
+       (goto-char (point-min))
        (get-line)
        )))
    ((eq nil buffer-or-string)
@@ -287,7 +284,7 @@ by functions run from dictem-postprocess-each-definition-hook.")
 
 (defun dictem-collect-matches ()
   ; nreverse, setcar and nconc are used to reduce a number of cons
-  (beginning-of-buffer)
+  (goto-char (point-min))
   (let ((dictem-temp nil))
     (loop
      (let ((line (get-line)))
@@ -365,7 +362,7 @@ and returns alist containing strategies and their descriptions"
      ((= exit_status 0)
       (save-excursion
 	(set-buffer dictem-temp-buffer-name)
-	(beginning-of-buffer)
+	(goto-char (point-min))
 	(let ((regexp "^ \\([^ ]+\\) +\\(.*\\)$")
 	      (l nil))
 	  (while (search-forward-regexp regexp nil t)
@@ -402,7 +399,7 @@ and returns alist containing database names and descriptions"
      ((= exit_status 0)
       (save-excursion
 	(set-buffer dictem-temp-buffer-name)
-	(beginning-of-buffer)
+	(goto-char (point-min))
 	(let ((regexp "^ \\([^ ]+\\) +\\(.*\\)$")
 	      (l nil))
 	  (while (search-forward-regexp regexp nil t)
@@ -962,7 +959,7 @@ to enter a database name."
 	(run-functions search-fun database query strategy)
 	(if (and (not (equal ex_status 0)) (= (point-min) (point-max)))
 	    (insert (dictem-generate-full-error-message ex_status)))
-	(beginning-of-buffer)
+	(goto-char (point-min))
 	(setq buffer-read-only t)
 	ex_status
 	))))
@@ -1292,7 +1289,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 (defun dictem-postprocess-definition-separator ()
   (save-excursion
-    (beginning-of-buffer)
+    (goto-char (point-min))
     (let ((regexp "^\\(From\\)\\( [^\n]+\\)\\(\\[[^\n]+\\]\\)"))
 
       (while (search-forward-regexp regexp nil t)
@@ -1320,7 +1317,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 (defun dictem-postprocess-definition-hyperlinks ()
   (save-excursion
-    (beginning-of-buffer)
+    (goto-char (point-min))
     (let ((regexp "[{]\\([^{}|\n]+\\)[}]\\|^From [^\n]+\\[\\([^\n]+\\)\\]\\|\\([{]\\([^{}|\n]+\\)|\\([^{}|\n]+\\)[}]\\)"))
 
       (while (search-forward-regexp regexp nil t)
