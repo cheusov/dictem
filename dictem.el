@@ -687,6 +687,13 @@ to enter a database name."
 
   (let ((ex_status -1))
   (defun run-dict-search (database)
+    (if (string-match dictem-dict-server-and-database-url database)
+	(save-dictem (setq dictem-server (match-string 1 database))
+		     (setq dictem-port   (match-string 3 database))
+		     (setq database      (match-string 4 database))
+		     (dictem-initialize)
+		     (run-dict-search database)
+		     )
     (let* ((beg (point))
 	   (exit_status
 	    (call-process
@@ -721,7 +728,7 @@ to enter a database name."
 			dictem-error-messages)))
 	     (kill-region beg (point))))
       (setq dictem-last-database database)
-      ex_status))
+      ex_status)))
 
   (dictem-call-dict-internal 'run-dict-search databases)))
 
@@ -731,6 +738,13 @@ to enter a database name."
 
   (let ((ex_status -1))
   (defun run-dict-define (database)
+    (if (string-match dictem-dict-server-and-database-url database)
+	(save-dictem (setq dictem-server (match-string 1 database))
+		     (setq dictem-port   (match-string 3 database))
+		     (setq database      (match-string 4 database))
+		     (dictem-initialize)
+		     (run-dict-define database)
+		     )
     (let* ((beg (point))
 	   (exit_status
 	    (call-process
@@ -762,7 +776,7 @@ to enter a database name."
 			dictem-error-messages)))
 	     (kill-region beg (point))))
       (setq dictem-last-database database)
-      ex_status))
+      ex_status)))
 
   (dictem-call-dict-internal 'run-dict-define databases)))
 
@@ -772,6 +786,13 @@ to enter a database name."
 
   (let ((ex_status -1))
   (defun run-dict-match (database)
+    (if (string-match dictem-dict-server-and-database-url database)
+	(save-dictem (setq dictem-server (match-string 1 database))
+		     (setq dictem-port   (match-string 3 database))
+		     (setq database      (match-string 4 database))
+		     (dictem-initialize)
+		     (run-dict-match database)
+		     )
     (let* ((beg (point))
 	   (exit_status
 	    (call-process
@@ -797,7 +818,7 @@ to enter a database name."
 			dictem-error-messages)))
 	     (kill-region beg (point))))
       (setq dictem-last-database database)
-      ex_status))
+      ex_status)))
 
   (dictem-call-dict-internal 'run-dict-match databases)))
 
@@ -1068,8 +1089,10 @@ The default key bindings:
   "The currently selected window")
 
 (defconst dictem-buffer-name
-  "*dictem buffer*"
-  )
+  "*dictem buffer*")
+
+(defconst dictem-dict-server-and-database-url
+  "^dict://\\([^:]+\\)\\(:\\([0-9]+\\)?\\)/\\(.*\\)$")
 
 (defun dictem ()
   "Create a new dictem buffer and install dictem-mode"
@@ -1276,8 +1299,12 @@ shows information about databases provided by DICT."
 The `face' is used for displaying, the `data' are stored together with the
 link.  Upon clicking the `function' is called with `data' as argument."
   (let ((properties
-	 (append (list 'face face 'mouse-face 'highlight
-	       'link-data data 'link-function function)
+	 (append (list 'face face
+		       'mouse-face 'highlight
+		       'link-data data
+		       'link-function function
+		       'dictem-server dictem-server
+		       'dictem-port   dictem-port)
 	 add-props)))
     (remove-text-properties start end properties)
     (add-text-properties start end properties)))
@@ -1403,6 +1430,8 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	 (properties (text-properties-at (point)))
 	 (data (plist-get properties 'link-data))
 	 (fun  (plist-get properties 'link-function))
+	 (dictem-server (plist-get properties 'dictem-server))
+	 (dictem-port   (plist-get properties 'dictem-port))
 	 (word   (assq 'word data))
 	 (dbname (assq 'dbname data))
 	 )

@@ -203,6 +203,17 @@ dictem-run function will ask you about database name.
 
 -------
 
+You can even create virtual dictionaries which consist of
+databases from different DICT server.
+
+(setq dictem-user-databases-alist
+   '(("_en-ru" . ("dict://mova.org/mueller7"
+                  "dict://dict.org:2628/gcide"))
+     ("_ru-ru" . ("beslov" "dict://mova.org:2628/religion"))
+     ))
+
+-------
+
 If your DICT server provides too many databases and most of which
 are of no interest for you, you can disable them
 and use only those specified in dictem-user-databases-alist variable. 
