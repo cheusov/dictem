@@ -766,131 +766,131 @@ to enter a database name."
   (interactive)
 
   (let ((ex_status -1))
-  (defun dictem-local-run-dict-define (database)
-    (let ((splitted-url nil))
-      (if (setq splitted-url (dictem-parse-url database))
-	  (save-dictem (setq dictem-server (nth 1 splitted-url))
-		       (setq dictem-port (dictem-get-port (nth 2 splitted-url)))
-		       (setq database      (nth 3 splitted-url))
-		       (dictem-initialize)
-		       (dictem-local-run-dict-define database)
-		       )
-	(let* ((beg (point))
-	       (exit_status
-		(call-process
-		 dictem-client-prog nil (current-buffer) nil
-		 "-P" "-" "-d" database
-		 "-h" (dictem-get-server) "-p" (dictem-get-port)
-		 "--client" (dictem-client-text)
-		 query)))
+    (defun dictem-local-run-dict-define (database)
+      (let ((splitted-url nil))
+	(if (setq splitted-url (dictem-parse-url database))
+	    (save-dictem (setq dictem-server (nth 1 splitted-url))
+			 (setq dictem-port (dictem-get-port (nth 2 splitted-url)))
+			 (setq database      (nth 3 splitted-url))
+			 (dictem-initialize)
+			 (dictem-local-run-dict-define database)
+			 )
+	  (let* ((beg (point))
+		 (exit_status
+		  (call-process
+		   dictem-client-prog nil (current-buffer) nil
+		   "-P" "-" "-d" database
+		   "-h" (dictem-get-server) "-p" (dictem-get-port)
+		   "--client" (dictem-client-text)
+		   query)))
 
-	  (cond ((= 0 exit_status)
-		 (save-excursion
-		   (narrow-to-region beg (point))
-		   (run-hooks 'dictem-postprocess-definition-hook)
-		   (widen)))
-		((= 21 exit_status)
-		 (save-excursion
-		   (narrow-to-region beg (point))
-		   (run-hooks 'dictem-postprocess-match-hook)
-		   (widen)))
-		(t
-		 (if (= -1 ex_status)
-		     (setq ex_status exit_status))
-		 (if (/= beg (point))
-		     (setq dictem-error-messages
-			   (append
-			    (list
-			     (dictem-make-url (dictem-get-server)
-					      (dictem-get-port) query t database)
-			     (buffer-substring-no-properties beg (point)))
-			    dictem-error-messages)))
-		 (kill-region beg (point))))
-	  ex_status))))
+	    (cond ((= 0 exit_status)
+		   (save-excursion
+		     (narrow-to-region beg (point))
+		     (run-hooks 'dictem-postprocess-definition-hook)
+		     (widen)))
+		  ((= 21 exit_status)
+		   (save-excursion
+		     (narrow-to-region beg (point))
+		     (run-hooks 'dictem-postprocess-match-hook)
+		     (widen)))
+		  (t
+		   (if (= -1 ex_status)
+		       (setq ex_status exit_status))
+		   (if (/= beg (point))
+		       (setq dictem-error-messages
+			     (append
+			      (list
+			       (dictem-make-url (dictem-get-server)
+						(dictem-get-port) query t database)
+			       (buffer-substring-no-properties beg (point)))
+			      dictem-error-messages)))
+		   (kill-region beg (point))))
+	    ex_status))))
 
-  (setq dictem-last-database database)
-  (dictem-call-dict-internal 'dictem-local-run-dict-define databases)))
+    (setq dictem-last-database database)
+    (dictem-call-dict-internal 'dictem-local-run-dict-define databases)))
 
 (defun dictem-base-match (databases query strategy)
   "dictem search: MATCH"
   (interactive)
 
   (let ((ex_status -1))
-  (defun dictem-local-run-dict-match (database)
-    (let ((splitted-url nil))
-      (if (setq splitted-url (dictem-parse-url database))
-	  (save-dictem (setq dictem-server (nth 1 splitted-url))
-		       (setq dictem-port (dictem-get-port (nth 2 splitted-url)))
-		       (setq database      (nth 3 splitted-url))
-		       (dictem-initialize)
-		       (dictem-local-run-dict-match database)
-		       )
-	(let* ((beg (point))
-	       (exit_status
-		(call-process
-		 dictem-client-prog nil (current-buffer) nil
-		 "-P" "-" "-d" database "-s" strategy
-		 "-h" (dictem-get-server) "-p" (dictem-get-port) "-m"
-		 "--client" (dictem-client-text)
-		 query)))
-	  (cond ((= 0 exit_status)
-		 (save-excursion
-		   (narrow-to-region beg (point))
-		   (run-hooks 'dictem-postprocess-match-hook)
-		   (widen)))
-		(t
-		 (if (= -1 ex_status)
-		     (setq ex_status exit_status))
-		 (if (/= beg (point))
-		     (setq dictem-error-messages
-			   (append
-			    (list
-			     (dictem-make-url (dictem-get-server)
-					      (dictem-get-port) query t database)
-			     (buffer-substring-no-properties beg (point)))
-			    dictem-error-messages)))
-		 (kill-region beg (point))))
-	  ex_status))))
+    (defun dictem-local-run-dict-match (database)
+      (let ((splitted-url nil))
+	(if (setq splitted-url (dictem-parse-url database))
+	    (save-dictem (setq dictem-server (nth 1 splitted-url))
+			 (setq dictem-port (dictem-get-port (nth 2 splitted-url)))
+			 (setq database      (nth 3 splitted-url))
+			 (dictem-initialize)
+			 (dictem-local-run-dict-match database)
+			 )
+	  (let* ((beg (point))
+		 (exit_status
+		  (call-process
+		   dictem-client-prog nil (current-buffer) nil
+		   "-P" "-" "-d" database "-s" strategy
+		   "-h" (dictem-get-server) "-p" (dictem-get-port) "-m"
+		   "--client" (dictem-client-text)
+		   query)))
+	    (cond ((= 0 exit_status)
+		   (save-excursion
+		     (narrow-to-region beg (point))
+		     (run-hooks 'dictem-postprocess-match-hook)
+		     (widen)))
+		  (t
+		   (if (= -1 ex_status)
+		       (setq ex_status exit_status))
+		   (if (/= beg (point))
+		       (setq dictem-error-messages
+			     (append
+			      (list
+			       (dictem-make-url (dictem-get-server)
+						(dictem-get-port) query t database)
+			       (buffer-substring-no-properties beg (point)))
+			      dictem-error-messages)))
+		   (kill-region beg (point))))
+	    ex_status))))
 
-  (setq dictem-last-database database)
-  (setq dictem-last-strategy strategy)
-  (dictem-call-dict-internal 'dictem-local-run-dict-match databases)))
+    (setq dictem-last-database database)
+    (setq dictem-last-strategy strategy)
+    (dictem-call-dict-internal 'dictem-local-run-dict-match databases)))
 
 (defun dictem-base-show-info (databases b c)
   "dictem: SHOW INFO command"
   (interactive)
 
   (let ((ex_status -1))
-  (defun run-dict-show-info (database)
-    (let* ((beg (point))
-	   (exit_status
-	    (call-process
-	     dictem-client-prog nil (current-buffer) nil
-	     "-P" "-" "-i" database
-	     "-h" (dictem-get-server) "-p" (dictem-get-port)
-	     "--client" (dictem-client-text)
-	     )))
-      (cond ((= 0 exit_status)
-	     (save-excursion
-	       (narrow-to-region beg (point))
-	       (run-hooks 'dictem-postprocess-show-info-hook)
-	       (widen)))
-	    (t
-	     (if (= -1 ex_status)
-		 (setq ex_status exit_status))
-	     (if (/= beg (point))
-		 (setq dictem-error-messages
-		       (append
-			(list
-			 (dictem-make-url (dictem-get-server)
-					  (dictem-get-port) "" t database)
-			 (buffer-substring-no-properties beg (point)))
-			dictem-error-messages)))
-	     (kill-region beg (point))))
-      ex_status))
+    (defun run-dict-show-info (database)
+      (let* ((beg (point))
+	     (exit_status
+	      (call-process
+	       dictem-client-prog nil (current-buffer) nil
+	       "-P" "-" "-i" database
+	       "-h" (dictem-get-server) "-p" (dictem-get-port)
+	       "--client" (dictem-client-text)
+	       )))
+	(cond ((= 0 exit_status)
+	       (save-excursion
+		 (narrow-to-region beg (point))
+		 (run-hooks 'dictem-postprocess-show-info-hook)
+		 (widen)))
+	      (t
+	       (if (= -1 ex_status)
+		   (setq ex_status exit_status))
+	       (if (/= beg (point))
+		   (setq dictem-error-messages
+			 (append
+			  (list
+			   (dictem-make-url (dictem-get-server)
+					    (dictem-get-port) "" t database)
+			   (buffer-substring-no-properties beg (point)))
+			  dictem-error-messages)))
+	       (kill-region beg (point))))
+	ex_status))
 
-  (setq dictem-last-database database)
-  (dictem-call-dict-internal 'run-dict-show-info databases)))
+    (setq dictem-last-database database)
+    (dictem-call-dict-internal 'run-dict-show-info databases)))
 
 (defun dictem-base-show-server (a b c)
   "dictem: SHOW SERVER command"
