@@ -75,7 +75,7 @@ Valid value looks like this:
 
 (defcustom dictem-use-user-databases-only
   nil
-  "If t, only user's dictionaries from dictem-user-databases-alist
+  "If `t', only user's dictionaries from dictem-user-databases-alist
 will be used by dictem-select-database"
   :group 'dictem
   :type 'boolean)
@@ -85,6 +85,14 @@ will be used by dictem-select-database"
   "Hook run in dictem mode buffers."
   :group 'dictem
   :type 'hook)
+
+(defcustom dictem-use-existing-buffer
+  nil
+  "If `t' the `dictem-run' function will not create new *dictem* buffer.
+Instead, existing buffer will be erased and used to show results.
+"
+  :group 'dictem
+  :type 'boolean)
 
 ;;;;;            Faces             ;;;;;
 
@@ -522,7 +530,10 @@ and sets dictem-database-alist variable."
 			       (dictem-get-port port))))
 
 (defun dictem-initialize ()
-  "Initialize dictem"
+  "Initialize dictem, i.e. obtaining
+a list of available databases and strategiss from DICT server
+and making other tasks."
+  (interactive)
   (let ((dbs (dictem-initialize-databases-alist)))
     (if (dictem-error-p dbs)
 	dbs
@@ -917,28 +928,34 @@ to enter a database name."
       (let ((selected-window (frame-selected-window))
 	    (coding-system-for-read coding-system)
 	    (coding-system-for-write coding-system)
+	    ; here we remember values of variables local to buffer
 	    (server dictem-server)
 	    (port   dictem-port)
 	    (dbs    dictem-database-alist)
 	    (strats dictem-strategy-alist)
 	    (user-dbs  dictem-user-databases-alist)
 	    (user-only dictem-use-user-databases-only)
+	    (use-existing-buf dictem-use-existing-buffer)
 	    )
-	(dictem)
+	(if dictem-use-existing-buffer
+	    (dictem-ensure-buffer)
+	  (dictem))
 ;	(set-buffer-file-coding-system coding-system)
 	(make-local-variable 'dictem-last-strategy)
 	(make-local-variable 'dictem-last-database)
 	(make-local-variable 'case-replace)
 	(make-local-variable 'case-fold-search)
 
-	; the following seven lines are to inherit values local to buffer
+	; the following lines are to inherit values local to buffer
 	(set (make-local-variable 'dictem-server) server)
 	(set (make-local-variable 'dictem-port)   port)
 	(set (make-local-variable 'dictem-database-alist) dbs)
 	(set (make-local-variable 'dictem-strategy-alist) strats)
 	(set (make-local-variable 'dictem-user-databases-alist) user-dbs)
 	(set (make-local-variable 'dictem-use-user-databases-only) user-only)
+	(set (make-local-variable 'dictem-use-existing-buffer) use-existing-buf)
 
+	;;;;;;;;;;;;;;
 	(setq dictem-last-strategy strategy)
 	(setq dictem-last-database database)
 	(setq case-replace nil)
@@ -1022,12 +1039,16 @@ The default key bindings:
   nil
   "The currently selected window")
 
+(defconst dictem-buffer-name
+  "*dictem buffer*"
+  )
+
 (defun dictem ()
   "Create a new dictem buffer and install dictem-mode"
   (interactive)
 
   (let (
-	(buffer (generate-new-buffer "*dictem buffer*"))
+	(buffer (generate-new-buffer dictem-buffer-name))
 	(window-configuration (current-window-configuration))
 	(selected-window (frame-selected-window)))
     (switch-to-buffer-other-window buffer)
@@ -1045,6 +1066,9 @@ The default key bindings:
 
 ; Kill the buffer
 (define-key dictem-mode-map "k" 'dictem-kill)
+
+; Kill all dictem buffers
+(define-key dictem-mode-map "x" 'dictem-kill-all-buffers)
 
 ; Bury the buffer
 (define-key dictem-mode-map "q" 'dictem-quit)
@@ -1089,7 +1113,10 @@ The default key bindings:
 
 (defun dictem-ensure-buffer ()
   "If current buffer is not a dictem buffer, create a new one."
-  (unless (dictem-mode-p)
+  (if (dictem-mode-p)
+      (progn
+	(setq buffer-read-only nil)
+	(erase-buffer))
     (dictem)))
 
 (defun dictem-quit ()
@@ -1098,7 +1125,7 @@ The default key bindings:
   (quit-window))
 
 (defun dictem-kill ()
-  "Close the current dictem buffer."
+  "Kill the current dictem buffer."
   (interactive)
 
   (if (eq major-mode 'dictem-mode)
@@ -1111,6 +1138,22 @@ The default key bindings:
 	      (progn
 		(select-window selected-window)
 		(set-window-configuration configuration)))))))
+
+(defun dictem-kill-all-buffers ()
+  "Kill all dictem buffers."
+  (interactive)
+  (defun list-buffer-names (l)
+    (cond
+     (l
+      (let ((buf-name (buffer-name (car l))))
+	(if (and (<= (length dictem-buffer-name) (length buf-name))
+		 (string= dictem-buffer-name
+			  (substring buf-name 0 (length dictem-buffer-name))))
+	    (kill-buffer buf-name)))
+      (list-buffer-names (cdr l)))
+     ))
+
+  (list-buffer-names (buffer-list)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;     Top-level Functions     ;;;;;;
