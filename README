@@ -56,7 +56,7 @@ REPORTING BUGS
 MAILING LISTS
 =============
 
-    There are no available mailing lists dedicated to DictEm itself.
+    There are no available mailing lists dedicated to DictEm.
 
 CONFIGURING
 =============
@@ -72,6 +72,9 @@ Manual Configuration
 --------------------
 
 The easiest configuration of dictem may look like this
+
+; Add to load-path variable a new directory with files of dictem
+;(add-to-list 'load-path "/usr/local/emacs/emacs-site")
 
 ; Loading dictem functions
 (require 'dictem)
