@@ -292,7 +292,7 @@ a single word in a MATCH search."
 	 (properties (text-properties-at (point)))
 	 (word (plist-get properties 'link-data)))
     (if word
-	(dictem-search dictem-last-database nil word 'dictem-define-base)
+	(dictem-run 'dictem-define-base dictem-last-database word nil)
       )
     )
   )
@@ -306,7 +306,7 @@ a single word in a MATCH search."
 	 (properties (text-properties-at (point)))
 	 (word (plist-get properties 'link-data)))
     (if word
-	(dictem-search (dictem-select-database) nil word 'dictem-define-base)
+	(dictem-run 'dictem-define-base (dictem-select-database) word nil)
       )
     )
   )
@@ -328,11 +328,12 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 (defun dictem-new-search (word &optional all)
 ;  (interactive)
-  (dictem-search
+  (dictem-run
+   'dictem-define-base
    dictem-last-database
-   "exact"
    word
-   'dictem-define-base)
+   "exact"
+   )
   )
 
 (defun dictem-colorit-define ()
@@ -430,7 +431,8 @@ The default key bindings:
             and show definitions
   m         make a new MATCH, i.e. ask for database, strategy and query
             and show matches
-
+  r         show information about DICT server
+  i         ask for a database and show information about it
   mouse-2   visit a link (DEFINE using all dictionaries)
   C-mouse-2 visit a link (DEFINE using asked dictionaries)
 
@@ -498,11 +500,11 @@ The default key bindings:
 (define-key dictem-mode-map "s"
   '(lambda ()
      (interactive)
-     (dictem-search
-      (dictem-select-database)
-      (dictem-select-strategy)
-      (dictem-read-query)
+     (dictem-run
       'dictem-search-base
+      (dictem-select-database)
+      (dictem-read-query)
+      (dictem-select-strategy)
       )
      )
   )
@@ -511,11 +513,11 @@ The default key bindings:
 (define-key dictem-mode-map "m"
   '(lambda ()
      (interactive)
-     (dictem-search
-      (dictem-select-database)
-      (dictem-select-strategy)
-      (dictem-read-query)
+     (dictem-run
       'dictem-match-base
+      (dictem-select-database)
+      (dictem-read-query)
+      (dictem-select-strategy)
       )
      )
   )
@@ -524,11 +526,37 @@ The default key bindings:
 (define-key dictem-mode-map "d"
   '(lambda ()
      (interactive)
-     (dictem-search
+     (dictem-run
+      'dictem-define-base
+      (dictem-select-database)
+      (dictem-read-query)
+      nil
+      )
+     )
+  )
+
+; SHOW SERVER
+(define-key dictem-mode-map "i"
+  '(lambda ()
+     (interactive)
+     (dictem-run
+      'dictem-showinfo-base
       (dictem-select-database)
       nil
-      (dictem-read-query)
-      'dictem-define-base
+      nil
+      )
+     )
+  )
+
+; SHOW INFO
+(define-key dictem-mode-map "r"
+  '(lambda ()
+     (interactive)
+     (dictem-run
+      'dictem-showserver-base
+      nil
+      nil
+      nil
       )
      )
   )
@@ -537,11 +565,11 @@ The default key bindings:
 (define-key dictem-mode-map " "
   '(lambda ()
      (interactive)
-     (dictem-search
-      "*"
-      nil
-      (thing-at-point 'word)
+     (dictem-run
       'dictem-define-base
+      "*"
+      (thing-at-point 'word)
+      nil
       )
      )
   )
@@ -550,11 +578,11 @@ The default key bindings:
 (define-key dictem-mode-map [C-SPC]
   '(lambda ()
      (interactive)
-     (dictem-search
-      (dictem-select-database dictem-last-database)
-      nil
-      (thing-at-point 'word)
+     (dictem-run
       'dictem-define-base
+      (dictem-select-database dictem-last-database)
+      (thing-at-point 'word)
+      nil
       )
      )
   )
@@ -630,8 +658,30 @@ The default key bindings:
   (dictem-colorit-match)
   )
 
+(defun dictem-showinfo-base (database b c)
+  "dictem: SHOW SERVER command"
+  (interactive)
+
+  (call-process
+   dictem-client-prog nil (current-buffer) nil
+   "-P" "-" "-i" database
+   "-h" dictem-server "-p" dictem-port
+   )
+  )
+
+(defun dictem-showserver-base (a b c)
+  "dictem: SHOW DB command"
+  (interactive)
+
+  (call-process
+   dictem-client-prog nil (current-buffer) nil
+   "-P" "-" "-I"
+   "-h" dictem-server "-p" dictem-port
+   )
+  )
+
 ; search type may be "", 'dictem-define or 'dictem-match
-(defun dictem-search (database strategy query search-fun)
+(defun dictem-run (search-fun &optional database query strategy)
   "Creates new *dictem* buffer and run search-fun"
   (interactive)
 
