@@ -4,7 +4,7 @@
 ; dictionary.el written by Torsten Hilbrich <Torsten.Hilbrich@gmx.net>
 ; but now probably doesn't contain original code.
 ; Most of the code has been written
-; from scratch by Aleksey Cheusov <vle@gmx.net>, 2004.
+; from scratch by Aleksey Cheusov <vle@gmx.net>, 2004-2005.
 ;
 ; DictEm is free software; you can redistribute it and/or modify it
 ; under the terms of the GNU General Public License as published by
@@ -489,10 +489,16 @@ and returns alist containing database names and descriptions"
   str)
 
 (defun dictem-remove-value-from-alist (l)
-  (cond
-   ((symbolp l) l)
-   (t (cons (list (caar l))
-	    (dictem-remove-value-from-alist (cdr l))))))
+  (let ((ret nil))
+    (dolist (i l)
+      (setq ret (cons (list (car i)) ret)))
+    (reverse ret)
+    ))
+;(defun dictem-remove-value-from-alist (l)
+;  (cond
+;   ((symbolp l) l)
+;   (t (cons (list (caar l))
+;	    (dictem-remove-value-from-alist (cdr l))))))
 
 (defun dictem-select (prompt alist default history)
   (let*
@@ -621,7 +627,7 @@ to enter a database name."
      'dictem-query-history default-query t)))
 
 
-;;;;;;;;    Search Functions     ;;;;;;;
+;;;;;;;;           Hooks        ;;;;;;;;
 
 (defcustom dictem-postprocess-definition-hook
   nil
@@ -631,7 +637,8 @@ to enter a database name."
   :options '(dictem-postprocess-definition-separator
 	     dictem-postprocess-definition-hyperlinks
 	     dictem-postprocess-each-definition
-	     dictem-postprocess-definition-remove-header))
+	     dictem-postprocess-definition-remove-header
+	     dictem-postprocess-collect-hyperlinks))
 
 (defcustom dictem-postprocess-match-hook
   nil
@@ -645,13 +652,16 @@ to enter a database name."
   "Hook run in dictem mode buffers containing SHOW INFO result."
   :group 'dictem
   :type 'hook
-  :options '(dictem-postprocess-definition-hyperlinks))
+  :options '(dictem-postprocess-definition-hyperlinks
+	     dictem-postprocess-collect-hyperlinks))
 
 (defcustom dictem-postprocess-show-server-hook
   nil
   "Hook run in dictem mode buffers containing SHOW SERVER result."
   :group 'dictem
   :type 'hook)
+
+;;;;;;;;    Search Functions     ;;;;;;;
 
 (defun dictem-call-dict-internal (fun databases)
   (let ((exit-status -1))
@@ -766,6 +776,7 @@ to enter a database name."
 
   (setq dictem-last-database database)
   (setq dictem-last-strategy strategy)
+
   (dictem-call-dict-internal 'dictem-local-run-dict-search databases)))
 
 (defun dictem-base-define (databases query strategy)
@@ -1012,6 +1023,8 @@ to enter a database name."
 	(set (make-local-variable 'dictem-user-databases-alist) user-dbs)
 	(set (make-local-variable 'dictem-use-user-databases-only) user-only)
 	(set (make-local-variable 'dictem-use-existing-buffer) use-existing-buf)
+
+	(set (make-local-variable 'dictem-hyperlinks-alist) nil)
 
 	;;;;;;;;;;;;;;
 	(setq case-replace nil)
@@ -1437,26 +1450,29 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 (defun dictem-postprocess-collect-hyperlinks ()
   (save-excursion
-    (setq dictem-hyperlinks-alist nil)
-;    (make-variable-buffer-local dictem-hyperlinks-alist)
     (goto-char (point-min))
-    (let ((regexp "\\({[^{}|\n]+\\)}\\|\\({\\([^{}|\n]+\\)|\\([^{}|\n]+\\)}\\)"))
+    (let ((regexp "\\({\\([^{}|]+\\)}\\|\\({\\([^{}|\n]+\\)|\\([^{}|\n]+\\)}\\)\\)"))
 
       (while (search-forward-regexp regexp nil t)
-	(cond ((match-beginning 1)
-	       (let* ((word (buffer-substring-no-properties
-			     (+ (match-beginning 1) 1)
-			     (- (match-end 1) 1 ))))
+	(cond ((match-beginning 2)
+	       (let* ((word (dictem-replace-spaces
+			     (buffer-substring-no-properties
+			      (match-beginning 2)
+			      (match-end 2)))))
 		 (setq dictem-hyperlinks-alist
 		       (cons (list word word) dictem-hyperlinks-alist))
 		 ))
-	      ((match-beginning 2)
-	       (let* ((word (buffer-substring-no-properties
-			     (match-beginning 3)
-			     (match-end 3)))
-		      (link (buffer-substring-no-properties
-			     (match-beginning 4)
-			     (match-end 4)))
+	      ((match-beginning 3)
+	       (let* ((word-beg (match-beginning 4))
+		      (word-end (match-end 4))
+		      (link-beg (match-beginning 5))
+		      (link-end (match-end 5))
+		      (word (dictem-replace-spaces
+			     (buffer-substring-no-properties
+			      word-beg word-end)))
+		      (link (dictem-replace-spaces
+			     (buffer-substring-no-properties
+			      link-beg link-end)))
 		      )
 		 (setq dictem-hyperlinks-alist
 		       (cons (list word link) dictem-hyperlinks-alist))
@@ -1545,16 +1561,17 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	 )))))
 
 (defun dictem-postprocess-definition-remove-header ()
-  (goto-char (point-min))
-  (end-of-line)
-  (let (eol (point))
+  (save-excursion
     (goto-char (point-min))
-    (if (search-forward "definition found" eol t)
-	(progn
-	  (goto-char (point-min))
-	  (kill-line 2)
-	  )
-      )))
+    (end-of-line)
+    (let (eol (point))
+      (goto-char (point-min))
+      (if (search-forward-regexp "definitions? found" eol t)
+	  (progn
+	    (goto-char (point-min))
+	    (kill-line 2)
+	    )
+	))))
 
 ;;;;;       On-Click Functions     ;;;;;
 
