@@ -1,3 +1,6 @@
+(require 'cl)
+(require 'dictem-ll)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;         Custom Things        ;;;;;
 
@@ -103,25 +106,6 @@ dict-1.9.14 or later (or compatible) is recomented."
 (defvar dictem-temp-buffer-name
   "*dict-temp*"
   "Temporary buffer name")
-
-;(require 'dictem-opt)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;                              ;;;;;
-
-(defun get-line ()
-  "Replacement for (thing-at-point 'line)"
-  (save-excursion
-    (buffer-substring-no-properties
-     (progn (beginning-of-line) (point))
-     (progn (end-of-line) (point)))))
-
-(defun list2alist (l)
-  (cond
-   ((null l) nil)
-   (t (cons
-       (list (car l) nil)
-       (list2alist (cdr l))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions Related to Error Object  ;;
@@ -248,15 +232,6 @@ dict-1.9.14 or later (or compatible) is recomented."
 
 (defun dictem-prepand-special-dbs (l)
   (cons '("*" nil) (cons '("!" nil) l)))
-
-(defun dictem-replace-spaces (str)
-  (while (string-match "  +" str)
-    (setq str (replace-match " " t t str)))
-  (if (string-match "^ +" str)
-      (setq str (replace-match "" t t str)))
-  (if (string-match " +$" str)
-      (setq str (replace-match "" t t str)))
-  str)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;        Main Functions        ;;;;;
@@ -673,3 +648,5 @@ The default key bindings:
 	      (progn
 		(select-window selected-window)
 		(set-window-configuration configuration)))))))
+
+(provide 'dictem)

@@ -1,3 +1,7 @@
+(require 'dictem)
+
+;(load-file "dictem.el")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;            Faces             ;;;;;
 
@@ -288,3 +292,5 @@ link.  Upon clicking the `function' is called with `data' as argument."
 
 (define-key dictem-mode-map [C-down-mouse-2]
   'dictem-define-with-db-on-click)
+
+(provide 'dictem-opt)
