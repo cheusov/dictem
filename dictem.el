@@ -1448,10 +1448,32 @@ link.  Upon clicking the `function' is called with `data' as argument."
 	   (list (cons 'dbname dictem-current-dbname))))
 	))))
 
+(defvar dictem-hyperlink-beginning
+  "{"
+  "String that begins hyperlink.
+This variable is used by
+the function 'dictem-postprocess-definition-hyperlinks'")
+
+(defvar dictem-hyperlink-end
+  "}"
+  "String that ends hyperlink.
+This variable is used by
+the function 'dictem-postprocess-definition-hyperlinks'")
+
+(defvar dictem-hyperlink-define-func
+  'dictem-base-define
+  "Function called when user clicks on hyperlinks inside the definition.
+This variable is used by
+the function 'dictem-postprocess-definition-hyperlinks'")
+
 (defun dictem-postprocess-collect-hyperlinks ()
   (save-excursion
     (goto-char (point-min))
-    (let ((regexp "\\({\\([^{}|]+\\)}\\|\\({\\([^{}|\n]+\\)|\\([^{}|\n]+\\)}\\)\\)"))
+    (let ((regexp (concat "\\(" dictem-hyperlink-beginning "\\([^{}|]+\\)"
+		  dictem-hyperlink-end
+		  "\\|\\(" dictem-hyperlink-beginning
+		  "\\([^{}|\n]+\\)|\\([^{}|\n]+\\)" dictem-hyperlink-end
+		  "\\)\\)")))
 
       (while (search-forward-regexp regexp nil t)
 	(cond ((match-beginning 2)
@@ -1482,40 +1504,48 @@ link.  Upon clicking the `function' is called with `data' as argument."
 (defun dictem-postprocess-definition-hyperlinks ()
   (save-excursion
     (goto-char (point-min))
-    (let ((regexp "\\({[^{}|]+\\)}\\|^From [^\n]+\\[\\([^\n]+\\)\\]\\|\\({\\([^{}|\n]+\\)|\\([^{}|\n]+\\)}\\)"))
+    (let ((regexp
+	   (concat dictem-hyperlink-beginning "\\([^{}|]+\\)" dictem-hyperlink-end
+		   "\\|"
+		   "^From [^\n]+\\[\\([^\n]+\\)\\]"
+		   "\\|"
+		   "\\(" dictem-hyperlink-beginning "\\([^{}|\n]+\\)|\\([^{}|\n]+\\)"
+		   dictem-hyperlink-end "\\)")))
 
       (while (search-forward-regexp regexp nil t)
 	(cond ((match-beginning 1)
-	       (let* ((beg (+ 1 (match-beginning 1)))
+	       (let* ((beg (match-beginning 1))
 		      (end (match-end 1))
-		      (repl (buffer-substring beg end))
+		      (match-beg (match-beginning 0))
 		      (word (buffer-substring-no-properties beg end)))
-		 (replace-match repl t t)
+		 (replace-match word t t)
 		 (dictem-create-link
-		  (- beg 1) (- end 1)
+		  match-beg (+ match-beg (length word))
 		  'dictem-reference-definition-face
-		  'dictem-base-define
+		  dictem-hyperlink-define-func
 		  (list (cons 'word (dictem-replace-spaces word))
 			(cons 'dbname dictem-current-dbname))
 		  '(link t))
 		 ))
 	      ((match-beginning 2)
-	       (setq dictem-current-dbname
-		     (dictem-replace-spaces
-		      (buffer-substring-no-properties (match-beginning 2)
-						      (match-end 2)))))
+	       (if (null dictem-current-dbname)
+		   (setq dictem-current-dbname
+			 (dictem-replace-spaces
+			  (buffer-substring-no-properties (match-beginning 2)
+							  (match-end 2))))))
 	      ((match-beginning 3)
 	       (let* ((beg (match-beginning 5))
 		      (end (match-end 5))
+		      (match-beg (match-beginning 3))
 	              (repl-beg (match-beginning 4))
 		      (repl-end (match-end 4))
-		      (repl (buffer-substring repl-beg repl-end))
+		      (repl (buffer-substring-no-properties repl-beg repl-end))
 		      (word (buffer-substring-no-properties beg end)))
 		 (replace-match repl t t)
 		 (dictem-create-link
-		  (- repl-beg 1) (- repl-end 1)
+		  match-beg (+ match-beg (length repl))
 		  'dictem-reference-definition-face
-		  'dictem-base-define
+		  dictem-hyperlink-define-func
 		  (list (cons 'word (dictem-replace-spaces word))
 			(cons 'dbname dictem-current-dbname))
 		  '(link t))))
