@@ -70,19 +70,27 @@ to enter a database name."
 
 (defcustom dictem-postprocess-definition-hook
   nil
-  "Hook run in dictem mode buffers containing DEFINE result.")
+  "Hook run in dictem mode buffers containing DEFINE result."
+  :group 'dictem
+  :type 'hook)
 
 (defcustom dictem-postprocess-match-hook
   nil
-  "Hook run in dictem mode buffers containing MATCH result.")
+  "Hook run in dictem mode buffers containing MATCH result."
+  :group 'dictem
+  :type 'hook)
 
 (defcustom dictem-postprocess-dbinfo-hook
   nil
-  "Hook run in dictem mode buffers containing SHOW INFO result.")
+  "Hook run in dictem mode buffers containing SHOW INFO result."
+  :group 'dictem
+  :type 'hook)
 
 (defcustom dictem-postprocess-showserver-hook
   nil
-  "Hook run in dictem mode buffers containing SHOW SERVER result.")
+  "Hook run in dictem mode buffers containing SHOW SERVER result."
+  :group 'dictem
+  :type 'hook)
 
 (defun dictem-call-dict-internal (fun databases)
   (let ((exit-status -1))

@@ -22,7 +22,7 @@
 
   "The face that is used for displaying a reference to
 a phrase in a DEFINE search."
-  :group 'dictem)
+  :group 'dictem-faces)
 
 (defface dictem-reference-m1-face
   '((((type x)
@@ -41,7 +41,7 @@ a phrase in a DEFINE search."
 
   "The face that is used for displaying a reference to
 a phrase in a MATCH search."
-  :group 'dictem)
+  :group 'dictem-faces)
 
 (defface dictem-reference-m2-face
   '((((type x)
@@ -60,7 +60,7 @@ a phrase in a MATCH search."
 
   "The face that is used for displaying a reference to
 a single word in a MATCH search."
-  :group 'dictem)
+  :group 'dictem-faces)
 
 (defface dictem-reference-dbname-face
   '((((type x)
@@ -78,7 +78,7 @@ a single word in a MATCH search."
      (:underline t)))
 
   "The face that is used for displaying a reference to database"
-  :group 'dictem)
+  :group 'dictem-faces)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;      Low Level Functions     ;;;;;

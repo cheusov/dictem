@@ -3,8 +3,15 @@
 
 (defgroup dictem nil
   "Client for accessing the DICT server."
+  :tag "DictEm"
   :group 'help
   :group 'hypermedia)
+
+(defgroup dictem-faces nil
+  "Face options for dictem DICT client."
+  :tag "DictEm faces"
+  :group 'dictem
+  :group 'faces)
 
 (defcustom dictem-server "dict.org"
   "The DICT server"
