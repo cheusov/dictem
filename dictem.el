@@ -1271,17 +1271,14 @@ shows information about databases provided by DICT."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;      Optional Features       ;;;;;
-(defun dictem-create-link (start end face function &optional data help)
+(defun dictem-create-link (start end face function &optional data add-props)
   "Create a link in the current buffer starting from `start' going to `end'.
 The `face' is used for displaying, the `data' are stored together with the
 link.  Upon clicking the `function' is called with `data' as argument."
   (let ((properties
-	 (list 'face face
-	       'mouse-face 'highlight
-	       'link t
-	       'link-data data
-	       'link-function function)
-	 ))
+	 (append (list 'face face 'mouse-face 'highlight
+	       'link-data data 'link-function function)
+	 add-props)))
     (remove-text-properties start end properties)
     (add-text-properties start end properties)))
 
@@ -1332,7 +1329,8 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		  'dictem-reference-definition-face
 		  'dictem-base-define
 		  (list (cons 'word (dictem-replace-spaces word))
-			(cons 'dbname dictem-current-dbname)))
+			(cons 'dbname dictem-current-dbname))
+		  '(link t))
 		 ))
 	      ((match-beginning 2)
 	       (setq dictem-current-dbname
@@ -1353,7 +1351,7 @@ link.  Upon clicking the `function' is called with `data' as argument."
 		  'dictem-base-define
 		  (list (cons 'word (dictem-replace-spaces word))
 			(cons 'dbname dictem-current-dbname))
-		  )))
+		  '(link t))))
 	      )))))
 
 (defun dictem-postprocess-match ()
