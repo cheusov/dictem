@@ -3,6 +3,8 @@ DictEm is a DICT client for GNU Emacs.
 COPYING
 ============
 
+See the file COPYING
+
 INSTALLATION
 ============
 
@@ -74,7 +76,7 @@ Manual Configuration
 The easiest configuration of dictem may look like this
 
 ; Add to load-path variable a new directory with files of dictem
-;(add-to-list 'load-path "/usr/local/emacs/emacs-site")
+;(add-to-list 'load-path "/usr/local/share/emacs/emacs-site")
 
 ; Loading dictem functions
 (require 'dictem)
