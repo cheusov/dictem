@@ -16,13 +16,11 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 675 Mass Ave, Cambridge, MA 02139, USA.
 # 
-# $Id: Makefile.am,v 1.11 2004-11-30 14:44:09 cheusov Exp $
+# $Id: Makefile.am,v 1.12 2004-11-30 15:15:05 cheusov Exp $
 #
 
 # Add a _letter_ if you change the version number and release your own version.
 # Numbers are for the original author(s) only.
-
-DICTEM_VERSION=0.0.2
 
 #bin_SCRIPTS = dictem
 #man_MANS    = dictem.1
@@ -47,7 +45,7 @@ ChangeLog:
 cvsdist:
 	@( CVSROOT=`cat CVS/Root` && \
 	export CVSROOT && \
-	VERSION=$(DICTEM_VERSION) && \
+	VERSION=$(PACKAGE_VERSION) && \
 	VERSION_CVS=`echo $${VERSION} | tr . -` && \
 	export VERSION VERSION_CVS && \
 	make ChangeLog && \
