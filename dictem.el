@@ -13,13 +13,13 @@
 
 ;;;;;; Functions for Initializing ;;;;;;
 
-(defun dictem-set-strategies (&optional server port)
+(defun dictem-initialize-strategies-alist (&optional server port)
   "Obtain strategy ALIST from a DICT server
 and sets dictem-strategy-alist variable."
   (interactive)
   (setq dictem-strategy-alist (dictem-get-strategies server port)))
 
-(defun dictem-set-databases (&optional server port)
+(defun dictem-initialize-databases-alist (&optional server port)
   "Obtain database ALIST from a DICT server
 and sets dictem-database-alist variable."
   (interactive)

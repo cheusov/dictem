@@ -55,33 +55,33 @@
 
 (defun dictem-collect-matches ()
   ; nreverse, setcar and nconc are used to reduce a number of cons
-  (defvar dictem-temp nil)
   (beginning-of-buffer)
-  (loop
-   (let ((line (get-line)))
-     (if (string-match "^[^ ]+" line)
-	 (progn
-	   (if (consp dictem-temp)
-	       (setcar (cdar dictem-temp)
-		       (nreverse (cadar dictem-temp))))
-	   (setq
-	    dictem-temp
-	    (cons
-	     (list
-	      (substring line (match-beginning 0) (match-end 0))
-	      (nreverse 
-	       (dictem-tokenize (substring line (match-end 0)))))
-	     dictem-temp)))
-       (if (consp dictem-temp)
-	   (setcar (cdar dictem-temp)
-		   (nconc (nreverse (dictem-tokenize line))
-			  (cadar dictem-temp))
-		   ))
-       ))
-   (if (or (> (forward-line 1) 0)
-	   (> (current-column) 0))
-       (return (nreverse dictem-temp)))
-   ))
+  (let ((dictem-temp nil))
+    (loop
+     (let ((line (get-line)))
+       (if (string-match "^[^ ]+" line)
+	   (progn
+	     (if (consp dictem-temp)
+		 (setcar (cdar dictem-temp)
+			 (nreverse (cadar dictem-temp))))
+	     (setq
+	      dictem-temp
+	      (cons
+	       (list
+		(substring line (match-beginning 0) (match-end 0))
+		(nreverse 
+		 (dictem-tokenize (substring line (match-end 0)))))
+	       dictem-temp)))
+	 (if (consp dictem-temp)
+	     (setcar (cdar dictem-temp)
+		     (nconc (nreverse (dictem-tokenize line))
+			    (cadar dictem-temp))
+		     ))
+	 ))
+     (if (or (> (forward-line 1) 0)
+	     (> (current-column) 0))
+	 (return (nreverse dictem-temp)))
+     )))
 
 ;;;;;        GET Functions         ;;;;;
 
@@ -96,9 +96,11 @@
 	  "-s" (if strategy strategy dictem-default-strategy)
 	  "-h" (if server server dictem-server)
 	  "-p" (if port port dictem-port)
+	  "--client" (dictem-client-text)
 	  query)))
     (cond
      ((= exit_status 20) ;20 means "no matches found", See dict(1)
+      (kill-buffer dictem-temp-buffer-name)
       nil)
      ((= exit_status 0)
       (progn
@@ -120,11 +122,13 @@
 and returns alist containing strategies and their descriptions"
   (let ((exit_status
 	 (call-process
-	     dictem-client-prog nil
-	     dictem-temp-buffer-name nil
-	     "-P" "-" "-S"
-	     "-h" (if server server dictem-server)
-	     "-p" (if port port dictem-port))))
+	  dictem-client-prog nil
+	  dictem-temp-buffer-name nil
+	  "-P" "-" "-S"
+	  "-h" (if server server dictem-server)
+	  "-p" (if port port dictem-port)
+	  "--client" (dictem-client-text))
+	 ))
     (cond
      ((= exit_status 0)
       (save-excursion
@@ -159,7 +163,9 @@ and returns alist containing database names and descriptions"
 	  dictem-temp-buffer-name nil
 	  "-P" "-" "-D"
 	  "-h" (if server server dictem-server)
-	  "-p" (if port port dictem-port))))
+	  "-p" (if port port dictem-port)
+	  "--client" (dictem-client-text))
+	 ))
     (cond
      ((= exit_status 0)
       (save-excursion
@@ -168,13 +174,12 @@ and returns alist containing database names and descriptions"
 	(let ((regexp "^ \\([^ ]+\\) +\\(.*\\)$")
 	      (l nil))
 	  (while (search-forward-regexp regexp nil t)
-	    (setq l (cons
-		     (list
-		      (buffer-substring-no-properties
-		       (match-beginning 1) (match-end 1))
-		      (buffer-substring-no-properties
-		       (match-beginning 2) (match-end 2)))
-		     l)))
+	    (let ((dbname (buffer-substring-no-properties
+			   (match-beginning 1) (match-end 1)))
+		  (dbdescr (buffer-substring-no-properties
+			    (match-beginning 2) (match-end 2))))
+	      (if (not (string= "--exit--" dbname))
+		  (setq l (cons (list dbname dbdescr) l)))))
 	  (kill-buffer dictem-temp-buffer-name)
 	  l)))
      (t
