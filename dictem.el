@@ -66,6 +66,17 @@
   )
 )
 
+(defun list2alist (list)
+  (if
+      list
+      (cons
+       (list (car list) nil)
+       (list2alist (cdr list))
+       )
+    nil
+    )
+  )
+
 (defvar edict-default-strategy ".")
 (defvar edict-default-database "*")
 (defvar edict-strategy-history nil)
@@ -85,6 +96,41 @@
      default
      )
     )
+  )
+
+(defun get-first-token ()
+  (let
+      ((str (thing-at-point 'line)))
+    (if
+	(string-match "^ [^ ][^ ]*" str )
+	(list (substring str ( + (match-beginning 0) 1) (match-end 0)))
+      )
+    )
+  )
+
+(defun get-first-tokens-from-temp-buffer ()
+;    (switch-to-buffer "*dict-temp*")
+  (set-buffer "*dict-temp*")
+  (beginning-of-buffer)
+  (let ((list-of-first-tokens nil )) ;(get-first-tokens)))
+    (while (= (forward-line 1) 0)
+      (setq list-of-first-tokens (append (get-first-token) list-of-first-tokens))
+      )
+    list-of-first-tokens
+    )
+  )
+
+(defun edict-set-strategies ()
+  "Obtain stratgy list from a DICT server
+and sets edict-strategy-list variable"
+  (interactive)
+  (if
+      (eq 0 (call-process "dict" nil "*dict-temp*" nil "-P" "-" "-S" "-h" edict-server "-p" edict-port))
+      (setq edict-strategy-list
+	    (nreverse (list2alist (get-first-tokens-from-temp-buffer)))
+	    )
+    )
+  (kill-buffer "*dict-temp*")
   )
 
 (defun edict-select-strategy ()
@@ -270,8 +316,8 @@ the protocol defined in RFC 2229.
   "If current buffer is not a edict buffer, create a new one."
   (unless (edict-mode-p)
     (edict)
+    )
   )
-)
 
 (defun edict-close ()
   "Close the current edict buffer"
