@@ -447,7 +447,7 @@ and returns alist containing database names and descriptions"
 	"."))))
 
 (defun dictem-get-default-database (&optional def-db)
-  "Gets the default database"
+  "Returns the default database"
   (defun dictem-extract-dbname (database)
     (cond
      ((consp database) (dictem-extract-dbname (car database)))
@@ -1068,36 +1068,28 @@ to enter a database name."
 (defun dictem-next-link ()
   "Move point to the next hyperlink"
   (interactive)
-
-  (defun dictem-local-next-link2 (limit)
-    (let ((pt nil))
-      (if (and (setq pt (next-single-property-change (point) 'link nil limit))
-	       (/= limit pt))
-	  (if (get-char-property pt 'link)
-	      (goto-char pt)
-	    (goto-char (next-single-property-change pt 'link nil limit))))
-      )
-    )
-
-  (dictem-local-next-link2 (point-max))
-  )
+  (let ((pt nil)
+	(limit (point-max)))
+    (if (and (setq pt (next-single-property-change
+		       (point) 'link nil limit))
+	     (/= limit pt))
+	(if (get-char-property pt 'link)
+	    (goto-char pt)
+	  (goto-char (next-single-property-change pt 'link nil limit))))
+    ))
 
 (defun dictem-previous-link ()
   "Move point to the previous hyperlink"
   (interactive)
-
-  (defun dictem-local-prev-link2 (limit)
-    (let ((pt nil))
-      (if (and (setq pt (previous-single-property-change (point) 'link nil limit))
-	       (/= limit pt))
-	  (if (get-char-property pt 'link)
-	      (goto-char pt)
-	    (goto-char (previous-single-property-change pt 'link nil limit))))
-      )
-    )
-
-  (dictem-local-prev-link2 (point-min))
-  )
+  (let ((pt nil)
+	(limit (point-min)))
+    (if (and (setq pt (previous-single-property-change
+		       (point) 'link nil limit))
+	     (/= limit pt))
+	(if (get-char-property pt 'link)
+	    (goto-char pt)
+	  (goto-char (previous-single-property-change pt 'link nil limit))))
+      ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun dictem-help ()
