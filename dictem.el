@@ -107,6 +107,14 @@ Instead, existing buffer will be erased and used to show results.
   :group 'dictem
   :type 'boolean)
 
+(defcustom dictem-use-content-history t
+  "If not nil and dictem-use-existing-buffer is also not nil,
+buffer content and (point) is saved in dictem-content-history variable
+when DEFINE hyperlinks are accessed.
+It is restored by dictem-last function.
+On slow machines it may better to set this variable to nil"
+  :group 'dictem)
+
 ;;;;;            Faces             ;;;;;
 
 (defface dictem-reference-definition-face
@@ -1149,7 +1157,7 @@ The default key bindings:
 
 (defvar dictem-content-history
   nil
-  "A list of pairs (buffer_content, point)")
+  "A list of lists (buffer_content point)")
 
 (defconst dictem-buffer-name
   "*dictem buffer*")
@@ -1260,10 +1268,11 @@ and returns a list containing protocol, server, port and path on nil if fails"
   "If current buffer is not a dictem buffer, create a new one."
   (if (dictem-mode-p)
       (progn
-	(setq dictem-content-history
-	      (cons (cons (buffer-substring
-			   (point-min) (point-max))
-			  (point)) dictem-content-history))
+	(if dictem-use-content-history
+	    (setq dictem-content-history
+		  (cons (list (buffer-substring
+			       (point-min) (point-max))
+			      (point)) dictem-content-history)))
 	(setq buffer-read-only nil)
 	(erase-buffer))
     (dictem)))
@@ -1299,7 +1308,7 @@ and returns a list containing protocol, server, port and path on nil if fails"
 	    (setq buffer-read-only nil)
 	    (delete-region (point-min) (point-max))
 	    (insert-string (car (car dictem-content-history)))
-	    (goto-char (cdr (car dictem-content-history)))
+	    (goto-char (cadr (car dictem-content-history)))
 	    (setq dictem-content-history (cdr dictem-content-history))
 	    )
 	  )

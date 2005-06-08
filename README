@@ -411,6 +411,46 @@ For emulating behaviour of older releases, set it to `t'.
 (setq dictem-empty-initial-input t)
 
 -------
+Ex. 12
+
+By default dictem-postprocess-definition-hyperlinks function
+assumes that hyperlinks have the following form: {foo} or {foo|bar}.
+Sometimes "{" and "}" characters are general characters
+in definitions. The following code changes "{" and "}" for
+"{link-beg " and " link-end" respectively
+inside definitions obtained from the databases "^infopage-..."
+
+; new function is used for creating hyperlinks
+; which works differently depending on database name
+(defun my-dictem-postprocess-definition-hyperlinks ()
+  "Creating hyperlinks according to database name"
+  (interactive)
+  (cond (
+	((string-match "^infopage-" dictem-current-dbname)
+	 (let ((dictem-hyperlink-beginning "{link-beg ")
+	       (dictem-hyperlink-end       " link-end}")
+	       )
+	   (dictem-postprocess-definition-hyperlinks)))
+	(t (dictem-postprocess-definition-hyperlinks))))
+
+; definitions from each database are processed separately
+(add-hook 'dictem-postprocess-definition-hook
+	  'dictem-postprocess-each-definition)
+(add-hook 'dictem-postprocess-each-definition-hook
+	  'my-dictem-postprocess-definition-hyperlinks)
+
+-------
+Ex. 13
+
+You may want to remove "XXX definition[s] found" header
+from the DEFINE buffers.
+It may be done with a help of
+dictem-postprocess-definition-remove-header function.
+
+(add-hook 'dictem-postprocess-definition-hook
+	  'dictem-postprocess-definition-remove-header)
+
+-------
 
 If you have read to this point and all the examples above seem easy
 for you, you are probably a LISP Guru.

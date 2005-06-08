@@ -1,4 +1,6 @@
-Version 0.0.5
+Version 0.0.5, Wed,  8 Jun 2005 19:56:56 +0300
+
+  - new examles in README file: Ex.12-13
 
   - `dictem-postprocess-collect-hyperlinks' function
     (when added to `dictem-postprocess-definition-hook',
@@ -12,14 +14,15 @@ Version 0.0.5
     "e" is assigned to call the function `dictem-hyperlinks-menu'.
     The variable `dictem-hyperlinks-alist' is local to buffer.
 
-  - If `dictem-use-existing-buffer' variable is `t',
-    the entire buffer content
-    is stored in `dictem-content-history' variable when user clicks
-    a hyperlink and thus he/she can easily return to the previous
+  - If `dictem-use-existing-buffer' variable is `t'
+    and dictem-use-content-history is not nil,
+    the entire buffer content and (point)
+    is stored in `dictem-content-history' variable when you click
+    on hyperlink and thus you can easily return to the previous
     buffer by pressing "l" (`dictem-last' function).
 
     "l" is assigned to function `dictem-last'.
-    It works just like the button <BACK> in WEB browsers.
+    It works just like the button <BACK> in the WEB browsers.
 
   - added: `dictem-postprocess-definition-remove-header',
       function for postprocessing DEFINE buffer.
@@ -32,7 +35,7 @@ Version 0.0.5
     `dolist' macros instead of recursion.
     Recursion-bases implementation causes dictem to fail
     when lots of buffers exist.
-    Thanks to Juri Linkov for bug report and lots of suggestions.
+    Thanks to Juri Linkov for bug reports and lots of suggestions.
 
   - String that begins hyperlink
       is stored in the variable `dictem-hyperlink-beginning', defaults to "{"
@@ -43,7 +46,7 @@ Version 0.0.5
       defaults to `dictem-base-define'
 
     All this stuff may be useful for more complex buffer postprocessing.
-    For example hyperlinks are not always enclosed in '{' and '}' braces.
+    Hyperlinks are not always enclosed in '{' and '}' braces.
 
 Version 0.0.4, Thu, 24 Feb 2005 19:40:24 +0200
 

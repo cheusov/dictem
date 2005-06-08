@@ -17,16 +17,16 @@ dnl You should have received a copy of the GNU General Public License along
 dnl with this program; if not, write to the Free Software Foundation, Inc.,
 dnl 675 Mass Ave, Cambridge, MA 02139, USA.
 dnl
-dnl $Id: configure.in,v 1.6 2005-02-24 17:49:25 cheusov Exp $
+dnl $Id: configure.in,v 1.7 2005-06-08 17:00:37 cheusov Exp $
 dnl
 
-define(DICTEM_VERSION, [0.0.4])
+define(DICTEM_VERSION, [0.0.5])
 
 AC_INIT(dictem, DICTEM_VERSION, [vle@gmx.net])
 AM_INIT_AUTOMAKE(dictem, DICTEM_VERSION)
 AM_SANITY_CHECK
 AC_PREREQ(2.53)
-AC_REVISION($Revision: 1.6 $)
+AC_REVISION($Revision: 1.7 $)
 
 #AC_CONFIG_SRCDIR([dictem.el])
 
