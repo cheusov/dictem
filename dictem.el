@@ -3,7 +3,7 @@
 ; This code was initially based on
 ; dictionary.el written by Torsten Hilbrich <Torsten.Hilbrich@gmx.net>
 ; but now probably doesn't contain original code.
-; Most of the code has been written
+; Most of the code has been rewritten
 ; from scratch by Aleksey Cheusov <vle@gmx.net>, 2004-2005.
 ;
 ; DictEm is free software; you can redistribute it and/or modify it
@@ -341,21 +341,110 @@ This variable is local to buffer")
 	 (return (nreverse dictem-temp)))
      )))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;             call-process functions
+
+(defun dictem-get-buffer (buf)
+  (cond
+   ((bufferp buf) buf)
+   (buf (current-buffer))
+   (t (get-buffer-create dictem-temp-buffer-name))
+   ))
+
+(defun dictem-call-process-SHOW-SERVER (buffer host port)
+  (call-process
+   dictem-client-prog nil
+   (dictem-get-buffer buffer)
+   nil
+   "-P" "-" "-I"
+   "-h" (if host host (dictem-get-server))
+   "-p" (dictem-get-port port)
+   "--client" (dictem-client-text)
+   ))
+
+(defun dictem-call-process-SHOW-INFO (buffer db host port)
+  (call-process
+   dictem-client-prog nil
+   (dictem-get-buffer buffer)
+   nil
+   "-P" "-"
+   "-i" db
+   "-h" (if host host (dictem-get-server))
+   "-p" (dictem-get-port port)
+   "--client" (dictem-client-text)
+   ))
+
+(defun dictem-call-process-SHOW-STRAT (buffer host port)
+  (call-process
+   dictem-client-prog nil
+   (dictem-get-buffer buffer)
+   nil
+   "-P" "-" "-S"
+   "-h" (if host host (dictem-get-server))
+   "-p" (dictem-get-port port)
+   "--client" (dictem-client-text)
+   ))
+
+(defun dictem-call-process-SHOW-DB (buffer host port)
+  (call-process
+   dictem-client-prog nil
+   (dictem-get-buffer buffer)
+   nil
+   "-P" "-" "-D"
+   "-h" (if host host (dictem-get-server))
+   "-p" (dictem-get-port port)
+   "--client" (dictem-client-text)
+   ))
+
+(defun dictem-call-process-MATCH (buffer db query strat host port)
+  (call-process
+   dictem-client-prog nil
+   (dictem-get-buffer buffer)
+   nil
+   "-P" "-" "-m"
+   "-d" (if db db "*")
+   "-s" (if strat strat ".")
+   "-h" (if host host (dictem-get-server))
+   "-p" (dictem-get-port port)
+   "--client" (dictem-client-text)
+   query
+   ))
+
+(defun dictem-call-process-DEFINE (buffer db query host port)
+  (call-process
+   dictem-client-prog nil
+   (dictem-get-buffer buffer)
+   nil
+   "-P" "-"
+   "-d" (if db db "*")
+   "-s" "exact"
+   "-h" (if host host (dictem-get-server))
+   "-p" (dictem-get-port port)
+   "--client" (dictem-client-text)
+   query
+   ))
+
+(defun dictem-call-process-SEARCH (buffer db query strat host port)
+  (call-process
+   dictem-client-prog nil
+   (dictem-get-buffer buffer)
+   nil
+   "-P" "-"
+   "-d" (if db db "*")
+   "-s" (if strat strat ".")
+   "-h" (if host host (dictem-get-server))
+   "-p" (dictem-get-port port)
+   "--client" (dictem-client-text)
+   query
+   ))
+
 ;;;;;        GET Functions         ;;;;;
 
 (defun dictem-get-matches (query &optional database strategy server port)
   "Returns ALIST of matches"
   (let ((exit_status
-	 (call-process
-	  dictem-client-prog nil
-	  (get-buffer-create dictem-temp-buffer-name) nil
-	  "-P" "-" "-m"
-	  "-d" (if database database "*")
-	  "-s" (if strategy strategy ".")
-	  "-h" (if server server dictem-server)
-	  "-p" (dictem-get-port port)
-	  "--client" (dictem-client-text)
-	  query)))
+	 (dictem-call-process-MATCH nil database query strategy server port)
+	 ))
     (cond
      ((= exit_status 20) ;20 means "no matches found", See dict(1)
       (kill-buffer dictem-temp-buffer-name)
@@ -379,13 +468,7 @@ This variable is local to buffer")
   "Obtains strategy ALIST from a DICT server
 and returns alist containing strategies and their descriptions"
   (let ((exit_status
-	 (call-process
-	  dictem-client-prog nil
-	  (get-buffer-create dictem-temp-buffer-name) nil
-	  "-P" "-" "-S"
-	  "-h" (if server server dictem-server)
-	  "-p" (dictem-get-port port)
-	  "--client" (dictem-client-text))
+	 (dictem-call-process-SHOW-STRAT nil server port)
 	 ))
     (cond
      ((= exit_status 0)
@@ -416,13 +499,7 @@ and returns alist containing strategies and their descriptions"
   "Obtains database ALIST from a DICT server
 and returns alist containing database names and descriptions"
   (let ((exit_status
-	 (call-process
-	  dictem-client-prog nil
-	  (get-buffer-create dictem-temp-buffer-name) nil
-	  "-P" "-" "-D"
-	  "-h" (if server server dictem-server)
-	  "-p" (dictem-get-port port)
-	  "--client" (dictem-client-text))
+	 (dictem-call-process-SHOW-DB nil server port)
 	 ))
     (cond
      ((= exit_status 0)
@@ -677,269 +754,190 @@ to enter a database name."
 
 (defun dictem-call-dict-internal (fun databases)
   (let ((exit-status -1))
-
-    (defun dictem-local-call-dict-internal-iter (fun databases)
-      (if databases
-	  (let ((ex_st (funcall fun (car databases))))
-	    (cond
-	     ((= ex_st 0)
-	      (setq exit-status 0))
-	     (t (if (/= 0 exit-status)
-		    (setq exit-status ex_st)))
-	     )
-	    (dictem-local-call-dict-internal-iter fun (cdr databases)))))
-
     (cond
      ((null databases) 0)
      ((stringp databases)
-      (dictem-local-call-dict-internal-iter fun (cons databases nil)))
-     ((consp databases)
-      (dictem-local-call-dict-internal-iter fun (cdr databases)))
+      (dictem-call-dict-internal fun (list databases)))
+     ((listp databases)
+      (dolist (db databases)
+	(let ((ex_st (funcall fun db)))
+	  (cond
+	   ((= ex_st 0)
+	    (setq exit-status 0))
+	   (t (if (/= 0 exit-status)
+		  (setq exit-status ex_st)))
+	   )))
+      (if (= exit-status -1) 0 exit-status)
+      )
      (t (error "wrong type of argument"))
      )
-
-    (if (= exit-status -1) 0 exit-status)
     ))
 
-(defun dictem-make-url (host port database define_or_match query &optional strategy)
+;(defun dictem-call-dict-internal (fun databases)
+;  (dolist (db databases)
+;    (funcall fun db)))
+;  (funcall fun databases))
+
+(defun dictem-make-url (host port database cmd_sign query &optional strategy)
   "Returns dict:// URL"
   (concat
    "dict://" host ":"
    (dictem-get-port (if port port "2628"))
-   "/" (if define_or_match "d" "m") ":" query ":" database
-   (if (null define_or_match) (concat ":" (if strategy strategy ".")))
+   "/" cmd_sign ":" query ":" database
+   (if strategy (concat ":" (if strategy strategy ".")))
    ))
 
-(defun dictem-base-show-databases (a b c)
-  "Show a list of databases"
-  (interactive)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun dictem-base-do-selector (fun hook &optional database &rest args)
+  (let ((splitted-url nil)
+	(databases    nil))
+    (cond ((and database (listp database))
+	   (dictem-call-dict-internal
+	    `(lambda (db)
+	       (apply 'dictem-base-do-selector 
+		      (append (list ,fun hook db) args)))
+	    database))
+
+	  ((and database
+		(setq splitted-url (dictem-parse-url database)))
+	   (apply 'dictem-base-do-foreign-server
+		  (append
+		   (list fun hook
+			 (nth 1 splitted-url)
+			 (dictem-get-port (nth 2 splitted-url))
+			 (nth 3 splitted-url))
+		   args)))
+
+	  ((setq databases (assoc database dictem-user-databases-alist))
+	   (let ((exit_status
+		  (apply 'dictem-base-do-selector
+			 (append
+			  (list fun hook (cdr databases))
+			  args))))
+	     (progn
+	       (setq dictem-last-database database)
+	       exit_status)
+	   ))
+
+	  (t
+	   (apply 'dictem-base-do-default-server
+		  (append (list fun hook database) args)))
+	  )))
+
+(defun dictem-base-do-foreign-server (fun hook server port database &rest args)
+;  "dictem search: MATCH + DEFINE. Accesses to the foreign DICT server"
+;  (interactive)
+  (let ((dictem-last-database nil)
+	(dictem-last-strategy nil))
+    (save-dictem (setq dictem-server server)
+		 (setq dictem-port   port)
+		 (setq database      database)
+		 (dictem-initialize)
+		 (apply 'dictem-base-do-default-server
+			(append (list fun hook database) args))
+		 )))
+
+(defun dictem-base-do-default-server (fun hook
+					  &optional database query strategy)
   (let* ((beg (point))
 	 (exit_status
-	  (call-process
-	   dictem-client-prog nil (current-buffer) nil
-	   "-P" "-" "-D"
-	   "-h" (dictem-get-server) "-p" (dictem-get-port)
-	   "--client" (dictem-client-text)
-	   )))
+	  (apply fun (append (list t)
+			     (if database (list database))
+			     (if query (list query))
+			     (if strategy (list strategy))
+			     (list nil) (list nil)))
+	  ))
 
     (cond ((= 0 exit_status)
-	   nil)
+	   (save-excursion
+	     (narrow-to-region beg (point))
+	     (run-hooks hook)
+	     (widen)))
+	  ((= 21 exit_status)
+	   (save-excursion
+	     (narrow-to-region beg (point))
+	     (run-hooks 'dictem-postprocess-match-hook)
+	     (widen)))
 	  (t
 	   (if (/= beg (point))
 	       (setq dictem-error-messages
 		     (append
 		      (list
 		       (dictem-make-url (dictem-get-server)
-					(dictem-get-port) "" t "")
+					(dictem-get-port) database "?" query)
 		       (buffer-substring-no-properties beg (point)))
 		      dictem-error-messages)))
-	   (kill-region beg (point))))))
+	   (kill-region beg (point))))
+
+    (if database (setq dictem-last-database database))
+    (if strategy (setq dictem-last-strategy strategy))
+    exit_status
+    ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun dictem-base-search (databases query strategy)
-  "dictem search: MATCH + DEFINE"
+  "MATCH + DEFINE commands"
   (interactive)
 
-  (let ((ex_status -1))
-  (defun dictem-local-run-dict-search (database)
-    (let ((splitted-url nil))
-      (if (setq splitted-url (dictem-parse-url database))
-	  (save-dictem (setq dictem-server (nth 1 splitted-url))
-		       (setq dictem-port (dictem-get-port (nth 2 splitted-url)))
-		       (setq database      (nth 3 splitted-url))
-		       (dictem-initialize)
-		       (dictem-local-run-dict-search database)
-		       )
-	(let* ((beg (point))
-	       (exit_status
-		(call-process
-		 dictem-client-prog nil (current-buffer) nil
-		 "-P" "-" "-d" database "-s" strategy
-		 "-h" (dictem-get-server) "-p" (dictem-get-port)
-		 "--client" (dictem-client-text)
-		 query)))
+  (dictem-base-do-selector
+   (symbol-function 'dictem-call-process-SEARCH)
+   'dictem-postprocess-definition-hook
+   databases query strategy))
 
-	  (cond ((= 0 exit_status)
-		 (setq ex_status 0)
-		 (save-excursion
-		   (narrow-to-region beg (point))
-		   (run-hooks 'dictem-postprocess-definition-hook)
-		   (widen)))
-		((= 21 exit_status)
-		 (if (= -1 ex_status)
-		     (setq ex_status exit_status))
-		 (save-excursion
-		   (narrow-to-region beg (point))
-		   (run-hooks 'dictem-postprocess-match-hook)
-		   (widen)))
-		(t
-		 (if (= -1 ex_status)
-		     (setq ex_status exit_status))
-		 (if (/= beg (point))
-		     (setq dictem-error-messages
-			   (append
-			    (list
-			     (dictem-make-url (dictem-get-server)
-					      (dictem-get-port) query t database)
-			     (buffer-substring-no-properties beg (point)))
-			    dictem-error-messages)))
-		 (kill-region beg (point))))
-	  ex_status))))
-
-  (setq dictem-last-database database)
-  (setq dictem-last-strategy strategy)
-
-  (dictem-call-dict-internal 'dictem-local-run-dict-search databases)))
-
-(defun dictem-base-define (databases query strategy)
-  "dictem search: DEFINE"
+(defun dictem-base-define (databases query c)
+  "DEFINE command"
   (interactive)
 
-  (let ((ex_status -1))
-    (defun dictem-local-run-dict-define (database)
-      (let ((splitted-url nil))
-	(if (setq splitted-url (dictem-parse-url database))
-	    (save-dictem (setq dictem-server (nth 1 splitted-url))
-			 (setq dictem-port (dictem-get-port (nth 2 splitted-url)))
-			 (setq database      (nth 3 splitted-url))
-			 (dictem-initialize)
-			 (dictem-local-run-dict-define database)
-			 )
-	  (let* ((beg (point))
-		 (exit_status
-		  (call-process
-		   dictem-client-prog nil (current-buffer) nil
-		   "-P" "-" "-d" database
-		   "-h" (dictem-get-server) "-p" (dictem-get-port)
-		   "--client" (dictem-client-text)
-		   query)))
-
-	    (cond ((= 0 exit_status)
-		   (save-excursion
-		     (narrow-to-region beg (point))
-		     (run-hooks 'dictem-postprocess-definition-hook)
-		     (widen)))
-		  ((= 21 exit_status)
-		   (save-excursion
-		     (narrow-to-region beg (point))
-		     (run-hooks 'dictem-postprocess-match-hook)
-		     (widen)))
-		  (t
-		   (if (= -1 ex_status)
-		       (setq ex_status exit_status))
-		   (if (/= beg (point))
-		       (setq dictem-error-messages
-			     (append
-			      (list
-			       (dictem-make-url (dictem-get-server)
-						(dictem-get-port) query t database)
-			       (buffer-substring-no-properties beg (point)))
-			      dictem-error-messages)))
-		   (kill-region beg (point))))
-	    ex_status))))
-
-    (setq dictem-last-database database)
-    (dictem-call-dict-internal 'dictem-local-run-dict-define databases)))
+  (dictem-base-do-selector
+   (symbol-function 'dictem-call-process-DEFINE)
+   'dictem-postprocess-definition-hook
+   databases query))
 
 (defun dictem-base-match (databases query strategy)
-  "dictem search: MATCH"
+  "MATCH command"
   (interactive)
 
-  (let ((ex_status -1))
-    (defun dictem-local-run-dict-match (database)
-      (let ((splitted-url nil))
-	(if (setq splitted-url (dictem-parse-url database))
-	    (save-dictem (setq dictem-server (nth 1 splitted-url))
-			 (setq dictem-port (dictem-get-port (nth 2 splitted-url)))
-			 (setq database      (nth 3 splitted-url))
-			 (dictem-initialize)
-			 (dictem-local-run-dict-match database)
-			 )
-	  (let* ((beg (point))
-		 (exit_status
-		  (call-process
-		   dictem-client-prog nil (current-buffer) nil
-		   "-P" "-" "-d" database "-s" strategy
-		   "-h" (dictem-get-server) "-p" (dictem-get-port) "-m"
-		   "--client" (dictem-client-text)
-		   query)))
-	    (cond ((= 0 exit_status)
-		   (save-excursion
-		     (narrow-to-region beg (point))
-		     (run-hooks 'dictem-postprocess-match-hook)
-		     (widen)))
-		  (t
-		   (if (= -1 ex_status)
-		       (setq ex_status exit_status))
-		   (if (/= beg (point))
-		       (setq dictem-error-messages
-			     (append
-			      (list
-			       (dictem-make-url (dictem-get-server)
-						(dictem-get-port) query t database)
-			       (buffer-substring-no-properties beg (point)))
-			      dictem-error-messages)))
-		   (kill-region beg (point))))
-	    ex_status))))
+  (dictem-base-do-selector
+   (symbol-function 'dictem-call-process-MATCH)
+   'dictem-postprocess-match-hook
+   databases query strategy))
 
-    (setq dictem-last-database database)
-    (setq dictem-last-strategy strategy)
-    (dictem-call-dict-internal 'dictem-local-run-dict-match databases)))
+(defun dictem-base-show-databases (a b c)
+  "SHOW DB command"
+  (interactive)
+
+  (dictem-base-do-selector
+   (symbol-function ' dictem-call-process-SHOW-DB)
+   nil))
+
+(defun dictem-base-show-strategies (a b c)
+  "SHOW STRAT command"
+  (interactive)
+
+  (dictem-base-do-selector
+   (symbol-function ' dictem-call-process-SHOW-STRAT)
+   nil))
 
 (defun dictem-base-show-info (databases b c)
-  "dictem: SHOW INFO command"
+  "SHOW INFO command"
   (interactive)
 
-  (let ((ex_status -1))
-    (defun run-dict-show-info (database)
-      (let* ((beg (point))
-	     (exit_status
-	      (call-process
-	       dictem-client-prog nil (current-buffer) nil
-	       "-P" "-" "-i" database
-	       "-h" (dictem-get-server) "-p" (dictem-get-port)
-	       "--client" (dictem-client-text)
-	       )))
-	(cond ((= 0 exit_status)
-	       (save-excursion
-		 (narrow-to-region beg (point))
-		 (run-hooks 'dictem-postprocess-show-info-hook)
-		 (widen)))
-	      (t
-	       (if (= -1 ex_status)
-		   (setq ex_status exit_status))
-	       (if (/= beg (point))
-		   (setq dictem-error-messages
-			 (append
-			  (list
-			   (dictem-make-url (dictem-get-server)
-					    (dictem-get-port) "" t database)
-			   (buffer-substring-no-properties beg (point)))
-			  dictem-error-messages)))
-	       (kill-region beg (point))))
-	ex_status))
-
-    (setq dictem-last-database database)
-    (dictem-call-dict-internal 'run-dict-show-info databases)))
+  (dictem-base-do-selector
+   (symbol-function 'dictem-call-process-SHOW-INFO)
+   'dictem-postprocess-show-info-hook
+   databases))
 
 (defun dictem-base-show-server (a b c)
-  "dictem: SHOW SERVER command"
+  "SHOW SERVER command"
   (interactive)
 
-  (let* ((beg (point))
-	 (exit_status
-	  (call-process
-	   dictem-client-prog nil (current-buffer) nil
-	   "-P" "-" "-I"
-	   "-h" (dictem-get-server) "-p" (dictem-get-port)
-	   "--client" (dictem-client-text)
-	   )))
-    (cond ((= 0 exit_status)
-	   (save-excursion
-	     (narrow-to-region beg (point))
-	     (run-hooks 'dictem-postprocess-show-server-hook)
-	     (widen))))
-    exit_status))
+  (dictem-base-do-selector
+   (symbol-function ' dictem-call-process-SHOW-SERVER)
+   'dictem-postprocess-show-server-hook))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun dictem-get-error-message (exit_status)
   (cond
