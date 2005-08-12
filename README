@@ -2,7 +2,7 @@ DictEm is a dict client for GNU Emacs.
 
 It uses a console dict client (http://sf.net/projects/dict) and
 implements all functions of the client part of DICT protocol
-(RFC-2229, www.dict.org), i.e looking up words and definitions,
+(RFC-2229, www.dict.org), i.e. looking up words and definitions,
 obtaining information about available strategies, provided databases,
 information about DICT server etc.
 
@@ -11,7 +11,7 @@ Unlike dictionary.el
 uses autocompletion that is used for selecting dictionary and search
 strategy.  Moreover, DictEm provides several hooks which may be used
 for buffer postprocessing. For example, inbuilt hyperlinking and
-highlighting mechanism are based on this possiblity.  Another example
+highlighting mechanisms are based on this possibility.  Another example
 is that information obtained from DICT server that is in HTML, ROFF or
 INFO format can be easily viewed by Emacs+DictEm if the user supplies
 appropriate conversion functions.  Of course DictEm can be differently
@@ -87,13 +87,14 @@ INSTALLATION
   (available at http://sf.net/projects/dict)
   is installed on your system.
   Console dict client is used by DictEm for accessing the DICT server.
-  dict-1.9.14 or later is recomended.
+  dict-1.9.14 or later is strongly recommended.
 
 REPORTING BUGS
 ==============
 
     Please send all bug reports and suggestions directly to
-    Aleksey Cheusov <vle@gmx.net>
+    Aleksey Cheusov <vle@gmx.net>.
+    dict-beta@dict.org mailing list is also good.
 
 MAILING LISTS
 =============
@@ -230,7 +231,7 @@ and use only those specified in dictem-user-databases-alist variable.
 Ex.6
 
 Of course, you can assign you can
-assign your own key bendings in dictem buffer
+assign your own key bindings in dictem buffer
 
 (define-key dictem-mode-map [tab] 'dictem-next-link)
 (define-key dictem-mode-map [(backtab)] 'dictem-previous-link)
@@ -352,14 +353,32 @@ It is easy to postprocess them.
 -------
 Ex.9
 
-; By using dictem-run function more advanced ELISP programmers
-; may create their own search scenaria. Look at this code.
+; The dictem's top level function is 'dictem-run'.
+; By using it more advanced ELISP programmers
+; can create their own search scenaria. Look at this code.
 
 (dictem-run
   'dictem-base-search
-  "gcide"
-  "apple"
-  "lev")
+  "gcide" "apple" "lev")
+
+(dictem-run
+  'dictem-base-match
+  "dict://mova.org/mueller7" "apple" "exact")
+
+(dictem-run
+  'dictem-base-define
+  '("dict://mova.org/mueller7" "dict://dict.org/gcide")
+   "apple" "exact")
+
+(dictem-run 'dictem-base-show-info "dict://dict.org/gcide")
+
+(let ((dictem-server "localhost"))
+  (dictem-run
+   '(lambda (a b c)
+      (dictem-base-show-strategies nil nil nil)
+      (dictem-base-show-databases nil nil nil)
+      (dictem-base-show-server nil nil nil)
+      )))
 
 (dictem-run
   '(lambda (a b c)
@@ -384,9 +403,9 @@ Ex.9
 Ex.10
 
 By default dictem remembers the database name and strategy that
-was used last time and the following call
-of dictem-select-database and dictem-select-strategy will use
-these values as a default in the minibuffer.
+was used last time.
+The  dictem-select-database and dictem-select-strategy functions
+will use these values as a default in the minibuffer.
 If you dislike this behaviour, set variables
 dictem-default-database and/or dictem-default-strategy.
 
@@ -455,6 +474,6 @@ dictem-postprocess-definition-remove-header function.
 If you have read to this point and all the examples above seem easy
 for you, you are probably a LISP Guru.
 So, I have nothing more to tell you ;-)
-Feel free to inspect the code, and I hope you found DictEm useful.
+Feel free to inspect the code, and I hope you'll find DictEm useful.
 
-Dict'Em All! ;-)
+Dict'em All! ;-)
