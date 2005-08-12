@@ -1,6 +1,6 @@
 Version 0.0.5, Wed,  8 Jun 2005 19:56:56 +0300
 
-  - new examles in README file: Ex.12-13
+  - new examples in README file: Ex.12-13
 
   - `dictem-postprocess-collect-hyperlinks' function
     (when added to `dictem-postprocess-definition-hook',
