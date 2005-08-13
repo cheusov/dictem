@@ -342,7 +342,6 @@ This variable is local to buffer")
      )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;             call-process functions
 
 (defun dictem-get-buffer (buf)
   (cond
@@ -350,6 +349,9 @@ This variable is local to buffer")
    (buf (current-buffer))
    (t (get-buffer-create dictem-temp-buffer-name))
    ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;             call-process functions
 
 (defun dictem-call-process-SHOW-SERVER (buffer host port)
   (call-process
@@ -789,21 +791,21 @@ to enter a database name."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun dictem-base-do-selector (fun hook &optional database &rest args)
+(defun dictem-base-do-selector (cmd hook &optional database &rest args)
   (let ((splitted-url nil)
 	(databases    nil))
     (cond ((and database (listp database))
 	   (dictem-call-dict-internal
 	    `(lambda (db)
 	       (apply 'dictem-base-do-selector 
-		      (append (list ,fun hook db) args)))
+		      (append (list ,cmd hook db) args)))
 	    database))
 
 	  ((and database
 		(setq splitted-url (dictem-parse-url database)))
 	   (apply 'dictem-base-do-foreign-server
 		  (append
-		   (list fun hook
+		   (list cmd hook
 			 (nth 1 splitted-url)
 			 (dictem-get-port (nth 2 splitted-url))
 			 (nth 3 splitted-url))
@@ -813,7 +815,7 @@ to enter a database name."
 	   (let ((exit_status
 		  (apply 'dictem-base-do-selector
 			 (append
-			  (list fun hook (cdr databases))
+			  (list cmd hook (cdr databases))
 			  args))))
 	     (progn
 	       (setq dictem-last-database database)
@@ -822,10 +824,10 @@ to enter a database name."
 
 	  (t
 	   (apply 'dictem-base-do-default-server
-		  (append (list fun hook database) args)))
+		  (append (list cmd hook database) args)))
 	  )))
 
-(defun dictem-base-do-foreign-server (fun hook server port database &rest args)
+(defun dictem-base-do-foreign-server (cmd hook server port database &rest args)
 ;  "dictem search: MATCH + DEFINE. Accesses to the foreign DICT server"
 ;  (interactive)
   (let ((dictem-last-database nil)
@@ -835,12 +837,13 @@ to enter a database name."
 		 (setq database      database)
 		 (dictem-initialize)
 		 (apply 'dictem-base-do-default-server
-			(append (list fun hook database) args))
+			(append (list cmd hook database) args))
 		 )))
 
-(defun dictem-base-do-default-server (fun hook
+(defun dictem-base-do-default-server (cmd hook
 					  &optional database query strategy)
   (let* ((beg (point))
+	 (fun (dictem-cmd2function cmd))
 	 (exit_status
 	  (apply fun (append (list t)
 			     (if database (list database))
@@ -882,7 +885,8 @@ to enter a database name."
   (interactive)
 
   (dictem-base-do-selector
-   (symbol-function 'dictem-call-process-SEARCH)
+   "search"
+;   (symbol-function 'dictem-call-process-SEARCH)
    'dictem-postprocess-definition-hook
    databases query strategy))
 
@@ -891,7 +895,8 @@ to enter a database name."
   (interactive)
 
   (dictem-base-do-selector
-   (symbol-function 'dictem-call-process-DEFINE)
+   "define"
+;   (symbol-function 'dictem-call-process-DEFINE)
    'dictem-postprocess-definition-hook
    databases query))
 
@@ -900,7 +905,8 @@ to enter a database name."
   (interactive)
 
   (dictem-base-do-selector
-   (symbol-function 'dictem-call-process-MATCH)
+   "match"
+;   (symbol-function 'dictem-call-process-MATCH)
    'dictem-postprocess-match-hook
    databases query strategy))
 
@@ -909,7 +915,8 @@ to enter a database name."
   (interactive)
 
   (dictem-base-do-selector
-   (symbol-function ' dictem-call-process-SHOW-DB)
+   "show-db"
+;   (symbol-function ' dictem-call-process-SHOW-DB)
    nil))
 
 (defun dictem-base-show-strategies (a b c)
@@ -917,7 +924,8 @@ to enter a database name."
   (interactive)
 
   (dictem-base-do-selector
-   (symbol-function ' dictem-call-process-SHOW-STRAT)
+   "show-strat"
+;   (symbol-function ' dictem-call-process-SHOW-STRAT)
    nil))
 
 (defun dictem-base-show-info (databases b c)
@@ -925,7 +933,8 @@ to enter a database name."
   (interactive)
 
   (dictem-base-do-selector
-   (symbol-function 'dictem-call-process-SHOW-INFO)
+   "show-info"
+;   (symbol-function 'dictem-call-process-SHOW-INFO)
    'dictem-postprocess-show-info-hook
    databases))
 
@@ -934,7 +943,8 @@ to enter a database name."
   (interactive)
 
   (dictem-base-do-selector
-   (symbol-function ' dictem-call-process-SHOW-SERVER)
+   "show-server"
+;   (symbol-function ' dictem-call-process-SHOW-SERVER)
    'dictem-postprocess-show-server-hook))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1162,6 +1172,24 @@ The default key bindings:
 
 (defconst dictem-url-regexp
   "^\\(dict\\)://\\([^/:]+\\)\\(:\\([0-9]+\\)\\)?/\\(.*\\)$")
+
+(defconst dictem-cmd2function_alist
+  '(("show-server" dictem-call-process-SHOW-SERVER)
+    ("show-info"   dictem-call-process-SHOW-INFO)
+    ("show-strat"  dictem-call-process-SHOW-STRAT)
+    ("show-db"     dictem-call-process-SHOW-DB)
+    ("match"       dictem-call-process-MATCH)
+    ("define"      dictem-call-process-DEFINE)
+    ("search"      dictem-call-process-SEARCH))
+  )
+
+(defun dictem-cmd2function (cmd)
+  (let ((fun (assoc cmd dictem-cmd2function_alist)))
+    (if fun
+	(symbol-function (cadr fun))
+      (error "Unknown command" cmd)
+      )
+    ))
 
 (defun dictem-parse-url (url)
   "Parses string like dict://dict.org:2628/foldoc

@@ -450,7 +450,7 @@ inside definitions obtained from the databases "^infopage-..."
 	       (dictem-hyperlink-end       " link-end}")
 	       )
 	   (dictem-postprocess-definition-hyperlinks)))
-	(t (dictem-postprocess-definition-hyperlinks))))
+	(t (dictem-postprocess-definition-hyperlinks)))))
 
 ; definitions from each database are processed separately
 (add-hook 'dictem-postprocess-definition-hook
