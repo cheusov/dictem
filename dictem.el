@@ -828,8 +828,6 @@ to enter a database name."
 	  )))
 
 (defun dictem-base-do-foreign-server (cmd hook server port database &rest args)
-;  "dictem search: MATCH + DEFINE. Accesses to the foreign DICT server"
-;  (interactive)
   (let ((dictem-last-database nil)
 	(dictem-last-strategy nil))
     (save-dictem (setq dictem-server server)
@@ -882,7 +880,6 @@ to enter a database name."
 
 (defun dictem-base-search (databases query strategy)
   "MATCH + DEFINE commands"
-  (interactive)
 
   (dictem-base-do-selector
    "search"
@@ -892,7 +889,6 @@ to enter a database name."
 
 (defun dictem-base-define (databases query c)
   "DEFINE command"
-  (interactive)
 
   (dictem-base-do-selector
    "define"
@@ -902,7 +898,6 @@ to enter a database name."
 
 (defun dictem-base-match (databases query strategy)
   "MATCH command"
-  (interactive)
 
   (dictem-base-do-selector
    "match"
@@ -912,7 +907,6 @@ to enter a database name."
 
 (defun dictem-base-show-databases (a b c)
   "SHOW DB command"
-  (interactive)
 
   (dictem-base-do-selector
    "show-db"
@@ -921,7 +915,6 @@ to enter a database name."
 
 (defun dictem-base-show-strategies (a b c)
   "SHOW STRAT command"
-  (interactive)
 
   (dictem-base-do-selector
    "show-strat"
@@ -930,7 +923,6 @@ to enter a database name."
 
 (defun dictem-base-show-info (databases b c)
   "SHOW INFO command"
-  (interactive)
 
   (dictem-base-do-selector
    "show-info"
@@ -940,7 +932,6 @@ to enter a database name."
 
 (defun dictem-base-show-server (a b c)
   "SHOW SERVER command"
-  (interactive)
 
   (dictem-base-do-selector
    "show-server"
@@ -1121,27 +1112,51 @@ to enter a database name."
   "This is a mode for dict client implementing
 the protocol defined in RFC 2229.
 
-The default key bindings:
+The following basic commands are available in the buffer.
 
-  q         bury the dictem buffer
-  k         kill the dictem buffer
-  h         display the help information
+  \\[dictem-help]         display the help information
 
-  s         make a new SEARCH, i.e. ask for a database, strategy and query
+  \\[dictem-kill]         kill the dictem buffer
+  \\[dictem-kill-all-buffers]         kill all dictem buffers
+  \\[dictem-quit]         bury the dictem buffer
+
+  \\[dictem-last]         restore content of the previously visited dictem buffer
+
+  \\[dictem-run-search]         make a new SEARCH, i.e. ask for a database, strategy and query
             and show definitions
-  d         make a new DEFINE, i.e. ask for a database and query
-            and show definitions
-  m         make a new MATCH, i.e. ask for database, strategy and query
+  \\[dictem-run-match]         make a new MATCH, i.e. ask for database, strategy and query
             and show matches
-  r         show information about DICT server
-  i         ask for a database and show information about it
-  n         move point to the next definition
-  p         move point to the previous definition
-  SPC                 scroll dictem buffer up
-  DEL                 scroll dictem buffer down
-  mouse-2 or RET      visit a link (DEFINE using all dictionaries)
+  \\[dictem-run-define]         make a new DEFINE, i.e. ask for a database and query
+            and show definitions
+  \\[dictem-run-show-server]         show information about DICT server
+  \\[dictem-run-show-info]         ask for a database and show information about it
+  \\[dictem-run-show-databases]         show databases DICT server provides
+  \\[dictem-run-show-strategies]         show search strategies DICT server provides
+
+  \\[dictem-next-section]         move point to the next definition
+  \\[dictem-previous-section]         move point to the previous definition
+  \\[dictem-next-link]       move point to the next hyper link
+  \\[dictem-previous-link]       move point to the previous hyper link
+
+  \\[dictem-hyperlinks-menu]         display the menu with hyperlinks
+
+  \\[scroll-up]                 scroll dictem buffer up
+  \\[scroll-down]                 scroll dictem buffer down
+  \\[dictem-define-on-click] or \\[dictem-define-on-press]    visit a link (DEFINE using all dictionaries)
+
+
+Also some advanced commands are available.
+
+  \\[dictem-initialize] Initializes dictem, i.e. obtains
+a list of available databases and strategiss from DICT server
+and makes other tasks
+  \\[dictem-initialize-strategies-alist] Obtain strategy ALIST from a DICT server and sets dictem-strategy-alist variable
+  \\[dictem-initialize-databases-alist] Obtain database ALIST from a DICT server and sets dictem-database-alist variable
+
+
+The following key bindings are currently in effect in the buffer:
+\\{dictem-mode-map}
 "
-;  SPC       search the marked region (DEFINE) in all dictionaries
 
   (interactive)
 
@@ -1404,9 +1419,15 @@ shows information about DICT server in it."
 
 (defun dictem-run-show-databases ()
   "Creates new *dictem* buffer and
-shows information about databases provided by DICT."
+shows a list of databases provided by DICT."
   (interactive)
   (dictem-run 'dictem-base-show-databases))
+
+(defun dictem-run-show-strategies ()
+  "Creates new *dictem* buffer and
+shows a list of search stratgeies provided by DICT."
+  (interactive)
+  (dictem-run 'dictem-base-show-strategies))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
