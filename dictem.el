@@ -537,14 +537,15 @@ and returns alist containing database names and descriptions"
 	  dictem-last-strategy
 	"."))))
 
+(defun dictem-extract-dbname (database)
+  (cond
+   ((consp database) (dictem-extract-dbname (car database)))
+   ((stringp database) database)
+   (t (error "The database should be either stringp or consp"))
+   ))
+
 (defun dictem-get-default-database (&optional def-db)
   "Returns the default database"
-  (defun dictem-extract-dbname (database)
-    (cond
-     ((consp database) (dictem-extract-dbname (car database)))
-     ((stringp database) database)
-     (t (error "The database should be either stringp or consp"))
-     ))
 
   (if def-db
       (dictem-extract-dbname def-db)
@@ -883,7 +884,6 @@ to enter a database name."
 
   (dictem-base-do-selector
    "search"
-;   (symbol-function 'dictem-call-process-SEARCH)
    'dictem-postprocess-definition-hook
    databases query strategy))
 
@@ -892,7 +892,6 @@ to enter a database name."
 
   (dictem-base-do-selector
    "define"
-;   (symbol-function 'dictem-call-process-DEFINE)
    'dictem-postprocess-definition-hook
    databases query))
 
@@ -901,7 +900,6 @@ to enter a database name."
 
   (dictem-base-do-selector
    "match"
-;   (symbol-function 'dictem-call-process-MATCH)
    'dictem-postprocess-match-hook
    databases query strategy))
 
@@ -910,7 +908,6 @@ to enter a database name."
 
   (dictem-base-do-selector
    "show-db"
-;   (symbol-function ' dictem-call-process-SHOW-DB)
    nil))
 
 (defun dictem-base-show-strategies (a b c)
@@ -918,7 +915,6 @@ to enter a database name."
 
   (dictem-base-do-selector
    "show-strat"
-;   (symbol-function ' dictem-call-process-SHOW-STRAT)
    nil))
 
 (defun dictem-base-show-info (databases b c)
@@ -926,7 +922,6 @@ to enter a database name."
 
   (dictem-base-do-selector
    "show-info"
-;   (symbol-function 'dictem-call-process-SHOW-INFO)
    'dictem-postprocess-show-info-hook
    databases))
 
@@ -935,7 +930,6 @@ to enter a database name."
 
   (dictem-base-do-selector
    "show-server"
-;   (symbol-function ' dictem-call-process-SHOW-SERVER)
    'dictem-postprocess-show-server-hook))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -963,19 +957,20 @@ to enter a database name."
    (t                  (concat "Ooops!" (number-to-string exit_status)))
    ))
 
+(defun dictem-local-internal (err-msgs exit_status)
+  (if err-msgs
+      (concat (car err-msgs) "\n"
+	      (cadr err-msgs)
+	      "\n"
+	      (dictem-local-internal
+	       (cddr err-msgs)
+	       nil)
+	      )
+    (if exit_status
+	(dictem-get-error-message exit_status)
+      nil)))
+
 (defun dictem-generate-full-error-message (exit_status)
-  (defun dictem-local-internal (err-msgs exit_status)
-    (if err-msgs
-	(concat (car err-msgs) "\n"
-		(cadr err-msgs)
-		"\n"
-		(dictem-local-internal
-		 (cddr err-msgs)
-		 nil)
-		)
-      (if exit_status
-	  (dictem-get-error-message exit_status)
-	nil)))
 
   (concat "Error messages:\n\n"
 	  (dictem-local-internal dictem-error-messages exit_status)))
