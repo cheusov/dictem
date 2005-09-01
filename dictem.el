@@ -218,7 +218,7 @@ a single word in a MATCH search."
 
 (defvar dictem-temp-buffer-name
   "*dict-temp*"
-  "Temporary buffer name")
+  "Temporary dictem buffer name")
 
 (defvar dictem-current-dbname
   nil
@@ -263,6 +263,74 @@ This variable is local to buffer")
   "Returns a portion of text sent to the server for identifying a client"
   (concat "dictem " dictem-version ", DICT client for emacs"))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;     Functions related to userdb    ;;
+
+(defun dictem-make-userdb (name short-name
+				match define search show-info strats)
+  "Make user database object"
+  (list name 'dictem-userdb
+	short-name match define search show-info strats))
+
+(defun dictem-userdb-p (obj)
+  "Returns t if obj is the dictem error object"
+  (and obj (listp obj) (cdr obj) (listp (cdr obj))
+       (eq (cadr obj) 'dictem-userdb)))
+
+(defun dictem-userdb-member (obj name)
+  "Extract member from userdb object by its name"
+  (cond ((dictem-userdb-p obj)
+	 (nth (cdr (assoc name
+			  '(("name"   . 0) ("short-name" . 2)
+			    ("match"  . 3) ("define"     . 4)
+			    ("search" . 5) ("show-info"  . 6)
+			    ("strats" . 7))))
+	      obj))
+	(t (error "Invalid type of argument"))))
+
+(defun dictem-userdb-DEFINE (buffer db query host port)
+  (let* ((fun   (dictem-userdb-member db "define"))
+	 (name  (dictem-userdb-member db "name"))
+	 (sname (dictem-userdb-member db "short-name"))
+	 (ret (funcall fun query))
+	 (buf (dictem-get-buffer buffer)))
+    (save-excursion
+      (set-buffer buf)
+      (cond ((dictem-error-p ret)
+	     (insert (dictem-error-message ret) "\n")
+	     (dictem-error-status ret))
+	    ((stringp ret)
+	     (insert "\n\nFrom " sname " [" name "]:\n\n"
+		     (dictem-indent-string ret) "\n\n")
+	     0)
+	    (t
+	     (error "Invalid type of returned value1"))))))
+
+(defun dictem-userdb-MATCH (buffer db query strat host port)
+  (let* ((fun   (dictem-userdb-member db "match"))
+	 (name  (dictem-userdb-member db "name"))
+	 (ret (funcall fun query strat name))
+	 (buf (dictem-get-buffer buffer)))
+    (save-excursion
+      (set-buffer buf)
+      (cond ((dictem-error-p ret)
+	     (insert (dictem-error-message ret) "\n")
+	     (dictem-error-status ret))
+	    ((listp ret)
+	     (dolist (db ret); (insert (car db) ":\n" ))
+	       (progn
+		 (insert (concat (car db) ":\n"))
+		 (dolist (m (cdr db))
+		   (insert "  " m "\n"))
+		 ))
+
+;	     (insert "From " sname " [" name "]:\n\n"
+;		     (dictem-indent-string ret) "\n\n")
+	     0)
+	    (t
+	     (error "Invalid type of returned value"))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions related to error object  ;;
 
 (defun dictem-make-error (error_status &optional buffer-or-string)
@@ -287,6 +355,7 @@ This variable is local to buffer")
 (defun dictem-error-p (OBJECT)
   "Returns t if OBJECT is the dictem error object"
   (and
+   (not (null OBJECT))
    (listp OBJECT)
    (eq (car OBJECT) 'dictem-error)
    ))
@@ -571,6 +640,14 @@ and returns alist containing database names and descriptions"
        (list (car l) nil)
        (dictem-list2alist (cdr l))))))
 
+(defun dictem-indent-string (str)
+  (let ((start 0))
+    (while (string-match "\n" str start)
+      (progn
+	(setq start ( + 2 (match-end 0)))
+	(setq str (replace-match "\n  " t t str)))))
+  (concat "  " str))
+
 (defun dictem-replace-spaces (str)
   (while (string-match "[ \n][ \n]+" str)
     (setq str (replace-match " " t t str)))
@@ -793,16 +870,22 @@ to enter a database name."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun dictem-base-do-selector (cmd hook &optional database &rest args)
-  (let ((splitted-url nil)
-	(databases    nil))
-    (cond ((and database (listp database))
+  (let* ((splitted-url nil)
+	 (databases    nil)
+	 (user-db      (assoc database dictem-user-databases-alist))
+	 )
+    (cond ((dictem-userdb-p database)
+	   (apply 'dictem-base-do-default-server
+		  (append (list cmd hook database) args)))
+
+	  ((and database (listp database))
 	   (dictem-call-dict-internal
 	    `(lambda (db)
 	       (apply 'dictem-base-do-selector 
 		      (append (list ,cmd hook db) args)))
-	    database))
+	    (cdr database)))
 
-	  ((and database
+	  ((and database (stringp database)
 		(setq splitted-url (dictem-parse-url database)))
 	   (apply 'dictem-base-do-foreign-server
 		  (append
@@ -812,16 +895,15 @@ to enter a database name."
 			 (nth 3 splitted-url))
 		   args)))
 
-	  ((setq databases (assoc database dictem-user-databases-alist))
+	  (user-db
 	   (let ((exit_status
 		  (apply 'dictem-base-do-selector
 			 (append
-			  (list cmd hook (cdr databases))
-			  args))))
+			  (list cmd hook user-db) args))))
 	     (progn
 	       (setq dictem-last-database database)
 	       exit_status)
-	   ))
+	     ))
 
 	  (t
 	   (apply 'dictem-base-do-default-server
@@ -842,7 +924,10 @@ to enter a database name."
 (defun dictem-base-do-default-server (cmd hook
 					  &optional database query strategy)
   (let* ((beg (point))
-	 (fun (dictem-cmd2function cmd))
+	 (fun (if (dictem-userdb-p database)
+		  (dictem-cmd2userdb cmd)
+		(dictem-cmd2function cmd)))
+
 	 (exit_status
 	  (apply fun (append (list t)
 			     (if database (list database))
@@ -853,12 +938,12 @@ to enter a database name."
 
     (cond ((= 0 exit_status)
 	   (save-excursion
-	     (narrow-to-region beg (point))
+	     (narrow-to-region beg (point-max))
 	     (run-hooks hook)
 	     (widen)))
 	  ((= 21 exit_status)
 	   (save-excursion
-	     (narrow-to-region beg (point))
+	     (narrow-to-region beg (point-max))
 	     (run-hooks 'dictem-postprocess-match-hook)
 	     (widen)))
 	  (t
@@ -1183,23 +1268,37 @@ The following key bindings are currently in effect in the buffer:
 (defconst dictem-url-regexp
   "^\\(dict\\)://\\([^/:]+\\)\\(:\\([0-9]+\\)\\)?/\\(.*\\)$")
 
-(defconst dictem-cmd2function_alist
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defconst dictem-cmd2function-alist
   '(("show-server" dictem-call-process-SHOW-SERVER)
     ("show-info"   dictem-call-process-SHOW-INFO)
     ("show-strat"  dictem-call-process-SHOW-STRAT)
     ("show-db"     dictem-call-process-SHOW-DB)
     ("match"       dictem-call-process-MATCH)
     ("define"      dictem-call-process-DEFINE)
-    ("search"      dictem-call-process-SEARCH))
-  )
+    ("search"      dictem-call-process-SEARCH)
+    ))
 
-(defun dictem-cmd2function (cmd)
-  (let ((fun (assoc cmd dictem-cmd2function_alist)))
+(defconst dictem-cmd2userdb-alist
+  '(("match"       dictem-userdb-MATCH)
+    ("define"      dictem-userdb-DEFINE)
+    ))
+
+(defun dictem-cmd2xxx (cmd alist)
+  (let ((fun (assoc cmd alist)))
     (if fun
 	(symbol-function (cadr fun))
       (error "Unknown command" cmd)
       )
     ))
+
+(defun dictem-cmd2function (cmd)
+  (dictem-cmd2xxx cmd dictem-cmd2function-alist))
+(defun dictem-cmd2userdb (cmd)
+  (dictem-cmd2xxx cmd dictem-cmd2userdb-alist))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun dictem-parse-url (url)
   "Parses string like dict://dict.org:2628/foldoc
@@ -1704,38 +1803,39 @@ the function 'dictem-postprocess-definition-hyperlinks'")
 	     dictem-postprocess-definition-hyperlinks))
 
 (defun dictem-postprocess-each-definition ()
-  (goto-char (point-min))
-  (let ((regexp-from-dbname "^From [^\n]+\\[\\([^\n]+\\)\\]")
-	(beg nil)
-	(end (make-marker))
-	(dbname nil))
-    (if (search-forward-regexp regexp-from-dbname nil t)
-	(let ((dictem-current-dbname
-	       (buffer-substring-no-properties
-		(match-beginning 1) (match-end 1))))
-	  (setq beg (match-beginning 0))
-	  (while (search-forward-regexp regexp-from-dbname nil t)
-	    (set-marker end (match-beginning 0))
+  (save-excursion
+    (goto-char (point-min))
+    (let ((regexp-from-dbname "^From [^\n]+\\[\\([^\n]+\\)\\]")
+	  (beg nil)
+	  (end (make-marker))
+	  (dbname nil))
+      (if (search-forward-regexp regexp-from-dbname nil t)
+	  (let ((dictem-current-dbname
+		 (buffer-substring-no-properties
+		  (match-beginning 1) (match-end 1))))
+	    (setq beg (match-beginning 0))
+	    (while (search-forward-regexp regexp-from-dbname nil t)
+	      (set-marker end (match-beginning 0))
 ;	    (set-marker marker (match-end 0))
-	    (setq dbname
-		  (buffer-substring-no-properties
-		   (match-beginning 1) (match-end 1)))
+	      (setq dbname
+		    (buffer-substring-no-properties
+		     (match-beginning 1) (match-end 1)))
 
+	      (save-excursion
+		(narrow-to-region beg (marker-position end))
+		(run-hooks 'dictem-postprocess-each-definition-hook)
+		(widen))
+
+	      (setq dictem-current-dbname dbname)
+	      (goto-char end)
+	      (forward-char)
+	      (setq beg (marker-position end))
+	      )
 	    (save-excursion
-	      (narrow-to-region beg (marker-position end))
+	      (narrow-to-region beg (point-max))
 	      (run-hooks 'dictem-postprocess-each-definition-hook)
 	      (widen))
-
-	    (setq dictem-current-dbname dbname)
-	    (goto-char end)
-	    (forward-char)
-	    (setq beg (marker-position end))
-	    )
-	  (save-excursion
-	    (narrow-to-region beg (point-max))
-	    (run-hooks 'dictem-postprocess-each-definition-hook)
-	    (widen))
-	  ))))
+	    )))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
