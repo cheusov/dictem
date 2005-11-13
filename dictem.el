@@ -292,15 +292,20 @@ This variable is local to buffer")
   (let* ((fun   (dictem-userdb-member db "define"))
 	 (name  (dictem-userdb-member db "name"))
 	 (sname (dictem-userdb-member db "short-name"))
-	 (ret (funcall fun query))
+	 (ret (save-excursion (funcall fun query)))
 	 (buf (dictem-get-buffer buffer)))
     (save-excursion
       (set-buffer buf)
       (cond ((dictem-error-p ret)
-	     (insert (dictem-error-message ret) "\n")
+	     (insert "From " sname " [" name "]:\n\n"
+		     (dictem-error-message ret) "\n\n")
+;	     (insert (dictem-error-message ret) "\n")
 	     (dictem-error-status ret))
+	    ((null ret)
+	     (insert "No matches found" "\n")
+	     20)
 	    ((stringp ret)
-	     (insert "\n\nFrom " sname " [" name "]:\n\n"
+	     (insert "From " sname " [" name "]:\n\n"
 		     (dictem-indent-string ret) "\n\n")
 	     0)
 	    (t
@@ -309,7 +314,7 @@ This variable is local to buffer")
 (defun dictem-userdb-MATCH (buffer db query strat host port)
   (let* ((fun   (dictem-userdb-member db "match"))
 	 (name  (dictem-userdb-member db "name"))
-	 (ret (funcall fun query strat name))
+	 (ret (save-excursion (funcall fun query strat name)))
 	 (buf (dictem-get-buffer buffer)))
     (save-excursion
       (set-buffer buf)
@@ -323,12 +328,34 @@ This variable is local to buffer")
 		 (dolist (m (cdr db))
 		   (insert "  " m "\n"))
 		 ))
-
-;	     (insert "From " sname " [" name "]:\n\n"
-;		     (dictem-indent-string ret) "\n\n")
 	     0)
 	    (t
-	     (error "Invalid type of returned value"))))))
+	     (error "Invalid type of returned value2"))))))
+
+(defun dictem-userdb-SEARCH (buffer db query strat host port)
+  (let* ((funm  (dictem-userdb-member db "match"))
+;	 (fund  (dictem-userdb-member db "define"))
+	 (name  (dictem-userdb-member db "name"))
+	 (sname (dictem-userdb-member db "short-name"))
+	 (sname nil)
+	 (ret   (funcall funm query strat name))
+	 (buf   (dictem-get-buffer buffer)))
+    (save-excursion
+      (set-buffer buf)
+      (cond ((dictem-error-p ret)
+	     (insert (dictem-error-message ret) "\n")
+	     (dictem-error-status ret))
+	    ((listp ret)
+	     (dolist (matches ret)
+	       (insert "From " "search-search-search" " [" name "]:\n\n")
+	       (dolist (match (cdr matches))
+		 (dictem-userdb-DEFINE buffer db;(car matches)
+				       match host port))
+	       )
+	     0)
+	    (t
+	     (error "Something strange happened"))
+	    ))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions related to error object  ;;
@@ -929,11 +956,11 @@ to enter a database name."
 		(dictem-cmd2function cmd)))
 
 	 (exit_status
-	  (apply fun (append (list t)
+	  (save-excursion (apply fun (append (list t)
 			     (if database (list database))
 			     (if query (list query))
 			     (if strategy (list strategy))
-			     (list nil) (list nil)))
+			     (list nil) (list nil))))
 	  ))
 
     (cond ((= 0 exit_status)
@@ -1096,10 +1123,12 @@ to enter a database name."
 	    (user-dbs  dictem-user-databases-alist)
 	    (user-only dictem-use-user-databases-only)
 	    (use-existing-buf dictem-use-existing-buffer)
+	    (dict-buf nil)
 	    )
 	(if dictem-use-existing-buffer
 	    (dictem-ensure-buffer)
 	  (dictem))
+	(setq dict-buf (buffer-name))
 ;	(set-buffer-file-coding-system coding-system)
 	(make-local-variable 'dictem-default-strategy)
 	(make-local-variable 'dictem-default-database)
@@ -1122,6 +1151,7 @@ to enter a database name."
 	(setq case-fold-search nil)
 	(setq dictem-error-messages nil)
 	(dictem-local-run-functions search-fun database query strategy)
+	(switch-to-buffer-other-window dict-buf)
 	(if (and (not (equal ex_status 0)) (= (point-min) (point-max)))
 	    (insert (dictem-generate-full-error-message ex_status)))
 	(goto-char (point-min))
@@ -1283,6 +1313,7 @@ The following key bindings are currently in effect in the buffer:
 (defconst dictem-cmd2userdb-alist
   '(("match"       dictem-userdb-MATCH)
     ("define"      dictem-userdb-DEFINE)
+    ("search"      dictem-userdb-SEARCH)
     ))
 
 (defun dictem-cmd2xxx (cmd alist)
