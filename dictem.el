@@ -1151,7 +1151,7 @@ to enter a database name."
 	(setq case-fold-search nil)
 	(setq dictem-error-messages nil)
 	(dictem-local-run-functions search-fun database query strategy)
-	(switch-to-buffer-other-window dict-buf)
+	(switch-to-buffer dict-buf)
 	(if (and (not (equal ex_status 0)) (= (point-min) (point-max)))
 	    (insert (dictem-generate-full-error-message ex_status)))
 	(goto-char (point-min))
