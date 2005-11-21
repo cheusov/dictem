@@ -55,19 +55,25 @@
 (defcustom dictem-client-prog "dict"
   "The command line DICT client.
 dictem accesses DICT server through this executable.
-dict-1.9.14 or later (or compatible) is recomented."
+dict-1.9.14 or later (or compatible) is strongly recomented."
   :group 'dictem
   :type 'string)
+
+(defcustom dictem-client-prog-args-list nil
+  "A list of additional arguments (strings) passed to dict client.
+For example '(\"-M\") if you prefer to recieve MIME-ized content"
+  :group 'dictem
+  :type  'list)
 
 (defcustom dictem-default-strategy nil
   "The default search strategy."
   :group 'dictem
-  :group 'string)
+  :type  'string)
 
 (defcustom dictem-default-database nil
   "The default database name."
   :group 'dictem
-  :group 'string)
+  :type  'string)
 
 (defcustom dictem-user-databases-alist
   nil
@@ -509,18 +515,19 @@ This variable is local to buffer")
    ))
 
 (defun dictem-call-process-DEFINE (buffer db query host port)
-  (call-process
-   dictem-client-prog nil
-   (dictem-get-buffer buffer)
-   nil
-   "-P" "-"
-   "-d" (if db db "*")
-   "-s" "exact"
-   "-h" (if host host (dictem-get-server))
-   "-p" (dictem-get-port port)
-   "--client" (dictem-client-text)
-   query
-   ))
+  (apply 'call-process
+	 `(,dictem-client-prog
+	   nil
+	   ,(dictem-get-buffer buffer)
+	   nil
+	   "-P" "-"
+	   "-d" ,(if db db "*")
+	   "-h" ,(if host host (dictem-get-server))
+	   "-p" ,(dictem-get-port port)
+	   "--client" ,(dictem-client-text)
+	   ,@dictem-client-prog-args-list
+	   ,query
+	   )))
 
 (defun dictem-call-process-SEARCH (buffer db query strat host port)
   (call-process
