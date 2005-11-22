@@ -3,7 +3,7 @@
 ; This code was initially based on
 ; dictionary.el written by Torsten Hilbrich <Torsten.Hilbrich@gmx.net>
 ; but now probably doesn't contain original code.
-; Most of the code has been rewritten
+; Most of the code has been written
 ; from scratch by Aleksey Cheusov <vle@gmx.net>, 2004-2005.
 ;
 ; DictEm is free software; you can redistribute it and/or modify it
@@ -23,6 +23,12 @@
 
 ;
 ; Note! Documentation is in README file.
+;
+; Latest information about dictem project and sources
+; are available at
+;
+; http://freshmeat.net/projects/dictem
+; http://mova.org/~cheusov/pub/dictem
 ;
 
 (require 'cl)
