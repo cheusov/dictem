@@ -61,9 +61,18 @@ dict-1.9.14 or later (or compatible) is strongly recomented."
 
 (defcustom dictem-client-prog-args-list nil
   "A list of additional arguments (strings) passed to dict client.
-For example '(\"-M\") if you prefer to recieve MIME-ized content"
+For example '(\"--some-option\")."
   :group 'dictem
   :type  'list)
+
+(defcustom dictem-option-mime nil
+  "If `t' the OPTION MIME command (see RFC-2229 for details)
+will be sent to the DICT server. i.e. \"dict\" program
+will be run with \"-M\" option (only dict-1.10.0 or later support it).
+As a result server's response will be prepanded with MIME header
+followed by a blank line."
+  :group 'dictem
+  :type  'boolean)
 
 (defcustom dictem-default-strategy nil
   "The default search strategy."
@@ -455,64 +464,64 @@ This variable is local to buffer")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;             call-process functions
 
-(defun dictem-call-process-SHOW-SERVER (buffer host port)
-  (call-process
-   dictem-client-prog nil
-   (dictem-get-buffer buffer)
-   nil
-   "-P" "-" "-I"
-   "-h" (if host host (dictem-get-server))
-   "-p" (dictem-get-port port)
-   "--client" (dictem-client-text)
+(defun dictem-local-dict-basic-option (host port option-mime)
+  (append
+   (list "-P" "-" 
+	 "-h" (if host host (dictem-get-server))
+	 "-p" (dictem-get-port port)
+	 "--client" (dictem-client-text)
+	 )
+   (if option-mime '("-M"))
+   dictem-client-prog-args-list
    ))
+
+(defun dictem-call-process-SHOW-SERVER (buffer host port)
+  (apply 'call-process
+	 `(,dictem-client-prog
+	   nil
+	   ,(dictem-get-buffer buffer)
+	   nil
+	   ,@(dictem-local-dict-basic-option host port nil)
+	   "-I")))
 
 (defun dictem-call-process-SHOW-INFO (buffer db host port)
-  (call-process
-   dictem-client-prog nil
-   (dictem-get-buffer buffer)
-   nil
-   "-P" "-"
-   "-i" db
-   "-h" (if host host (dictem-get-server))
-   "-p" (dictem-get-port port)
-   "--client" (dictem-client-text)
-   ))
+  (apply 'call-process
+	 `(,dictem-client-prog
+	   nil
+	   ,(dictem-get-buffer buffer)
+	   nil
+	   ,@(dictem-local-dict-basic-option host port nil)
+	   "-i" ,db)))
 
 (defun dictem-call-process-SHOW-STRAT (buffer host port)
-  (call-process
-   dictem-client-prog nil
-   (dictem-get-buffer buffer)
-   nil
-   "-P" "-" "-S"
-   "-h" (if host host (dictem-get-server))
-   "-p" (dictem-get-port port)
-   "--client" (dictem-client-text)
-   ))
+  (apply 'call-process
+	 `(,dictem-client-prog
+	   nil
+	   ,(dictem-get-buffer buffer)
+	   nil
+	   ,@(dictem-local-dict-basic-option host port nil)
+	   "-S")))
 
 (defun dictem-call-process-SHOW-DB (buffer host port)
-  (call-process
-   dictem-client-prog nil
-   (dictem-get-buffer buffer)
-   nil
-   "-P" "-" "-D"
-   "-h" (if host host (dictem-get-server))
-   "-p" (dictem-get-port port)
-   "--client" (dictem-client-text)
-   ))
+  (apply 'call-process
+	 `(,dictem-client-prog
+	   nil
+	   ,(dictem-get-buffer buffer)
+	   nil
+	   ,@(dictem-local-dict-basic-option host port nil)
+	   "-D")))
 
 (defun dictem-call-process-MATCH (buffer db query strat host port)
-  (call-process
-   dictem-client-prog nil
-   (dictem-get-buffer buffer)
-   nil
-   "-P" "-" "-m"
-   "-d" (if db db "*")
-   "-s" (if strat strat ".")
-   "-h" (if host host (dictem-get-server))
-   "-p" (dictem-get-port port)
-   "--client" (dictem-client-text)
-   query
-   ))
+  (apply 'call-process
+	 `(,dictem-client-prog
+	   nil
+	   ,(dictem-get-buffer buffer)
+	   nil
+	   ,@(dictem-local-dict-basic-option host port nil)
+	   "-m"
+	   "-d" ,(if db db "*")
+	   "-s" ,(if strat strat ".")
+	   ,query)))
 
 (defun dictem-call-process-DEFINE (buffer db query host port)
   (apply 'call-process
@@ -520,28 +529,20 @@ This variable is local to buffer")
 	   nil
 	   ,(dictem-get-buffer buffer)
 	   nil
-	   "-P" "-"
+	   ,@(dictem-local-dict-basic-option host port dictem-option-mime)
 	   "-d" ,(if db db "*")
-	   "-h" ,(if host host (dictem-get-server))
-	   "-p" ,(dictem-get-port port)
-	   "--client" ,(dictem-client-text)
-	   ,@dictem-client-prog-args-list
-	   ,query
-	   )))
+	   ,query)))
 
 (defun dictem-call-process-SEARCH (buffer db query strat host port)
-  (call-process
-   dictem-client-prog nil
-   (dictem-get-buffer buffer)
-   nil
-   "-P" "-"
-   "-d" (if db db "*")
-   "-s" (if strat strat ".")
-   "-h" (if host host (dictem-get-server))
-   "-p" (dictem-get-port port)
-   "--client" (dictem-client-text)
-   query
-   ))
+  (apply 'call-process
+	 `(,dictem-client-prog
+	   nil
+	   ,(dictem-get-buffer buffer)
+	   nil
+	   ,@(dictem-local-dict-basic-option host port dictem-option-mime)
+	   "-d" ,(if db db "*")
+	   "-s" ,(if strat strat ".")
+	   ,query)))
 
 ;;;;;        GET Functions         ;;;;;
 
@@ -1123,14 +1124,15 @@ to enter a database name."
 	    (coding-system-for-read coding-system)
 	    (coding-system-for-write coding-system)
 	    ; here we remember values of variables local to buffer
-	    (server dictem-server)
-	    (port   dictem-port)
-	    (dbs    dictem-database-alist)
-	    (strats dictem-strategy-alist)
-	    (user-dbs  dictem-user-databases-alist)
-	    (user-only dictem-use-user-databases-only)
+	    (server           dictem-server)
+	    (port             dictem-port)
+	    (dbs              dictem-database-alist)
+	    (strats           dictem-strategy-alist)
+	    (user-dbs         dictem-user-databases-alist)
+	    (user-only        dictem-use-user-databases-only)
 	    (use-existing-buf dictem-use-existing-buffer)
-	    (dict-buf nil)
+;	    (option-mime      dictem-option-mime)
+	    (dict-buf         nil)
 	    )
 	(if dictem-use-existing-buffer
 	    (dictem-ensure-buffer)
@@ -1150,6 +1152,7 @@ to enter a database name."
 	(set (make-local-variable 'dictem-user-databases-alist) user-dbs)
 	(set (make-local-variable 'dictem-use-user-databases-only) user-only)
 	(set (make-local-variable 'dictem-use-existing-buffer) use-existing-buf)
+;	(set (make-local-variable 'dictem-option-mime) option-mime)
 
 	(set (make-local-variable 'dictem-hyperlinks-alist) nil)
 
