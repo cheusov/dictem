@@ -74,9 +74,12 @@ For example '(\"--some-option\")."
 (defcustom dictem-option-mime nil
   "If `t' the OPTION MIME command (see RFC-2229 for details)
 will be sent to the DICT server. i.e. \"dict\" program
-will be run with \"-M\" option (only dict-1.10.0 or later support it).
+will be run with \"-M\" option.
 As a result server's response will be prepanded with MIME header
-followed by a blank line."
+followed by a blank line.
+Because of bugs in dict -M (version < 1.10.3) utility,
+dict-1.10.3 or later is strongly recommended
+"
   :group 'dictem
   :type  'boolean)
 
