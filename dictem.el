@@ -291,10 +291,10 @@ This variable is local to buffer")
 ;;     Functions related to userdb    ;;
 
 (defun dictem-make-userdb (name short-name
-				match define search show-info strats)
+				match define show-info strats)
   "Make user database object"
   (list name 'dictem-userdb
-	short-name match define search show-info strats))
+	short-name match define show-info strats))
 
 (defun dictem-userdb-p (obj)
   "Returns t if obj is the dictem error object"
@@ -362,11 +362,10 @@ This variable is local to buffer")
 
 (defun dictem-userdb-SEARCH (buffer db query strat host port)
   (let* ((funm  (dictem-userdb-member db "match"))
-;	 (fund  (dictem-userdb-member db "define"))
 	 (name  (dictem-userdb-member db "name"))
 	 (sname (dictem-userdb-member db "short-name"))
 	 (sname nil)
-	 (ret   (funcall funm query strat name))
+	 (ret   (funcall funm query strat))
 	 (buf   (dictem-get-buffer buffer)))
     (save-excursion
       (set-buffer buf)
@@ -374,12 +373,24 @@ This variable is local to buffer")
 	     (insert (dictem-error-message ret) "\n")
 	     (dictem-error-status ret))
 	    ((listp ret)
-	     (dolist (matches ret)
-	       (insert "From " "search-search-search" " [" name "]:\n\n")
-	       (dolist (match (cdr matches))
-		 (dictem-userdb-DEFINE buffer db;(car matches)
-				       match host port))
-	       )
+	     (dolist (match ret)
+	       (dictem-userdb-DEFINE buffer db
+				     match host port))
+	     0)
+	    (t
+	     (error "Something strange happened"))
+	    ))))
+
+(defun dictem-userdb-SHOW-INFO (buffer db query strat host port)
+  (let ((sname (dictem-userdb-member db "short-name"))
+	(buf   (dictem-get-buffer buffer)))
+    (save-excursion
+      (set-buffer buf)
+      (cond ((dictem-error-p sname)
+	     (insert (dictem-error-message sname) "\n")
+	     (dictem-error-status sname))
+	    ((stringp sname)
+	     (insert sname)
 	     0)
 	    (t
 	     (error "Something strange happened"))
@@ -1337,6 +1348,7 @@ The following key bindings are currently in effect in the buffer:
   '(("match"       dictem-userdb-MATCH)
     ("define"      dictem-userdb-DEFINE)
     ("search"      dictem-userdb-SEARCH)
+    ("show-info"   dictem-userdb-SHOW-INFO)
     ))
 
 (defun dictem-cmd2xxx (cmd alist)
