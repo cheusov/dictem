@@ -1,3 +1,36 @@
+Version 0.7, Fri, 31 Mar 2006 18:29:01 +0300
+
+  - added: dictem-client-prog-args-list variable
+    that keeps a list of additional
+    arguments to the command line 'dict' client.
+    This may be helpful in case you use 'dict' wrappers (having additional
+    options) or new versions of 'dict' program.
+
+  - added: dictem-option-mime variable.
+    If `t' the OPTION MIME command (see RFC-2229 for details)
+    will be sent to the DICT server. i.e. 'dict' program
+    will be run with '-M' option.
+    As a result server's response will be prepanded with MIME header
+    followed by a blank line.
+    Because of bugs in dict -M (version < 1.10.3) utility,
+    dict-1.10.3 or later is STRONGLY recommended
+
+    MIME-ized content can be postprocessed by functions called from
+    dictem-postprocess-xxxx hooks. Because the current version of dictem
+    doesn't contain such kind of functions, this variable should be used
+    by those who program in Emacs.
+    Suggestions and code are welcomed as always.
+    Have a lot of fun ;-)
+
+  - added: dictem-run-show-strategies function,
+    similar to dictem-run-show-databases.
+
+  - much complete dictem-mode's help string (documentation for dictem mode)
+
+  - new examples of dictem usage in Ex.9 section
+
+  - minor fixes in documentation and README
+
 Version 0.0.5, Wed,  8 Jun 2005 19:56:56 +0300
 
   - new examples in README file: Ex.12-13
