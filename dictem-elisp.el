@@ -76,7 +76,7 @@
 	(setq i (+ i 1))))
     l))
 
-(defun dictem-elisp-MATCH (query strategy dbname)
+(defun dictem-elisp-MATCH (query strategy)
   (let ((l (dictem-elisp-MATCH-UNI
 	    query
 	    (cond ((string= strategy "exact")
@@ -89,7 +89,7 @@
 		   (symbol-function 'dictem-string-match-suffix))
 		  ((string= strategy "substring")
 		   (symbol-function 'dictem-string-match-substring))))))
-    (if l (list (cons dbname l))
+    (if l l
       (dictem-make-error
        20 (format "No matches for %s/%s" query strategy)))))
 
