@@ -290,11 +290,10 @@ This variable is local to buffer")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;     Functions related to userdb    ;;
 
-(defun dictem-make-userdb (name short-name
-				match define show-info strats)
+(defun dictem-make-userdb (name short-name match define)
   "Make user database object"
   (list name 'dictem-userdb
-	short-name match define show-info strats))
+	short-name match define))
 
 (defun dictem-userdb-p (obj)
   "Returns t if obj is the dictem error object"
@@ -306,9 +305,7 @@ This variable is local to buffer")
   (cond ((dictem-userdb-p obj)
 	 (nth (cdr (assoc name
 			  '(("name"   . 0) ("short-name" . 2)
-			    ("match"  . 3) ("define"     . 4)
-			    ("search" . 5) ("show-info"  . 6)
-			    ("strats" . 7))))
+			    ("match"  . 3) ("define"     . 4))))
 	      obj))
 	(t (error "Invalid type of argument"))))
 
@@ -381,7 +378,7 @@ This variable is local to buffer")
 	     (error "Something strange happened"))
 	    ))))
 
-(defun dictem-userdb-SHOW-INFO (buffer db query strat host port)
+(defun dictem-userdb-SHOW-INFO (buffer db host port)
   (let ((sname (dictem-userdb-member db "short-name"))
 	(buf   (dictem-get-buffer buffer)))
     (save-excursion
