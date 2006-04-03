@@ -470,9 +470,62 @@ dictem-postprocess-definition-remove-header function.
 	  'dictem-postprocess-definition-remove-header)
 
 -------
+Ex. 14
 
-If you have read to this point and all the examples above seem easy
-for you, you are probably a LISP Guru.
+As of version 0.7 dictem can handle dictionaries defined by user.
+This allows to use dictem not only for accessing DICT servers,
+but also for accesing users's databases.
+
+; DEFINE function for the database "mysuperdb"
+(defun dictem-mysuperdb-DEFINE (query)
+  (cond
+   ((string= query "apple")  '("Apples grow on the trees"
+			       "Apple may be green, yellow or red"))
+   ((string= query "potato") '("Potato is a vegetable"
+			       "Potato is a traditional Belarusian food"))
+   (t (dictem-make-error
+       20 (format "No definitions for %s" query)))
+  ))
+
+; MATCH function for the database "mysuperdb"
+(defun dictem-mysuperdb-MATCH (query strategy)
+  ; the name of strategy is ignored
+  (let ((apple  (string-match query "apple"))
+	(potato (string-match query "potato")))
+    (cond
+     ((and (string= strategy "exact") (string= query "apple"))
+      '("apple"))
+     ((and (string= strategy "exact") (string= query "potato"))
+      '("potato"))
+     ((and apple potato)
+      '("apple" "potato"))
+     (apple
+      '("apple"))
+     (potato
+      '("potato"))
+     (t (dictem-make-error
+	 20 (format "No matches for %s/%s" query strategy)))
+     )))
+
+; Initializing a list of user-defined databases
+(setq dictem-user-databases-alist
+      `(("_en-en"  . ("foldoc" "gcide" "wn"))
+	("_ru-ru"  . ("beslov" "ushakov" "ozhegov" "brok_and_efr"))
+	,(dictem-make-userdb
+          ; the name of the database
+	  "mysuperdb"
+          ; short description
+          "My super database"
+          ; MATCH function
+	  (symbol-function 'dictem-mysuperdb-MATCH)
+          ; DEFINE function
+	  (symbol-function 'dictem-mysuperdb-DEFINE))
+	))
+
+-------
+
+If you have read to this point and all the examples above seem easy,
+you are probably a LISP Guru.
 So, I have nothing more to tell you ;-)
 Feel free to inspect the code, and I hope you'll find DictEm useful.
 
