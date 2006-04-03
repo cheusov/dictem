@@ -1,4 +1,4 @@
-Version 0.7, Fri, 31 Mar 2006 18:29:01 +0300
+Version 0.7, Mon,  3 Apr 2006 15:11:57 +0300
 
   - DICTEM can handle dictionaries defined by user.
     This allows to use dictem not only for accessing DICT servers,
