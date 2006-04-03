@@ -16,7 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 675 Mass Ave, Cambridge, MA 02139, USA.
 # 
-# $Id: Makefile.am,v 1.12 2004-11-30 15:15:05 cheusov Exp $
+# $Id: Makefile.am,v 1.13 2006-04-03 12:23:53 cheusov Exp $
 #
 
 # Add a _letter_ if you change the version number and release your own version.
@@ -36,10 +36,9 @@ ChangeLog:
 	@(echo "***** Making ChangeLog..."; \
 	rm -f ChangeLog; \
 	rcs2log -i 2 -r . | \
-	sed ' \
-		s,/[^ ]*cvs[^ ]*dictem/,,g; \
-		s,cheusov@[^>]*,vle@gmx.net,g; \
-		s,\(.*\)<\([^@<>]\+\)@\([^@<>]\+\)>\(.*\),\1<\2 at \3}\4,g' \
+	sed -e 's,/[^ ]*cvs[^ ]*dictem/,,g' \
+	    -e 's,cheusov@[^>]*,vle@gmx.net,g' \
+	    -e 's,\(.*\)<\([^@<>]\+\)@\([^@<>]\+\)>\(.*\),\1<\2 at \3[}]\4,g' \
 	> ChangeLog;)
 
 cvsdist:
