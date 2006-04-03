@@ -318,9 +318,10 @@ This variable is local to buffer")
     (save-excursion
       (set-buffer buf)
       (cond ((dictem-error-p ret)
-	     (insert "From " sname " [" name "]:\n\n"
-		     (dictem-error-message ret) "\n\n")
+;	     (insert "From " sname " [" name "]:\n\n"
+;		     (dictem-error-message ret) "\n\n")
 ;	     (insert (dictem-error-message ret) "\n")
+	     (insert (dictem-error-message ret) "\n")
 	     (dictem-error-status ret))
 	    ((null ret)
 	     (insert "No matches found" "\n")
