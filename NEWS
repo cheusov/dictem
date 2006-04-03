@@ -1,5 +1,10 @@
 Version 0.7, Fri, 31 Mar 2006 18:29:01 +0300
 
+  - DICTEM can handle dictionaries defined by user.
+    This allows to use dictem not only for accessing DICT servers,
+    but also for accesing user's databases.
+    See Ex.14 in README file for a simple example.
+
   - added: dictem-client-prog-args-list variable
     that keeps a list of additional
     arguments to the command line 'dict' client.
@@ -12,8 +17,8 @@ Version 0.7, Fri, 31 Mar 2006 18:29:01 +0300
     will be run with '-M' option.
     As a result server's response will be prepanded with MIME header
     followed by a blank line.
-    Because of bugs in dict -M (version < 1.10.3) utility,
-    dict-1.10.3 or later is STRONGLY recommended
+    Because of bugs in dict -M (dict version < 1.10.3),
+    dict-1.10.3 or later is STRONGLY recommended.
 
     MIME-ized content can be postprocessed by functions called from
     dictem-postprocess-xxxx hooks. Because the current version of dictem
@@ -25,7 +30,7 @@ Version 0.7, Fri, 31 Mar 2006 18:29:01 +0300
   - added: dictem-run-show-strategies function,
     similar to dictem-run-show-databases.
 
-  - much complete dictem-mode's help string (documentation for dictem mode)
+  - more complete dictem-mode's help string (documentation for dictem mode)
 
   - new examples of dictem usage in Ex.9 section
 
