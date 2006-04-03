@@ -16,7 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 675 Mass Ave, Cambridge, MA 02139, USA.
 # 
-# $Id: Makefile.am,v 1.13 2006-04-03 12:23:53 cheusov Exp $
+# $Id: Makefile.am,v 1.14 2006-04-03 12:34:06 cheusov Exp $
 #
 
 # Add a _letter_ if you change the version number and release your own version.
@@ -52,7 +52,7 @@ cvsdist:
 	echo "***** Exporting files for dictem-$${VERSION}..." && \
 	cd /tmp && \
 	rm -rf /tmp/dictem-$${VERSION} && \
-	cvs export -fd dictem-$${VERSION} -r dictem-$${VERSION_CVS} dictem && \
+	cvs export -d dictem-$${VERSION} -r dictem-$${VERSION_CVS} dictem && \
 	cd dictem-$${VERSION} && \
 	mv /tmp/dictem.ChangeLog.$${VERSION} ChangeLog && \
 	autoreconf && \
