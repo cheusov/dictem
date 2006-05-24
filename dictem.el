@@ -801,10 +801,10 @@ and sets dictem-database-alist variable."
 a list of available databases and strategiss from DICT server
 and makes other tasks."
   (interactive)
-  (let ((dbs (dictem-initialize-databases-alist)))
+  (let ((dbs (dictem-initialize-databases-alist))
+	(strats (dictem-initialize-strategies-alist)))
     (if (dictem-error-p dbs)
-	dbs
-      (dictem-initialize-strategies-alist))))
+	dbs strats)))
 
 ;;; Functions related to Minibuffer ;;;;
 
@@ -813,7 +813,8 @@ and makes other tasks."
 to enter a search strategy."
   (interactive)
   (if (dictem-error-p dictem-strategy-alist)
-      (error "A list of strategies was not initialized properly"))
+      (error (concat "server error: "
+		     (dictem-error-message dictem-strategy-alist))))
   (dictem-select
    "strategy"
    (dictem-prepand-special-strats
@@ -826,7 +827,8 @@ to enter a search strategy."
 to enter a database name."
   (interactive)
   (if (dictem-error-p dictem-database-alist)
-      (error "A list of databases was not initialized properly"))
+      (error (concat "server error: "
+		     (dictem-error-message dictem-database-alist))))
   (let* ((dbs (dictem-remove-value-from-alist dictem-database-alist))
 	 (dbs2 (if user-dbs
 		   (if dictem-use-user-databases-only
@@ -1174,7 +1176,8 @@ to enter a database name."
 	(set (make-local-variable 'dictem-user-databases-alist) user-dbs)
 	(set (make-local-variable 'dictem-use-user-databases-only) user-only)
 	(set (make-local-variable 'dictem-use-existing-buffer) use-existing-buf)
-;	(set (make-local-variable 'dictem-option-mime) option-mime)
+
+	(set (make-local-variable 'dictem-option-mime) option-mime)
 
 	(set (make-local-variable 'dictem-hyperlinks-alist) nil)
 
@@ -1369,10 +1372,10 @@ The following key bindings are currently in effect in the buffer:
 and returns a list containing protocol, server, port and path on nil if fails"
   (if (string-match dictem-url-regexp url)
       (list
-       (match-string 1 url )
-       (match-string 2 url)
-       (match-string 4 url)
-       (match-string 5 url)
+       (match-string 1 url) ; protocol
+       (match-string 2 url) ; host
+       (match-string 4 url) ; port
+       (match-string 5 url) ; path (database name for dict://)
        )
     nil))
 
@@ -1814,7 +1817,6 @@ the function 'dictem-postprocess-definition-hyperlinks'")
 	))))
 
 ;;;;;       On-Click Functions     ;;;;;
-
 (defun dictem-define-on-press ()
   "Is called upon pressing Enter."
   (interactive)
