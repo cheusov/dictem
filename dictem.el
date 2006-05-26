@@ -104,6 +104,14 @@ Valid value looks like this:
   :group 'dictem
   :type '(alist :key-type string))
 
+(defcustom dictem-exclude-databases-alist
+  nil
+  "ALIST of regexps for databases
+that will not appear in autocompletion list.
+"
+  :group 'dictem
+  :type '(alist :key-type string))
+
 (defcustom dictem-use-user-databases-only
   nil
   "If `t', only user's dictionaries from dictem-user-databases-alist
@@ -683,6 +691,23 @@ and returns alist containing database names and descriptions"
 
 ;;;;;      Low Level Functions     ;;;;;
 
+(defun dictem-db-should-be-excluded (dbname)
+  "Returns t if a dbname should is not interesting for user.
+See dictem-exclude-databases-alist variable"
+  (let ((ret nil))
+    (dolist (re dictem-exclude-databases-alist)
+      (if (string-match re dbname)
+	  (setq ret t)))
+    ret))
+
+(defun dictem-delete-alist-predicate (l pred)
+  "makes a copy of l with no items for which (pred item) is true"
+  (let ((ret nil))
+    (dolist (item l)
+      (if (not (funcall pred (car item)))
+	  (setq ret (cons item ret))))
+    ret))
+
 (defun dictem-get-line ()
   "Replacement for (thing-at-point 'line)"
   (save-excursion
@@ -792,9 +817,12 @@ and sets dictem-strategy-alist variable."
   "Obtain database ALIST from a DICT server
 and sets dictem-database-alist variable."
   (interactive)
-  (setq dictem-database-alist (dictem-get-databases
-			       server
-			       (dictem-get-port port))))
+  (setq dictem-database-alist
+	(dictem-delete-alist-predicate
+	 (dictem-get-databases
+	  server
+	  (dictem-get-port port))
+	 'dictem-db-should-be-excluded)))
 
 (defun dictem-initialize ()
   "Initializes dictem, i.e. obtains
