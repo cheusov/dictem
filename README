@@ -474,7 +474,7 @@ Ex. 14
 
 As of version 0.7 dictem can handle dictionaries defined by user.
 This allows to use dictem not only for accessing DICT servers,
-but also for accesing users's databases.
+but also for accesing users' databases.
 
 ; DEFINE function for the database "mysuperdb"
 (defun dictem-mysuperdb-DEFINE (query)
@@ -523,9 +523,26 @@ but also for accesing users's databases.
 	))
 
 -------
+Ex. 15
 
+Last years many dictionary server provides too many bilingual dictionaries
+most of them may be not very interesting for you.
+DictEm allows to exclude such dictionary from an autocompletion menu
+by setting a list of regular expressions in dictem-exclude-databases
+variable.
+If, for example, you don't speak french and german and often use
+dict://dict.org server, your config may look like this
+
+(setq dictem-server "dict.org")
+(setq dictem-exclude-databases '("ger-" "-ger" "fra-" "-fra"))
+(dictem-initialize)
+
+Note that, (dictem-initialize) is placed after initializing
+dictem-exclude-databases variable.
+
+-------
 If you have read to this point and all the examples above seem easy,
-you are probably a LISP Guru.
+you are probably a ELISP Guru.
 So, I have nothing more to tell you ;-)
 Feel free to inspect the code, and I hope you'll find DictEm useful.
 

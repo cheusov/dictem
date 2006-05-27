@@ -104,7 +104,7 @@ Valid value looks like this:
   :group 'dictem
   :type '(alist :key-type string))
 
-(defcustom dictem-exclude-databases-alist
+(defcustom dictem-exclude-databases
   nil
   "ALIST of regexps for databases
 that will not appear in autocompletion list.
@@ -191,7 +191,7 @@ a single word in a MATCH search."
 ;;;;;           Variables          ;;;;;
 
 (defvar dictem-version
-  "0.7"
+  "0.8"
   "DictEm version information.")
 
 (defvar dictem-strategy-alist
@@ -693,9 +693,9 @@ and returns alist containing database names and descriptions"
 
 (defun dictem-db-should-be-excluded (dbname)
   "Returns t if a dbname should is not interesting for user.
-See dictem-exclude-databases-alist variable"
+See dictem-exclude-databases variable"
   (let ((ret nil))
-    (dolist (re dictem-exclude-databases-alist)
+    (dolist (re dictem-exclude-databases)
       (if (string-match re dbname)
 	  (setq ret t)))
     ret))
