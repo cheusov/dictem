@@ -43,7 +43,10 @@ See the file COPYING
 DOWNLOAD
 ========
 
-Latest sources can be downloaded from http://freshmeat.net/projects/dictem
+Latest sources can be downloaded from
+http://sourceforge.net/projects/dictem
+or
+http://freshmeat.net/projects/dictem
 
 INSTALLATION
 ============
@@ -58,48 +61,28 @@ INSTALLATION
 
   cd dictem-x.y.z
 
-* If you use shell, run
+* Copy *.el file to the directory you want.
 
-  ./configure
-
-  for configuring dictem.
-  You can also run
-
-  ./configure --help
-
-  to see configuring options.
-
-* Then run
-
-  make
-
-  to byte-compile Emacs Lisp sources
-
-* Finally run
-
-  make install
-
-  for installing dictem into the system.
-  Make sure that you have necessary permissions to install dictem to
-  system directories.
+  cp *.el /path/to/emacs/el/files
 
 * Make sure that DICT client named dict
   (available at http://sf.net/projects/dict)
   is installed on your system.
   Console dict client is used by DictEm for accessing the DICT server.
   dict-1.9.14 or later is strongly recommended.
+  If you'll set dictem-option-mime variable to t (read below),
+  dict-1.10.3 or later MUST be used.
 
 REPORTING BUGS
 ==============
 
     Please send all bug reports and suggestions directly to
     Aleksey Cheusov <vle@gmx.net>.
-    dict-beta@dict.org mailing list is also good.
+    Reporting bugs at sf.net is also good.
 
-MAILING LISTS
-=============
-
-    There are no available mailing lists dedicated to DictEm.
+    Also note that there exists dict-beta@dict.org mailing list (low
+    traffic) where you can ask questions about DICT protocol and
+    software.
 
 CONFIGURING
 =============
@@ -119,14 +102,14 @@ Ex.1
 The easiest configuration of dictem may look like this
 
 ; Add to load-path variable a new directory with files of dictem
-(add-to-list 'load-path "/usr/local/share/emacs/emacs-site")
+(add-to-list 'load-path "/path/you/installed/dictem/to")
 
 ; Loading dictem functions
 (require 'dictem)
 
 ; Setting the server host and port
 (setq dictem-server "localhost")
-(setq dictem-port   "2628")
+;(setq dictem-port   "2628")
 
 ; Code necessary to obtain database and strategy list
 ; from DICT server
