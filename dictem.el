@@ -1205,7 +1205,7 @@ to enter a database name."
 	(set (make-local-variable 'dictem-use-user-databases-only) user-only)
 	(set (make-local-variable 'dictem-use-existing-buffer) use-existing-buf)
 
-	(set (make-local-variable 'dictem-option-mime) option-mime)
+;	(set (make-local-variable 'dictem-option-mime) option-mime)
 
 	(set (make-local-variable 'dictem-hyperlinks-alist) nil)
 
