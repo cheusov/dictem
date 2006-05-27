@@ -1,0 +1,32 @@
+#!/bin/sh
+
+VERSION=`awk '/defconst.*dictem-version/ {gsub(/"/, ""); print $NF}' dictem.el`
+
+make_changelog (){
+    printf "making ChangeLog..." 1>&2
+    rcs2log -i 2 -r . |
+    sed \
+        -e 's,/[^ ]*cvs[^ ]*dictem/,,g' \
+        -e 's,cheusov@[^>]*,vle@gmx.net,g' \
+        -e 's,\(.*\)<\([^@<>]\+\)@\([^@<>]\+\)>\(.*\),\1<\2 at \3}\4,g' \
+    > ChangeLog || return 1
+    printf "done\n" 1>&2
+}
+
+CVSROOT=`cat CVS/Root`
+export CVSROOT
+VERSION_CVS=`echo ${VERSION} | tr . -`
+make_changelog || exit 1
+cp ChangeLog /tmp/dictem.ChangeLog.${VERSION} &&
+echo "***** Exporting files for dictem-${VERSION}..." &&
+cd /tmp &&
+rm -rf /tmp/dictem-${VERSION} &&
+cvs export -d dictem-${VERSION} -r dictem-${VERSION_CVS} dictem &&
+cd dictem-${VERSION} &&
+mv /tmp/dictem.ChangeLog.${VERSION} ChangeLog &&
+chmod -R a+rX,g-w . &&
+cd .. &&
+echo "***** Taring and gzipping dictem-${VERSION}.tar.gz..." &&
+tar cvvf dictem-${VERSION}.tar dictem-${VERSION} &&
+gzip -9f dictem-${VERSION}.tar &&
+echo "***** Done making /tmp/dictem-${VERSION}.tar.gz"

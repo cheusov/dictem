@@ -1,3 +1,25 @@
+Version 0.8, Mon,  Sun, 28 May 2006 00:23:43 +0300
+
+  - removed: ./configure / make / make install
+    See installation section in README if you are in trouble
+
+  - added: dictem-exclude-databases variable to disable some databases
+    from autocompletion menu, see example 15 in README file.
+
+    example for those who uses dict://dict.org:
+
+        (setq dictem-exclude-databases
+         '("tur-" "afr-" "ara-" "cro-" "cze-" "dan-" "hin-" "hun-"
+           "iri-" "ita-" "kha-" "lat-" "nld-" "por-" "sco-" "scr-"
+           "slo-" "swa-" "swe-" "tur-" "rom-" "wel-"
+
+           "-tur" "-afr" "-ara" "-cro" "-cze" "-dan" "-hin" "-hun"
+           "-iri" "-ita" "-kha" "-lat" "-nld" "-por" "-sco" "-scr"
+           "-slo" "-swa" "-swe" "-tur" "-rom" "-wel"))
+
+  - errors messages obtained from 'dict' command are printed
+     in case initialization failure but the constant string.
+
 Version 0.7, Mon,  3 Apr 2006 15:11:57 +0300
 
   - DICTEM can handle dictionaries defined by user.
