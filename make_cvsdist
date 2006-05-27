@@ -28,5 +28,5 @@ chmod -R a+rX,g-w . &&
 cd .. &&
 echo "***** Taring and gzipping dictem-${VERSION}.tar.gz..." &&
 tar cvvf dictem-${VERSION}.tar dictem-${VERSION} &&
-gzip -9f dictem-${VERSION}.tar &&
+gzip -9 dictem-${VERSION}.tar &&
 echo "***** Done making /tmp/dictem-${VERSION}.tar.gz"
