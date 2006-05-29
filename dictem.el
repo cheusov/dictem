@@ -817,11 +817,12 @@ and sets dictem-strategy-alist variable."
 and sets dictem-database-alist variable."
   (interactive)
   (setq dictem-database-alist
-	(dictem-delete-alist-predicate
-	 (dictem-get-databases
-	  server
-	  (dictem-get-port port))
-	 'dictem-db-should-be-excluded)))
+	(dictem-get-databases server (dictem-get-port port)))
+  (if (not (dictem-error-p dictem-database-alist))
+      (setq dictem-database-alist
+	    (dictem-delete-alist-predicate
+	     dictem-database-alist
+	     'dictem-db-should-be-excluded))))
 
 (defun dictem-initialize ()
   "Initializes dictem, i.e. obtains
