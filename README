@@ -107,8 +107,20 @@ The easiest configuration of dictem may look like this
 ; Loading dictem functions
 (require 'dictem)
 
-; Setting the server host and port
-(setq dictem-server "localhost")
+; Setting the dictionary server hostname.
+; This part is optional, if dictem-server is nil (the default value)
+; "dict" command line utility will use its ows config file
+; ~/.dictrc or PREFIX/etc/dict.conf.
+; Keeping dictem-server variable unset is recomended because
+; this allows to try _list of_ servers until connection is made,
+; see dict(1) for details.
+;(setq dictem-server "localhost")
+;(setq dictem-server "dict.org")
+
+
+; Setting the dictionary server port.
+; Setting dictem-port is usually not necessary because
+; most DICT servers use the default port 2628.
 ;(setq dictem-port   "2628")
 
 ; Code necessary to obtain database and strategy list
