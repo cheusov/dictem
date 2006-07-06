@@ -53,7 +53,7 @@
 (defcustom dictem-server nil
   "The DICT server"
   :group 'dictem
-  :type 'string)
+  :type '(restricted-sexp :match-alternatives (stringp 'nil)))
 
 (defcustom dictem-port 2628
   "The port of the DICT server"
