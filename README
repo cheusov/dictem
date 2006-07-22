@@ -206,12 +206,24 @@ Ex.4
 
 You can even create virtual dictionaries which consist of
 databases from different DICT server.
+The dict url form dict:///religion means 'dict' command line tool
+will be called without -h option, i.e. a list of dictionary servers
+from .dictrc (or dict.conf) will be used.
 
 (setq dictem-user-databases-alist
    '(("_en-ru" . ("dict://mova.org/mueller7"
                   "dict://dict.org:2628/web1913"))
-     ("_ru-ru" . ("beslov" "dict://mova.org:2628/religion"))
+     ("_ru-ru" . ("beslov" "dict:///religion"))
      ))
+
+another example:
+
+(setq dictem-user-databases-alist
+      `(("en-en" . ("dict://dict.org:2628/english"))
+        ("en-ru" . ("dict:///en-ru"
+                    "dict://dict.org:2628/eng-rus"
+                    ))
+        ))
 
 -------
 Ex.5
@@ -520,12 +532,12 @@ but also for accesing users' databases.
 -------
 Ex. 15
 
-Last years many dictionary server provides too many bilingual dictionaries
-most of them may be not very interesting for you.
-DictEm allows to exclude such dictionary from an autocompletion menu
+Last years many dictionary servers provide too many bilingual dictionaries,
+most of which may be not very interesting for you.
+DictEm allows to exclude such dictionaries from an autocompletion menu
 by setting a list of regular expressions in dictem-exclude-databases
 variable.
-If, for example, you don't speak french and german and often use
+If, for example, you don't speak french and german and use
 dict://dict.org server, your config may look like this
 
 (setq dictem-server "dict.org")

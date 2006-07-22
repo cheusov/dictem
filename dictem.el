@@ -766,6 +766,8 @@ See dictem-exclude-databases variable"
 (defun dictem-get-port (&optional port)
   (let ((p (if port port dictem-port)))
     (cond
+     ((and (stringp p) (string= "" p)) 2628)
+     ((null p) 2628)
      ((stringp p) p)
      ((numberp p) (number-to-string p))
      (t (error "The value of dictem-port variable should be \
@@ -774,6 +776,7 @@ either a string or a number"))
 
 (defun dictem-get-server ()
   (cond
+   ((and (stringp dictem-server) (string= "" dictem-server)) nil)
    ((stringp dictem-server) dictem-server)
    ((null dictem-server) nil)
    (t (error "The value of dictem-server variable should be \
@@ -1340,7 +1343,7 @@ The following key bindings are currently in effect in the buffer:
   "*dictem buffer*")
 
 (defconst dictem-url-regexp
-  "^\\(dict\\)://\\([^/:]+\\)\\(:\\([0-9]+\\)\\)?/\\(.*\\)$")
+  "^\\(dict\\)://\\([^/:]*\\)\\(:\\([0-9]+\\)\\)?/\\(.*\\)$")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
