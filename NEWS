@@ -1,3 +1,16 @@
+Version 0.81, Sat, 22 Jul 2006 15:45:53 +0300
+
+  - dictem-server variable can be equal to nil, in this case
+    'dict' command line tool will be called without -h option, i.e.
+    default _list of servers_ specified in .dictrc (or dict.conf)
+    will be used.
+
+    dict:///dictionary_name (in dictem-user-databases-alist) also means
+    that default server list will be used, see Ex.4 for the sample of use.
+
+  - dictem-server variable now defaults to nil, old value was "dict.org".
+    dictem-strategy-alist and dictem-database-alist also defaults to nil.
+
 Version 0.8, Mon,  Sun, 28 May 2006 00:23:43 +0300
 
   - removed: ./configure / make / make install
