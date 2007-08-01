@@ -1368,7 +1368,7 @@ The following key bindings are currently in effect in the buffer:
   (let ((fun (assoc cmd alist)))
     (if fun
 	(symbol-function (cadr fun))
-      (error "Unknown command" cmd)
+      (error "Unknown command \"%s\"" cmd)
       )
     ))
 
