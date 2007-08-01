@@ -1521,7 +1521,7 @@ and returns a list containing protocol, server, port and path on nil if fails"
 	  (progn
 	    (setq buffer-read-only nil)
 	    (delete-region (point-min) (point-max))
-	    (insert-string (car (car dictem-content-history)))
+	    (insert (car (car dictem-content-history)))
 	    (goto-char (cadr (car dictem-content-history)))
 	    (setq dictem-content-history (cdr dictem-content-history))
 	    )
