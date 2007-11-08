@@ -1,4 +1,4 @@
-DictEm is a dict client for GNU Emacs.
+DictEm is a Dictionary protocol client for GNU Emacs.
 
 It uses a console dict client (http://sf.net/projects/dict) and
 implements all functions of the client part of DICT protocol
