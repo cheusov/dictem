@@ -1,3 +1,8 @@
+Version 0.82, Mon, 28 Jan 2008 22:59:07 +0200
+
+  - FIX for emacs-22 (insert-string is replaced with insert)
+  - Minor fixes in README
+
 Version 0.81, Sat, 22 Jul 2006 15:45:53 +0300
 
   - dictem-server variable can be equal to nil, in this case
