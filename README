@@ -237,8 +237,7 @@ and use only those specified in dictem-user-databases-alist variable.
 -------
 Ex.6
 
-Of course, you can assign you can
-assign your own key bindings in dictem buffer
+Of course, you can assign your own key bindings in dictem buffer
 
 (define-key dictem-mode-map [tab] 'dictem-next-link)
 (define-key dictem-mode-map [(backtab)] 'dictem-previous-link)
