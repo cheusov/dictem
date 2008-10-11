@@ -4,7 +4,7 @@
 ; dictionary.el written by Torsten Hilbrich <Torsten.Hilbrich@gmx.net>
 ; but now probably doesn't contain original code.
 ; Most of the code has been written
-; from scratch by Aleksey Cheusov <vle@gmx.net>, 2004-2006.
+; from scratch by Aleksey Cheusov <vle@gmx.net>, 2004-2008.
 ;
 ; DictEm is free software; you can redistribute it and/or modify it
 ; under the terms of the GNU General Public License as published by
@@ -192,7 +192,7 @@ a single word in a MATCH search."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;           Variables          ;;;;;
 
-(defconst dictem-version "0.82"
+(defconst dictem-version "1.0.0"
   "DictEm version information.")
 
 (defvar dictem-strategy-alist
@@ -802,11 +802,12 @@ and sets dictem-database-alist variable."
   (interactive)
   (setq dictem-database-alist
 	(dictem-get-databases server (dictem-get-port port)))
-  (if (not (dictem-error-p dictem-database-alist))
-      (setq dictem-database-alist
-	    (dictem-delete-alist-predicate
-	     dictem-database-alist
-	     'dictem-db-should-be-excluded))))
+  (if (dictem-error-p dictem-database-alist)
+      dictem-database-alist
+    (setq dictem-database-alist
+	  (dictem-delete-alist-predicate
+	   dictem-database-alist
+	   'dictem-db-should-be-excluded))))
 
 (defun dictem-initialize ()
   "Initializes dictem, i.e. obtains
@@ -818,15 +819,22 @@ and makes other tasks."
     (if (dictem-error-p dbs)
 	dbs strats)))
 
+(defun dictem-reinitialize-err ()
+  "Initializes dictem if it is not initialized yet
+and run (error ...) if an initialization fails"
+  (interactive)
+  (if (or (dictem-error-p dictem-database-alist)
+	  (null dictem-database-alist))
+      (if (dictem-error-p (dictem-initialize))
+	  (error (dictem-error-message dictem-database-alist)))))
+
 ;;; Functions related to Minibuffer ;;;;
 
 (defun dictem-select-strategy (&optional default-strat)
   "Switches to minibuffer and asks the user
 to enter a search strategy."
   (interactive)
-  (if (dictem-error-p dictem-strategy-alist)
-      (error (concat "server error: "
-		     (dictem-error-message dictem-strategy-alist))))
+  (dictem-reinitialize-err)
   (dictem-select
    "strategy"
    (dictem-prepand-special-strats
@@ -838,9 +846,7 @@ to enter a search strategy."
   "Switches to minibuffer and asks user
 to enter a database name."
   (interactive)
-  (if (dictem-error-p dictem-database-alist)
-      (error (concat "server error: "
-		     (dictem-error-message dictem-database-alist))))
+  (dictem-reinitialize-err)
   (let* ((dbs (dictem-remove-value-from-alist dictem-database-alist))
 	 (dbs2 (if user-dbs
 		   (if dictem-use-user-databases-only

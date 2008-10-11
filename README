@@ -123,8 +123,11 @@ The easiest configuration of dictem may look like this
 ; most DICT servers use the default port 2628.
 ;(setq dictem-port   "2628")
 
-; Code necessary to obtain database and strategy list
-; from DICT server
+; Code necessary to obtain database and strategy list from DICT
+; server. As of version 0.90, dictem runs this function from
+; dictem-select-database and dictem-select-strategy if an
+; initialization was not completed or failed previously, that is
+; running dictem-initialize is optional
 (dictem-initialize)
 
 ; Assigning hot keys for accessing DICT server
