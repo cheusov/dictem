@@ -1,3 +1,18 @@
+Version 1.0.0, Sat, 11 Oct 2008 18:59:15 +0300
+
+   - Running dictem-initialize everytime your network/internet is up
+     (if case you have no permanent connection to Internet,
+     e.g. dial-up, adsl etc.) is a bit annoying. To avoid this dictem
+     is (re)initialized (if needed) automatically from
+     dictem-select-strategy and dictem-select-database functions.  As
+     a result, running dictem-initialize in .emacs becomes unnecessary
+
+   - New function (dictem-reinitialize-err) added
+
+   - Minor fix in dictem-initialize-databases-alist function.  Now it
+     returns error data in case of failure, not nil.
+     (just like dictem-initialize-strategies-alist)
+
 Version 0.82, Mon, 28 Jan 2008 22:59:07 +0200
 
   - FIX for emacs-22 (insert-string is replaced with insert)
