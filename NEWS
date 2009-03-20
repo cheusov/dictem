@@ -1,3 +1,8 @@
+Version 1.0.1, Fri, 20 Mar 2009 12:43:15 +0200
+
+  - fix in dictem-postprocess-definition-remove-header.
+    It wrongly deleted extra line
+
 Version 1.0.0, Sat, 11 Oct 2008 18:59:15 +0300
 
    - Running dictem-initialize everytime your network/internet is up
