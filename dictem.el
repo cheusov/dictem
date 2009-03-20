@@ -1827,12 +1827,12 @@ the function 'dictem-postprocess-definition-hyperlinks'")
     (end-of-line)
     (let (eol (point))
       (goto-char (point-min))
-      (if (search-forward-regexp "definitions? found" eol t)
+      (if (search-forward-regexp "definitions? found" nil t)
 	  (progn
 	    (goto-char (point-min))
-	    (kill-line 2)
-	    )
-	))))
+	    (let ((kill-whole-line t))
+	      (kill-line 1))
+	    )))))
 
 ;;;;;       On-Click Functions     ;;;;;
 (defun dictem-define-on-press ()
