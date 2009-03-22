@@ -192,7 +192,7 @@ a single word in a MATCH search."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;           Variables          ;;;;;
 
-(defconst dictem-version "1.0.1"
+(defconst dictem-version "1.0.2"
   "DictEm version information.")
 
 (defvar dictem-strategy-alist

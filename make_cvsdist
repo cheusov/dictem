@@ -19,3 +19,4 @@ echo "***** Taring and gzipping dictem-${VERSION}.tar.gz..." &&
 tar cvvf dictem-${VERSION}.tar dictem-${VERSION} &&
 gzip -9 dictem-${VERSION}.tar &&
 echo "***** Done making /tmp/dictem-${VERSION}.tar.gz"
+ls -la dictem-${VERSION}.tar.gz
