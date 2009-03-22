@@ -1827,7 +1827,7 @@ the function 'dictem-postprocess-definition-hyperlinks'")
     (end-of-line)
     (let (eol (point))
       (goto-char (point-min))
-      (if (search-forward-regexp "definitions? found" nil t)
+      (if (search-forward-regexp "[0-9] definitions? found" eol t)
 	  (progn
 	    (goto-char (point-min))
 	    (let ((kill-whole-line t))
