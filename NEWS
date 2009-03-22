@@ -1,3 +1,7 @@
+Version 1.0.2, Sun, 22 Mar 2009 17:20:12 +0200
+
+  Another fix in dictem-postprocess-definition-remove-header.
+
 Version 1.0.1, Fri, 20 Mar 2009 12:43:15 +0200
 
   - fix in dictem-postprocess-definition-remove-header.
