@@ -951,6 +951,7 @@ to enter a database name."
 	 (databases    nil)
 	 (user-db      (assoc database dictem-user-databases-alist))
 	 )
+    (goto-char (point-max))
     (cond ((dictem-userdb-p database)
 	   (apply 'dictem-base-do-default-server
 		  (append (list cmd hook database) args)))
@@ -1783,43 +1784,43 @@ the function 'dictem-postprocess-definition-hyperlinks'")
 	      )))))
 
 (defun dictem-postprocess-match ()
-  (goto-char (point-min))
-  (let ((last-database dictem-last-database)
-	(regexp "\\(\"[^\"\n]+\"\\)\\|\\([^ \"\n]+\\)"))
+  (save-excursion
+    (goto-char (point-min))
+    (let ((last-database dictem-last-database)
+	  (regexp "\\(\"[^\"\n]+\"\\)\\|\\([^ \"\n]+\\)"))
 
-;    (forward-line-nomark)
-    (while (search-forward-regexp regexp nil t)
-      (let* ((beg (match-beginning 0))
-	     (end (match-end 0))
-	     (first-char (buffer-substring-no-properties beg beg)))
-	(cond
-	 ((save-excursion (goto-char beg) (= 0 (current-column)))
-	  (setq last-database
-		(dictem-replace-spaces
-		 (buffer-substring-no-properties beg (- end 1))))
-	  (dictem-create-link
-	   beg (- end 1)
-	   'dictem-reference-dbname-face 'dictem-base-show-info
-	   (list (cons 'dbname last-database))))
-	 ((match-beginning 1)
-	  (dictem-create-link
-	   beg end
-	   'dictem-reference-m1-face 'dictem-base-define
-	   (list (cons 'word
-		       (dictem-replace-spaces
-			(buffer-substring-no-properties
-			 (+ beg 1) (- end 1))))
-		 (cons 'dbname last-database))))
-	 (t
-	  (dictem-create-link
-	   beg end
-	   'dictem-reference-m2-face 'dictem-base-define
-	   (list (cons 'word
-		       (dictem-replace-spaces
-			(buffer-substring-no-properties
-			 beg end )))
-		 (cons 'dbname last-database))))
-	 )))))
+      (while (search-forward-regexp regexp nil t)
+	(let* ((beg (match-beginning 0))
+	       (end (match-end 0))
+	       (first-char (buffer-substring-no-properties beg beg)))
+	  (cond
+	   ((save-excursion (goto-char beg) (= 0 (current-column)))
+	    (setq last-database
+		  (dictem-replace-spaces
+		   (buffer-substring-no-properties beg (- end 1))))
+	    (dictem-create-link
+	     beg (- end 1)
+	     'dictem-reference-dbname-face 'dictem-base-show-info
+	     (list (cons 'dbname last-database))))
+	   ((match-beginning 1)
+	    (dictem-create-link
+	     beg end
+	     'dictem-reference-m1-face 'dictem-base-define
+	     (list (cons 'word
+			 (dictem-replace-spaces
+			  (buffer-substring-no-properties
+			   (+ beg 1) (- end 1))))
+		   (cons 'dbname last-database))))
+	   (t
+	    (dictem-create-link
+	     beg end
+	     'dictem-reference-m2-face 'dictem-base-define
+	     (list (cons 'word
+			 (dictem-replace-spaces
+			  (buffer-substring-no-properties
+			   beg end )))
+		   (cons 'dbname last-database))))
+	   ))))))
 
 (defun dictem-postprocess-definition-remove-header ()
   (save-excursion
