@@ -1733,26 +1733,40 @@ the function 'dictem-postprocess-definition-hyperlinks'")
 		 )))))
     ))
 
+(defun dictem-find-brackets (re-beg re-end)
+  (let ((beg-beg (make-marker))
+	(beg-end (make-marker))
+	(end-beg (make-marker))
+	(end-end (make-marker)))
+    (if (search-forward-regexp re-beg nil t)
+	(progn
+	  (set-marker beg-beg (match-beginning 0))
+	  (set-marker beg-end (match-end 0))
+	  (if (search-forward-regexp re-end nil t)
+	      (progn
+		(set-marker end-beg (+ 1 (match-beginning 0)))
+		(set-marker end-end (+ 1 (match-end 0)))
+		(list beg-beg beg-end end-beg end-end))
+	    nil))
+      nil)))
+
 (defun dictem-postprocess-definition-hyperlinks-cyrlybr1 ()
   (save-excursion
     (goto-char (point-min))
-    (let ((regexp
-	   (concat dictem-hyperlink-beginning "\\([^{}|]+\\)"
-		   dictem-hyperlink-end)))
+    (let ((regexp) (pos) (beg1) (beg2) (beg3) (end) (word))
 
-      (while (search-forward-regexp regexp nil t)
-	(let* ((beg (match-beginning 1))
-	       (end (match-end 1))
-	       (match-beg (match-beginning 0))
-	       (word (buffer-substring-no-properties beg end)))
-	  (replace-match word t t)
-	  (dictem-create-link
-	   match-beg (+ match-beg (length word))
-	   'dictem-reference-definition-face
-	   dictem-hyperlink-define-func
-	   (list (cons 'word (dictem-replace-spaces word))
-		 (cons 'dbname dictem-current-dbname))
-	   '(link t)))))))
+      (while (setq pos (dictem-find-brackets dictem-hyperlink-beginning
+					     dictem-hyperlink-end))
+	(delete-region (nth 0 pos) (nth 1 pos))
+	(delete-region (nth 2 pos) (nth 3 pos))
+	(setq word (buffer-substring-no-properties (nth 1 pos) (nth 2 pos)))
+	(dictem-create-link
+	 (nth 1 pos) (nth 2 pos)
+	 'dictem-reference-definition-face
+	 dictem-hyperlink-define-func
+	 (list (cons 'word (dictem-replace-spaces word))
+	       (cons 'dbname dictem-current-dbname))
+	 '(link t))))))
 
 (defun dictem-postprocess-definition-hyperlinks-curlybr2 ()
   (save-excursion
