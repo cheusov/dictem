@@ -1733,55 +1733,55 @@ the function 'dictem-postprocess-definition-hyperlinks'")
 		 )))))
     ))
 
-(defun dictem-postprocess-definition-hyperlinks ()
+(defun dictem-postprocess-definition-hyperlinks-cyrlybr1 ()
   (save-excursion
     (goto-char (point-min))
     (let ((regexp
-	   (concat dictem-hyperlink-beginning "\\([^{}|]+\\)" dictem-hyperlink-end
-		   "\\|"
-		   "^From [^\n]+\\[\\([^\n]+\\)\\]"
-		   "\\|"
-		   "\\(" dictem-hyperlink-beginning "\\([^{}|\n]+\\)|\\([^{}|\n]+\\)"
-		   dictem-hyperlink-end "\\)")))
+	   (concat dictem-hyperlink-beginning "\\([^{}|]+\\)"
+		   dictem-hyperlink-end)))
 
       (while (search-forward-regexp regexp nil t)
-	(cond ((match-beginning 1)
-	       (let* ((beg (match-beginning 1))
-		      (end (match-end 1))
-		      (match-beg (match-beginning 0))
-		      (word (buffer-substring-no-properties beg end)))
-		 (replace-match word t t)
-		 (dictem-create-link
-		  match-beg (+ match-beg (length word))
-		  'dictem-reference-definition-face
-		  dictem-hyperlink-define-func
-		  (list (cons 'word (dictem-replace-spaces word))
-			(cons 'dbname dictem-current-dbname))
-		  '(link t))
-		 ))
-	      ((match-beginning 2)
-	       (if (null dictem-current-dbname)
-		   (setq dictem-current-dbname
-			 (dictem-replace-spaces
-			  (buffer-substring-no-properties (match-beginning 2)
-							  (match-end 2))))))
-	      ((match-beginning 3)
-	       (let* ((beg (match-beginning 5))
-		      (end (match-end 5))
-		      (match-beg (match-beginning 3))
-	              (repl-beg (match-beginning 4))
-		      (repl-end (match-end 4))
-		      (repl (buffer-substring-no-properties repl-beg repl-end))
-		      (word (buffer-substring-no-properties beg end)))
-		 (replace-match repl t t)
-		 (dictem-create-link
-		  match-beg (+ match-beg (length repl))
-		  'dictem-reference-definition-face
-		  dictem-hyperlink-define-func
-		  (list (cons 'word (dictem-replace-spaces word))
-			(cons 'dbname dictem-current-dbname))
-		  '(link t))))
-	      )))))
+	(let* ((beg (match-beginning 1))
+	       (end (match-end 1))
+	       (match-beg (match-beginning 0))
+	       (word (buffer-substring-no-properties beg end)))
+	  (replace-match word t t)
+	  (dictem-create-link
+	   match-beg (+ match-beg (length word))
+	   'dictem-reference-definition-face
+	   dictem-hyperlink-define-func
+	   (list (cons 'word (dictem-replace-spaces word))
+		 (cons 'dbname dictem-current-dbname))
+	   '(link t)))))))
+
+(defun dictem-postprocess-definition-hyperlinks-curlybr2 ()
+  (save-excursion
+    (goto-char (point-min))
+    (let ((regexp
+	   (concat dictem-hyperlink-beginning "\\([^{}|\n]+\\)|\\([^{}|\n]+\\)"
+		   dictem-hyperlink-end)))
+
+      (while (search-forward-regexp regexp nil t)
+	(let* ((beg (match-beginning 5))
+	       (end (match-end 5))
+	       (match-beg (match-beginning 3))
+	       (repl-beg (match-beginning 4))
+	       (repl-end (match-end 4))
+	       (repl (buffer-substring-no-properties repl-beg repl-end))
+	       (word (buffer-substring-no-properties beg end)))
+	  (replace-match repl t t)
+	  (dictem-create-link
+	   match-beg (+ match-beg (length repl))
+	   'dictem-reference-definition-face
+	   dictem-hyperlink-define-func
+	   (list (cons 'word (dictem-replace-spaces word))
+		 (cons 'dbname dictem-current-dbname))
+	   '(link t)))))))
+
+(defun dictem-postprocess-definition-hyperlinks ()
+  (dictem-postprocess-definition-hyperlinks-cyrlybr1)
+  (dictem-postprocess-definition-hyperlinks-curlybr2)
+  )
 
 (defun dictem-postprocess-match ()
   (save-excursion
@@ -1834,6 +1834,109 @@ the function 'dictem-postprocess-definition-hyperlinks'")
 	    (let ((kill-whole-line t))
 	      (kill-line 1))
 	    )))))
+
+(defun dictem-add-text-face-properties (start end face-add-props
+					      &optional object)
+  (let (face-props)
+    (while (<= start end)
+      (progn
+	(setq face-props (get-text-property start 'face object))
+	(if (facep face-props)
+	    (progn
+	      (setq face-props nil)
+	      (add-text-properties
+	       start (+ 1 start)
+	       (list 'face nil)
+	       object)))
+	(add-text-properties
+	 start (+ 1 start)
+	 (list 'face (append face-props face-add-props))
+	 object)
+	(setq start (+ start 1))))))
+
+(defun dictem-add-begendre-face-propertires (re-beg re-end face-properties)
+  (let ((bold-beg-beg (make-marker))
+	(bold-beg-end (make-marker))
+	(bold-end-beg (make-marker))
+	(bold-end-end (make-marker)))
+    (while (search-forward-regexp re-beg nil t)
+      (progn
+	(set-marker bold-beg-beg (match-beginning 0))
+	(set-marker bold-beg-end (match-end 0))
+	(if (search-forward-regexp re-end nil t)
+	    (progn
+	      (set-marker bold-end-beg (match-beginning 0))
+	      (set-marker bold-end-end (match-end 0))
+	      (dictem-add-text-face-properties
+	       bold-beg-end (- bold-end-beg 1) face-properties)
+	      (delete-region bold-beg-beg bold-beg-end)
+	      (delete-region bold-end-beg bold-end-end)
+	      ))))))
+
+(defun dictem-postprocess-stardict-definition ()
+  (interactive)
+
+  (goto-char (point-min))
+  (dictem-add-begendre-face-propertires
+   "<b>" "</b>" '(:weight bold))
+
+  (goto-char (point-min))
+  (dictem-add-begendre-face-propertires
+   "<k>" "</k>" '(:height 1.2 :foreground "white" :weight bold))
+
+  (goto-char (point-min))
+  (dictem-add-begendre-face-propertires
+   "<abr>" "</abr>" '(:weight bold :foreground "green"))
+
+  (goto-char (point-min))
+  (dictem-add-begendre-face-propertires
+   "<dtrn>" "</dtrn>" '())
+
+  (goto-char (point-min))
+  (dictem-add-begendre-face-propertires
+   "<c c=\"green\">" "</c>" '(:foreground "green"))
+
+  (goto-char (point-min))
+  (dictem-add-begendre-face-propertires
+   "<c>" "</c>" '(:foreground "green"))
+
+  (goto-char (point-min))
+  (dictem-add-begendre-face-propertires
+   "<ex>" "</ex>" '(:foreground "BurlyWood"))
+
+  (goto-char (point-min))
+  (dictem-add-begendre-face-propertires
+   "<i>" "</i>" '(:slant "oblique"))
+
+  (goto-char (point-min))
+  (dictem-add-begendre-face-propertires
+   "<c c=\"blueviolet\">" "</c>" '(:foreground "lightblue"))
+
+  ; replaceing <tr> with [
+  (goto-char (point-min))
+  (while (search-forward-regexp "<tr>" nil t)
+    (replace-match "[" t t))
+
+  ; replaceing </tr> with ]
+  (goto-char (point-min))
+  (while (search-forward-regexp "</tr>" nil t)
+    (replace-match "]" t t))
+
+  ; replaceing <co> with (
+  (goto-char (point-min))
+  (while (search-forward-regexp "<co>" nil t)
+    (replace-match "" t t))
+
+  ; replaceing </co> with (
+  (goto-char (point-min))
+  (while (search-forward-regexp "</co>" nil t)
+    (replace-match "" t t))
+
+  (let ((dictem-hyperlink-beginning "<kref>")
+	(dictem-hyperlink-end "</kref>"))
+    (dictem-postprocess-definition-hyperlinks-cyrlybr1))
+
+  )
 
 ;;;;;       On-Click Functions     ;;;;;
 (defun dictem-define-on-press ()
