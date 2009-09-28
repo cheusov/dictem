@@ -961,7 +961,7 @@ to enter a database name."
 	    `(lambda (db)
 	       (apply 'dictem-base-do-selector 
 		      (append (list ,cmd hook db) args)))
-	    (cdr database)))
+	    database))
 
 	  ((and database (stringp database)
 		(setq splitted-url (dictem-parse-url database)))
@@ -1909,6 +1909,10 @@ the function 'dictem-postprocess-definition-hyperlinks'")
   (goto-char (point-min))
   (dictem-add-begendre-face-propertires
    "<c c=\"green\">" "</c>" '(:foreground "green"))
+
+  (goto-char (point-min))
+  (dictem-add-begendre-face-propertires
+   "<c c=\"brown\">" "</c>" '(:foreground "brown"))
 
   (goto-char (point-min))
   (dictem-add-begendre-face-propertires
