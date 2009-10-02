@@ -484,14 +484,22 @@ This variable is local to buffer")
      )))
 
 (defun dictem-call-process (buffer host port args)
-  (apply 'call-process
-	 `(,dictem-client-prog
-	   nil
-	   ,(dictem-get-buffer buffer)
-	   nil
-	   ,@(dictem-local-dict-basic-option host port nil)
-	   ,@args
-	 )))
+  (let (coding-system
+	coding-system-for-read
+	coding-system-for-write)
+    (if (and (functionp 'coding-system-list)
+	     (member 'utf-8 (coding-system-list)))
+	(setq coding-system 'utf-8))
+    (setq coding-system-for-read coding-system)
+    (setq coding-system-for-write coding-system)
+    (apply 'call-process
+	   `(,dictem-client-prog
+	     nil
+	     ,(dictem-get-buffer buffer)
+	     nil
+	     ,@(dictem-local-dict-basic-option host port nil)
+	     ,@args
+	     ))))
 
 (defun dictem-call-process-SHOW-SERVER (buffer host port)
   (dictem-call-process buffer host port '("-I")))
@@ -1131,59 +1139,53 @@ to enter a database name."
        )
       ex_status)
 
-    (let ((coding-system nil))
-      (if (and (functionp 'coding-system-list)
-	       (member 'utf-8 (coding-system-list)))
-	  (setq coding-system 'utf-8))
-      (let ((selected-window (frame-selected-window))
-	    (coding-system-for-read coding-system)
-	    (coding-system-for-write coding-system)
+    (let ((selected-window (frame-selected-window))
 	    ; here we remember values of variables local to buffer
-	    (server           dictem-server)
-	    (port             dictem-port)
-	    (dbs              dictem-database-alist)
-	    (strats           dictem-strategy-alist)
-	    (user-dbs         dictem-user-databases-alist)
-	    (user-only        dictem-use-user-databases-only)
-	    (use-existing-buf dictem-use-existing-buffer)
+	  (server           dictem-server)
+	  (port             dictem-port)
+	  (dbs              dictem-database-alist)
+	  (strats           dictem-strategy-alist)
+	  (user-dbs         dictem-user-databases-alist)
+	  (user-only        dictem-use-user-databases-only)
+	  (use-existing-buf dictem-use-existing-buffer)
 ;	    (option-mime      dictem-option-mime)
-	    (dict-buf         nil)
-	    )
-	(if dictem-use-existing-buffer
-	    (dictem-ensure-buffer)
-	  (dictem))
-	(setq dict-buf (buffer-name))
+	  (dict-buf         nil)
+	  )
+      (if dictem-use-existing-buffer
+	  (dictem-ensure-buffer)
+	(dictem))
+      (setq dict-buf (buffer-name))
 ;	(set-buffer-file-coding-system coding-system)
-	(make-local-variable 'dictem-default-strategy)
-	(make-local-variable 'dictem-default-database)
-	(make-local-variable 'case-replace)
-	(make-local-variable 'case-fold-search)
+      (make-local-variable 'dictem-default-strategy)
+      (make-local-variable 'dictem-default-database)
+      (make-local-variable 'case-replace)
+      (make-local-variable 'case-fold-search)
 
 	; the following lines are to inherit values local to buffer
-	(set (make-local-variable 'dictem-server) server)
-	(set (make-local-variable 'dictem-port)   port)
-	(set (make-local-variable 'dictem-database-alist) dbs)
-	(set (make-local-variable 'dictem-strategy-alist) strats)
-	(set (make-local-variable 'dictem-user-databases-alist) user-dbs)
-	(set (make-local-variable 'dictem-use-user-databases-only) user-only)
-	(set (make-local-variable 'dictem-use-existing-buffer) use-existing-buf)
+      (set (make-local-variable 'dictem-server) server)
+      (set (make-local-variable 'dictem-port)   port)
+      (set (make-local-variable 'dictem-database-alist) dbs)
+      (set (make-local-variable 'dictem-strategy-alist) strats)
+      (set (make-local-variable 'dictem-user-databases-alist) user-dbs)
+      (set (make-local-variable 'dictem-use-user-databases-only) user-only)
+      (set (make-local-variable 'dictem-use-existing-buffer) use-existing-buf)
 
 ;	(set (make-local-variable 'dictem-option-mime) option-mime)
 
-	(set (make-local-variable 'dictem-hyperlinks-alist) nil)
+      (set (make-local-variable 'dictem-hyperlinks-alist) nil)
 
 	;;;;;;;;;;;;;;
-	(setq case-replace nil)
-	(setq case-fold-search nil)
-	(setq dictem-error-messages nil)
-	(dictem-local-run-functions search-fun database query strategy)
-	(switch-to-buffer dict-buf)
-	(if (and (not (equal ex_status 0)) (= (point-min) (point-max)))
-	    (insert (dictem-generate-full-error-message ex_status)))
-	(goto-char (point-min))
-	(setq buffer-read-only t)
-	ex_status
-	))))
+      (setq case-replace nil)
+      (setq case-fold-search nil)
+      (setq dictem-error-messages nil)
+      (dictem-local-run-functions search-fun database query strategy)
+      (switch-to-buffer dict-buf)
+      (if (and (not (equal ex_status 0)) (= (point-min) (point-max)))
+	  (insert (dictem-generate-full-error-message ex_status)))
+      (goto-char (point-min))
+      (setq buffer-read-only t)
+      ex_status
+      )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun dictem-next-section ()
