@@ -476,8 +476,7 @@ This variable is local to buffer")
 (defun dictem-local-dict-basic-option (host port option-mime)
   (let ((server-host (if host host (dictem-get-server))))
     (append
-     (list "-P" "-" 
-	   "--client" (dictem-client-text))
+     (list "-P" "-")
      (if server-host
 	 (list "-h" server-host "-p" (dictem-get-port port)))
      (if option-mime '("-M"))
