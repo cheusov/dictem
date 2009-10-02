@@ -483,74 +483,47 @@ This variable is local to buffer")
      dictem-client-prog-args-list
      )))
 
-(defun dictem-call-process-SHOW-SERVER (buffer host port)
+(defun dictem-call-process (buffer host port args)
   (apply 'call-process
 	 `(,dictem-client-prog
 	   nil
 	   ,(dictem-get-buffer buffer)
 	   nil
 	   ,@(dictem-local-dict-basic-option host port nil)
-	   "-I")))
+	   ,@args
+	 )))
+
+(defun dictem-call-process-SHOW-SERVER (buffer host port)
+  (dictem-call-process buffer host port '("-I")))
 
 (defun dictem-call-process-SHOW-INFO (buffer db host port)
-  (apply 'call-process
-	 `(,dictem-client-prog
-	   nil
-	   ,(dictem-get-buffer buffer)
-	   nil
-	   ,@(dictem-local-dict-basic-option host port nil)
-	   "-i" ,db)))
+  (dictem-call-process buffer host port (list "-i" db)))
 
 (defun dictem-call-process-SHOW-STRAT (buffer host port)
-  (apply 'call-process
-	 `(,dictem-client-prog
-	   nil
-	   ,(dictem-get-buffer buffer)
-	   nil
-	   ,@(dictem-local-dict-basic-option host port nil)
-	   "-S")))
+  (dictem-call-process buffer host port '("-S")))
 
 (defun dictem-call-process-SHOW-DB (buffer host port)
-  (apply 'call-process
-	 `(,dictem-client-prog
-	   nil
-	   ,(dictem-get-buffer buffer)
-	   nil
-	   ,@(dictem-local-dict-basic-option host port nil)
-	   "-D")))
+  (dictem-call-process buffer host port '("-D")))
 
 (defun dictem-call-process-MATCH (buffer db query strat host port)
-  (apply 'call-process
-	 `(,dictem-client-prog
-	   nil
-	   ,(dictem-get-buffer buffer)
-	   nil
-	   ,@(dictem-local-dict-basic-option host port nil)
-	   "-m"
-	   "-d" ,(if db db "*")
-	   "-s" ,(if strat strat ".")
-	   ,query)))
+  (dictem-call-process
+   buffer host port
+   (list "-m"
+	 "-d" (if db db "*")
+	 "-s" (if strat strat ".")
+	 query)))
 
 (defun dictem-call-process-DEFINE (buffer db query host port)
-  (apply 'call-process
-	 `(,dictem-client-prog
-	   nil
-	   ,(dictem-get-buffer buffer)
-	   nil
-	   ,@(dictem-local-dict-basic-option host port dictem-option-mime)
-	   "-d" ,(if db db "*")
-	   ,query)))
+  (dictem-call-process
+   buffer host port
+   (list "-d" (if db db "*") query)))
 
 (defun dictem-call-process-SEARCH (buffer db query strat host port)
-  (apply 'call-process
-	 `(,dictem-client-prog
-	   nil
-	   ,(dictem-get-buffer buffer)
-	   nil
-	   ,@(dictem-local-dict-basic-option host port dictem-option-mime)
-	   "-d" ,(if db db "*")
-	   "-s" ,(if strat strat ".")
-	   ,query)))
+  (dictem-call-process
+   buffer host port
+   (list "-d" (if db db "*")
+	 "-s" (if strat strat ".")
+	 query)))
 
 ;;;;;        GET Functions         ;;;;;
 
