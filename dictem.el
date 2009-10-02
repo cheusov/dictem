@@ -437,7 +437,7 @@ This variable is local to buffer")
   (let ((dictem-temp nil))
     (loop
      (let ((line (dictem-get-line)))
-       (if (string-match "^[^ ]+" line)
+       (if (string-match "^[^ ]+:" line)
 	   (progn
 	     (if (consp dictem-temp)
 		 (setcar (cdar dictem-temp)
@@ -446,7 +446,7 @@ This variable is local to buffer")
 	      dictem-temp
 	      (cons
 	       (list
-		(substring line (match-beginning 0) (match-end 0))
+		(substring line (match-beginning 0) (- (match-end 0) 1))
 		(nreverse 
 		 (dictem-tokenize (substring line (match-end 0)))))
 	       dictem-temp)))
@@ -747,7 +747,7 @@ See dictem-exclude-databases variable"
 (defun dictem-tokenize (s)
   (if (string-match "\"[^\"]+\"\\|[^ \"]+" s )
 ;	(substring s (match-beginning 0) (match-end 0))
-      (cons (substring s (match-beginning 0) (match-end 0)) 
+      (cons (substring s (match-beginning 0) (match-end 0))
 	    (dictem-tokenize (substring s (match-end 0))))
     nil))
 
