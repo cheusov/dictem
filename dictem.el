@@ -1151,9 +1151,14 @@ to enter a database name."
 ;	    (option-mime      dictem-option-mime)
 	  (dict-buf         nil)
 	  )
-      (if dictem-use-existing-buffer
-	  (dictem-ensure-buffer)
+      (cond
+       ((eq dictem-use-existing-buffer 'always)
+	(dictem-ensure-buffer))
+       ((eq dictem-use-existing-buffer t)
+	(dictem-ensure-buffer))
+       (t
 	(dictem))
+       0)
       (setq dict-buf (buffer-name))
 ;	(set-buffer-file-coding-system coding-system)
       (make-local-variable 'dictem-default-strategy)
