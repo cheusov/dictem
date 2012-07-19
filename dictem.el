@@ -1151,17 +1151,15 @@ to enter a database name."
 ;	    (option-mime      dictem-option-mime)
 	  (dict-buf         nil)
 	  )
-;      (dictem-new-buffer)
-      (dictem)
-;      (dictem-ensure-buffer)
-;;      (cond
-;;       ((eq dictem-use-existing-buffer 'visible)
-;;	(dictem-ensure-buffer))
-;;       ((eq dictem-use-existing-buffer t)
-;;	(dictem-ensure-buffer))
-;;       (t
-;;       0)
-      (setq dict-buf dictem-buffer)
+      (cond
+       ((eq dictem-use-existing-buffer 'always)
+	(dictem-ensure-buffer))
+       ((eq dictem-use-existing-buffer t)
+	(dictem-ensure-buffer))
+       (t
+	(dictem))
+       0)
+      (setq dict-buf (buffer-name))
 ;	(set-buffer-file-coding-system coding-system)
       (make-local-variable 'dictem-default-strategy)
       (make-local-variable 'dictem-default-database)
@@ -1186,7 +1184,7 @@ to enter a database name."
       (setq case-fold-search nil)
       (setq dictem-error-messages nil)
       (dictem-local-run-functions search-fun database query strategy)
-;      (switch-to-buffer dict-buf)
+      (switch-to-buffer dict-buf)
       (if (and (not (equal ex_status 0)) (= (point-min) (point-max)))
 	  (insert (dictem-generate-full-error-message ex_status)))
       (goto-char (point-min))
@@ -1384,18 +1382,11 @@ and returns a list containing protocol, server, port and path on nil if fails"
   (interactive)
 
   (let (
-	(buffer (dictem-new-buffer))
+	(buffer (generate-new-buffer dictem-buffer-name))
 	(window-configuration (current-window-configuration))
 	(selected-window (frame-selected-window)))
-;    (switch-to-buffer-other-window buffer)
+    (switch-to-buffer-other-window buffer)
     (dictem-mode)
-    (if dictem-use-content-history
-	(setq dictem-content-history
-	      (cons (list (buffer-substring
-			   (point-min) (point-max))
-			  (point)) dictem-content-history)))
-    (setq buffer-read-only nil)
-    (erase-buffer)
 
     (make-local-variable 'dictem-window-configuration)
     (make-local-variable 'dictem-selected-window)
@@ -1473,18 +1464,18 @@ and returns a list containing protocol, server, port and path on nil if fails"
   "Return non-nil if current buffer has dictem-mode"
   (eq major-mode 'dictem-mode))
 
-;; (defun dictem-ensure-buffer ()
-;;   "If current buffer is not a dictem buffer, create a new one."
-;;   (if (dictem-mode-p)
-;;       (progn
-;; 	(if dictem-use-content-history
-;; 	    (setq dictem-content-history
-;; 		  (cons (list (buffer-substring
-;; 			       (point-min) (point-max))
-;; 			      (point)) dictem-content-history)))
-;; 	(setq buffer-read-only nil)
-;; 	(erase-buffer))
-;;     (dictem)))
+(defun dictem-ensure-buffer ()
+  "If current buffer is not a dictem buffer, create a new one."
+  (if (dictem-mode-p)
+      (progn
+	(if dictem-use-content-history
+	    (setq dictem-content-history
+		  (cons (list (buffer-substring
+			       (point-min) (point-max))
+			      (point)) dictem-content-history)))
+	(setq buffer-read-only nil)
+	(erase-buffer))
+    (dictem)))
 
 (defun dictem-quit ()
   "Bury the current dictem buffer."
