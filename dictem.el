@@ -192,7 +192,7 @@ a single word in a MATCH search."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;           Variables          ;;;;;
 
-(defconst dictem-version "1.0.2"
+(defconst dictem-version "1.0.3"
   "DictEm version information.")
 
 (defvar dictem-strategy-alist
@@ -941,7 +941,8 @@ to enter a database name."
 	    `(lambda (db)
 	       (apply 'dictem-base-do-selector 
 		      (append (list ,cmd hook db) args)))
-	    (cdr database)))
+	    (cdr database))
+	   (setq dictem-last-database (car database)))
 
 	  ((and database (stringp database)
 		(setq splitted-url (dictem-parse-url database)))

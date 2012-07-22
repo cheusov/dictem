@@ -1,3 +1,16 @@
+Version 1.0.3, Sun, 22 Jul 2012 13:12:00 +0300
+
+  - fix: "dictem-get-matches" function returns dictionary names
+    without ":" in the end.
+
+  - fix.  insertion of text produced by "dict" client of by user's
+    database is always made IN THE END of dictem buffer. This fixes
+    the problems with hightlighting in match/define mixed results.
+
+  - Fix failure when dictem-use-user-databases-only is t.  The problem
+    was that dictem-last-database variable was initialized
+    incorrectly.
+
 Version 1.0.2, Sun, 22 Mar 2009 17:20:12 +0200
 
   Another fix in dictem-postprocess-definition-remove-header.
