@@ -960,7 +960,8 @@ to enter a database name."
 	    `(lambda (db)
 	       (apply 'dictem-base-do-selector 
 		      (append (list ,cmd hook db) args)))
-	    (cdr database)))
+	    (cdr database))
+	   (setq dictem-last-database (car database)))
 
 	  ((and database (stringp database)
 		(setq splitted-url (dictem-parse-url database)))
