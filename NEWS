@@ -1,3 +1,9 @@
+Version 1.0.4, Sat, 25 Aug 2012 23:23:24 +0300
+
+  - Flag (interactive) was removed from the following functions:
+     dictem-select-strategy, dictem-select-database, dictem-read-query
+     and dictem-run. This fixes Debian bug #564251.
+
 Version 1.0.3, Sun, 22 Jul 2012 13:12:00 +0300
 
   - fix: "dictem-get-matches" function returns dictionary names
