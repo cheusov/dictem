@@ -192,7 +192,7 @@ a single word in a MATCH search."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;           Variables          ;;;;;
 
-(defconst dictem-version "1.0.3"
+(defconst dictem-version "1.0.4"
   "DictEm version information.")
 
 (defvar dictem-strategy-alist
@@ -813,7 +813,6 @@ and run (error ...) if an initialization fails"
 (defun dictem-select-strategy (&optional default-strat)
   "Switches to minibuffer and asks the user
 to enter a search strategy."
-  (interactive)
   (dictem-reinitialize-err)
   (dictem-select
    "strategy"
@@ -825,7 +824,6 @@ to enter a search strategy."
 (defun dictem-select-database (spec-dbs user-dbs &optional default-db)
   "Switches to minibuffer and asks user
 to enter a database name."
-  (interactive)
   (dictem-reinitialize-err)
   (let* ((dbs (dictem-remove-value-from-alist dictem-database-alist))
 	 (dbs2 (if user-dbs
@@ -842,7 +840,6 @@ to enter a database name."
 
 (defun dictem-read-query (&optional default-query)
   "Switches to minibuffer and asks user to enter a query."
-  (interactive)
   (if (featurep 'xemacs)
       (read-string
        (concat "query [" default-query "]: ")
@@ -1121,7 +1118,6 @@ to enter a database name."
 
 (defun dictem-run (search-fun &optional database query strategy)
   "Creates new *dictem* buffer and run search-fun"
-  (interactive)
 
   (let ((ex_status -1))
 
