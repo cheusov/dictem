@@ -1,37 +1,40 @@
-; dictem.el - DICT protocol client (rfc-2229) for [X]Emacs
+;;; dictem.el --- DICT protocol client (rfc-2229) for [X]Emacs
 
-; This code was initially based on
-; dictionary.el written by Torsten Hilbrich <Torsten.Hilbrich@gmx.net>
-; but now probably doesn't contain original code.
-; Most of the code has been written
-; from scratch by Aleksey Cheusov <vle@gmx.net>, 2004-2008.
-;
-; DictEm is free software; you can redistribute it and/or modify it
-; under the terms of the GNU General Public License as published by
-; the Free Software Foundation; either version 2 of the License, or
-; (at your option) any later version.
-;
-; DictEm is distributed in the hope that it will be useful, but
-; WITHOUT ANY WARRANTY; without even the implied warranty of
-; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-; General Public License for more details.
-;
-; You should have received a copy of the GNU General Public License
-; along with this program; if not, write to the Free Software
-; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-; 02111-1307, USA
+;; This code was initially based on
+;; dictionary.el written by Torsten Hilbrich <Torsten.Hilbrich@gmx.net>
+;; but now probably doesn't contain original code.
+;; Most of the code has been written
+;; from scratch by Aleksey Cheusov <vle@gmx.net>, 2004-2008.
+;;
+;; DictEm is free software; you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 2 of the License, or
+;; (at your option) any later version.
+;;
+;; DictEm is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+;; 02111-1307, USA
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; NOTE! Documentation is in README file.
-;
-; Latest information about dictem project and sources
-; are available at
-;
-; http://freshmeat.net/projects/dictem
-; http://sourceforge.net/projects/dictem
-; http://mova.org/~cheusov/pub/dictem
-;
+;;; Commentary:
+
+;; DICT protocol client (rfc-2229) for [X]Emacs
+
+;; NOTE! Documentation is in README file.
+;;
+;; Latest information about dictem project and sources
+;; are available at
+;;
+;; http://freshmeat.net/projects/dictem
+;; http://sourceforge.net/projects/dictem
+;; http://mova.org/~cheusov/pub/dictem
+
+;;; Code:
 
 (require 'cl)
 
